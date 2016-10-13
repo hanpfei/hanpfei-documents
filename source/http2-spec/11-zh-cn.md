@@ -1,96 +1,176 @@
+# [11. IANA 注意事项](https://http2.github.io/http2-spec/#iana)
 
-# [12. 参考文献](https://http2.github.io/http2-spec/#rfc.section.12)
+一个用于识别HTTP/2的字符串进入了由 [[TLS-ALPN]
+](https://http2.github.io/http2-spec/#TLS-ALPN) 建立的 "应用层协议协商 (ALPN) 协议IDs" 注册表
 
-## [12.1 引用的标准](https://http2.github.io/http2-spec/#rfc.section.12.1)
+本文档为帧类型，设置项，和错误码建立了一个注册表。这些新的注册表项出现在新的"Hypertext Transfer Protocol version 2 (HTTP/2) Parameters"一节。
 
-**[COMPRESSION]** 
-Peon, R. and H. Ruellan, “[HPACK: Header Compression for HTTP/2](https://tools.ietf.org/html/rfc7541)”, RFC 7541, [DOI 10.17487/RFC7541](http://dx.doi.org/10.17487/RFC7541), May 2015, <[http://www.rfc-editor.org/info/rfc7541](http://www.rfc-editor.org/info/rfc7541)>.
+为了在HTTP中使用，本文档注册了HTTP2-Settings首部字段；它还注册了421 (Misdirected Request) 状态码。
 
-**[COOKIE]**
-Barth, A., “[HTTP State Management Mechanism](https://tools.ietf.org/html/rfc6265)”, RFC 6265,[DOI 10.17487/RFC6265](http://dx.doi.org/10.17487/RFC6265), April 2011, <[http://www.rfc-editor.org/info/rfc6265](http://www.rfc-editor.org/info/rfc6265)>.
+为了在HTTP中使用，本文档还注册了PRI方法，以避免与连接前言 (connection preface)  ([Section 3.5](https://http2.github.io/http2-spec/#ConnectionHeader))冲突
 
-**[FIPS186]**
-NIST, “[Digital Signature Standard (DSS)](http://dx.doi.org/10.6028/NIST.FIPS.186-4)”, FIPS PUB 186-4, July 2013, <[http://dx.doi.org/10.6028/NIST.FIPS.186-4](http://dx.doi.org/10.6028/NIST.FIPS.186-4)>.
 
-**[RFC2119]**
-Bradner, S., “[Key words for use in RFCs to Indicate Requirement Levels](https://tools.ietf.org/html/rfc2119)”, BCP 14, RFC 2119, [DOI 10.17487/RFC2119](http://dx.doi.org/10.17487/RFC2119), March 1997, <[http://www.rfc-editor.org/info/rfc2119](http://www.rfc-editor.org/info/rfc2119)>.
+## [11.1 HTTP/2 识别字符串的注册 ](https://http2.github.io/http2-spec/#iana-alpn)
 
-**[RFC2818]**
-Rescorla, E., “[HTTP Over TLS](https://tools.ietf.org/html/rfc2818)”, RFC 2818, [DOI 10.17487/RFC2818](http://dx.doi.org/10.17487/RFC2818), May 2000, <[http://www.rfc-editor.org/info/rfc2818](http://www.rfc-editor.org/info/rfc2818)>.
+本文档为HTTP/2的识别 (参见 [Section 3.3](https://http2.github.io/http2-spec/#discover-https)) 而向由 [[TLS-ALPN]
+](https://http2.github.io/http2-spec/#TLS-ALPN) 建立的 "应用层协议协商 (ALPN) 协议IDs" 注册表中建立了两个注册项。
 
-**[RFC3986]**
-Berners-Lee, T., Fielding, R., and L. Masinter, “[Uniform Resource Identifier (URI): Generic Syntax](https://tools.ietf.org/html/rfc3986)”, STD 66, RFC 3986, [DOI 10.17487/RFC3986](http://dx.doi.org/10.17487/RFC3986), January 2005, <[http://www.rfc-editor.org/info/rfc3986](http://www.rfc-editor.org/info/rfc3986)>.
+当在TLS之上使用HTTP/2时，用"h2"来标识HTTP/2：
 
-**[RFC4648]**
-Josefsson, S., “[The Base16, Base32, and Base64 Data Encodings](https://tools.ietf.org/html/rfc4648)”, RFC 4648,[DOI 10.17487/RFC4648](http://dx.doi.org/10.17487/RFC4648), October 2006, <[http://www.rfc-editor.org/info/rfc4648](http://www.rfc-editor.org/info/rfc4648)>.
+Protocol: HTTP/2 over TLS
 
-**[RFC5226]**
-Narten, T. and H. Alvestrand, “[Guidelines for Writing an IANA Considerations Section in RFCs](https://tools.ietf.org/html/rfc5226)”, BCP 26, RFC 5226, [DOI 10.17487/RFC5226](http://dx.doi.org/10.17487/RFC5226), May 2008, <[http://www.rfc-editor.org/info/rfc5226](http://www.rfc-editor.org/info/rfc5226)>.
+Identification Sequence: 0x68 0x32 ("h2")
 
-**[RFC5234]**
-Crocker, D., Ed. and P. Overell, “[Augmented BNF for Syntax Specifications: ABNF](https://tools.ietf.org/html/rfc5234)”, STD 68, RFC 5234, [DOI 10.17487/RFC5234](http://dx.doi.org/10.17487/RFC5234), January 2008, <[http://www.rfc-editor.org/info/rfc5234](http://www.rfc-editor.org/info/rfc5234)>.
+Specification: This document
 
-**[RFC7230]**
-Fielding, R., Ed. and J. Reschke, Ed., “[Hypertext Transfer Protocol (HTTP/1.1): Message Syntax and Routing](https://tools.ietf.org/html/rfc7230)”, RFC 7230, [DOI 10.17487/RFC7230](http://dx.doi.org/10.17487/RFC7230), June 2014, <[http://www.rfc-editor.org/info/rfc7230](http://www.rfc-editor.org/info/rfc7230)>.
+The "h2c" string identifies HTTP/2 when used over cleartext TCP:
 
-**[RFC7231]**
-Fielding, R., Ed. and J. Reschke, Ed., “[Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content](https://tools.ietf.org/html/rfc7231)”, RFC 7231, [DOI 10.17487/RFC7231](http://dx.doi.org/10.17487/RFC7231), June 2014, <[http://www.rfc-editor.org/info/rfc7231](http://www.rfc-editor.org/info/rfc7231)>.
+Protocol: HTTP/2 over TCP
 
-**[RFC7232]**
-Fielding, R., Ed. and J. Reschke, Ed., “[Hypertext Transfer Protocol (HTTP/1.1): Conditional Requests](https://tools.ietf.org/html/rfc7232)”, RFC 7232, [DOI 10.17487/RFC7232](http://dx.doi.org/10.17487/RFC7232), June 2014, <[http://www.rfc-editor.org/info/rfc7232](http://www.rfc-editor.org/info/rfc7232)>.
+Identification Sequence: 0x68 0x32 0x63 ("h2c")
 
-**[RFC7233]**
-Fielding, R., Ed., Lafon, Y., Ed., and J. Reschke, Ed., “[Hypertext Transfer Protocol (HTTP/1.1): Range Requests](https://tools.ietf.org/html/rfc7233)”, RFC 7233, [DOI 10.17487/RFC7233](http://dx.doi.org/10.17487/RFC7233), June 2014, <[http://www.rfc-editor.org/info/rfc7233](http://www.rfc-editor.org/info/rfc7233)>.
+Specification: This document
 
-**[RFC7234]**
-Fielding, R., Ed., Nottingham, M., Ed., and J. Reschke, Ed., “[Hypertext Transfer Protocol (HTTP/1.1): Caching](https://tools.ietf.org/html/rfc7234)”, RFC 7234, [DOI 10.17487/RFC7234](http://dx.doi.org/10.17487/RFC7234), June 2014, <[http://www.rfc-editor.org/info/rfc7234](http://www.rfc-editor.org/info/rfc7234)>.
+## [11.2 帧类型注册表](https://http2.github.io/http2-spec/#iana-frames)
 
-**[RFC7235]**
-Fielding, R., Ed. and J. Reschke, Ed., “[Hypertext Transfer Protocol (HTTP/1.1): Authentication](https://tools.ietf.org/html/rfc7235)”, RFC 7235, [DOI 10.17487/RFC7235](http://dx.doi.org/10.17487/RFC7235), June 2014, <[http://www.rfc-editor.org/info/rfc7235](http://www.rfc-editor.org/info/rfc7235)>.
+本文档为HTTP/2帧类型码建立了一个注册表。"HTTP/2帧类型"注册表管理一个8位的空间。"HTTP/2帧类型"注册表在 ["IETF Review"或"IESG Approval" 策略](https://http2.github.io/http2-spec/#RFC5226) [RFC5226] 之下操作，其值在0x00和0xef之间，而0xf0 和 0xff之间的值被保留以备实验之用。
 
-**[TCP]**
-Postel, J., “[Transmission Control Protocol](https://tools.ietf.org/html/rfc793)”, STD 7, RFC 793,[DOI 10.17487/RFC0793](http://dx.doi.org/10.17487/RFC0793), September 1981, <[http://www.rfc-editor.org/info/rfc793](http://www.rfc-editor.org/info/rfc793)>.
+注册表中的新项需要下面的信息：
 
-**[TLS-ALPN]**
-Friedl, S., Popov, A., Langley, A., and E. Stephan, “[Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension](https://tools.ietf.org/html/rfc7301)”, RFC 7301,[DOI 10.17487/RFC7301](http://dx.doi.org/10.17487/RFC7301), July 2014, <[http://www.rfc-editor.org/info/rfc7301](http://www.rfc-editor.org/info/rfc7301)>.
+帧类型：帧类型的一个名称或者标签。
 
-**[TLS-ECDHE]**
-Rescorla, E., “[TLS Elliptic Curve Cipher Suites with SHA-256/384 and AES Galois Counter Mode (GCM)](https://tools.ietf.org/html/rfc5289)”, RFC 5289, [DOI 10.17487/RFC5289](http://dx.doi.org/10.17487/RFC5289), August 2008, <[http://www.rfc-editor.org/info/rfc5289](http://www.rfc-editor.org/info/rfc5289)>.
+代码：与分配给帧类型的8位代码。
 
-**[TLS-EXT]**
-Eastlake 3rd, D., “[Transport Layer Security (TLS) Extensions: Extension Definitions](https://tools.ietf.org/html/rfc6066)”, RFC 6066, [DOI 10.17487/RFC6066](http://dx.doi.org/10.17487/RFC6066), January 2011, <[http://www.rfc-editor.org/info/rfc6066](http://www.rfc-editor.org/info/rfc6066)>.
+规范说明：一个规范说明的引用，其中包含了帧布局的描述，它的语义，帧类型使用的标记，包含基于标记的值而有条件的出现的帧的任何部分。
 
-**[TLS12]**
-Dierks, T. and E. Rescorla, “[The Transport Layer Security (TLS) Protocol Version 1.2](https://tools.ietf.org/html/rfc5246)”, RFC 5246, [DOI 10.17487/RFC5246](http://dx.doi.org/10.17487/RFC5246), August 2008, <[http://www.rfc-editor.org/info/rfc5246](http://www.rfc-editor.org/info/rfc5246)>.
+本文档注册了下表所列的项。
 
-## [12.2 资料性引用](https://http2.github.io/http2-spec/#rfc.section.12.2)
 
-**[ALT-SVC]**
-Nottingham, M., McManus, P., and J. Reschke, “[HTTP Alternative Services](https://tools.ietf.org/html/draft-ietf-httpbis-alt-svc-06)”, Internet-Draft draft-ietf-httpbis-alt-svc-06 (work in progress), February 2015.
+|Frame Type    |Code |Section                 |
+|--------------|-----|------------------------|
+|DATA          |0x0  |[Section 6.1](https://http2.github.io/http2-spec/#DATA)          |
+|HEADERS       |0x1  |[Section 6.2](https://http2.github.io/http2-spec/#HEADERS)       |
+|PRIORITY      |0x2  |[Section 6.3](https://http2.github.io/http2-spec/#PRIORITY)      |
+|RST_STREAM    |0x3  |[Section 6.4](https://http2.github.io/http2-spec/#RST_STREAM)     |
+|SETTINGS      |0x4  |[Section 6.5](https://http2.github.io/http2-spec/#SETTINGS)      |
+|PUSH_PROMISE  |0x5  |[Section 6.6](https://http2.github.io/http2-spec/#PUSH_PROMISE)  |
+|PING          |0x6  |[Section 6.7](https://http2.github.io/http2-spec/#PING)          |
+|GOAWAY        |0x7  |[Section 6.8](https://http2.github.io/http2-spec/#GOAWAY)        |
+|WINDOW_UPDATE |0x8  |[Section 6.9](https://http2.github.io/http2-spec/#WINDOW_UPDATE) |
+|CONTINUATION  |0x9  |[Section 6.10](https://http2.github.io/http2-spec/#CONTINUATION) |
 
-**[BCP90]**
-Klyne, G., Nottingham, M., and J. Mogul, “[Registration Procedures for Message Header Fields](https://tools.ietf.org/html/rfc3864)”, BCP 90, RFC 3864, September 2004, <[http://www.rfc-editor.org/info/bcp90](http://www.rfc-editor.org/info/bcp90)>.
+## [11.3 设置项注册表](https://http2.github.io/http2-spec/#iana-settings)
 
-**[BREACH]**
-Gluck, Y., Harris, N., and A. Prado, “[BREACH: Reviving the CRIME Attack](http://breachattack.com/resources/BREACH%20-%20SSL,%20gone%20in%2030%20seconds.pdf)”, July 2013, <[http://breachattack.com/resources/BREACH%20-%20SSL,%20gone%20in%2030%20seconds.pdf](http://breachattack.com/resources/BREACH%20-%20SSL,%20gone%20in%2030%20seconds.pdf)>.
+This document establishes a registry for HTTP/2 settings. The "HTTP/2 Settings" registry manages a 16-bit space. The "HTTP/2 Settings" registry operates under the ["Expert Review" policy](https://http2.github.io/http2-spec/#RFC5226) [RFC5226]
+for values in the range from 0x0000 to 0xefff, with values between and 0xf000 and 0xffff being reserved for Experimental Use.
 
-**[HTML5]**
-Hickson, I., Berjon, R., Faulkner, S., Leithead, T., Doyle Navara, E., O'Connor, E., and S. Pfeiffer, “[HTML5](http://www.w3.org/TR/2014/REC-html5-20141028/)”, W3C Recommendation REC-html5-20141028, October 2014, <[http://www.w3.org/TR/2014/REC-html5-20141028/](http://www.w3.org/TR/2014/REC-html5-20141028/)>.
+New registrations are advised to provide the following information:
+Name:
+A symbolic name for the setting. Specifying a setting name is optional.
+Code:
+The 16-bit code assigned to the setting.
+Initial Value:
+An initial value for the setting.
+Specification:
+An optional reference to a specification that describes the use of the setting.
 
-**[RFC3749]**
-Hollenbeck, S., “[Transport Layer Security Protocol Compression Methods](https://tools.ietf.org/html/rfc3749)”, RFC 3749,[DOI 10.17487/RFC3749](http://dx.doi.org/10.17487/RFC3749), May 2004, <[http://www.rfc-editor.org/info/rfc3749](http://www.rfc-editor.org/info/rfc3749)>.
+The entries in the following table are registered by this document.
 
-**[RFC4492]**
-Blake-Wilson, S., Bolyard, N., Gupta, V., Hawk, C., and B. Moeller, “[Elliptic Curve Cryptography (ECC) Cipher Suites for Transport Layer Security (TLS)](https://tools.ietf.org/html/rfc4492)”, RFC 4492,[DOI 10.17487/RFC4492](http://dx.doi.org/10.17487/RFC4492), May 2006, <[http://www.rfc-editor.org/info/rfc4492](http://www.rfc-editor.org/info/rfc4492)>.
+|Name                   |Code  |Initial Value |Specification    |
+|-----------------------|------|--------------|-----------------|
+|HEADER_TABLE_SIZE      |0x1   |4096          | [Section 6.5.2](https://http2.github.io/http2-spec/#SettingValues)|
+|ENABLE_PUSH            |0x2   |1             | [Section 6.5.2](https://http2.github.io/http2-spec/#SettingValues)|
+|MAX_CONCURRENT_STREAMS |0x3   |(infinite)    | [Section 6.5.2](https://http2.github.io/http2-spec/#SettingValues)|
+|INITIAL_WINDOW_SIZE    |0x4   |65535         | [Section 6.5.2](https://http2.github.io/http2-spec/#SettingValues)|
+|MAX_FRAME_SIZE         |0x5   |16384         | [Section 6.5.2](https://http2.github.io/http2-spec/#SettingValues)|
+|MAX_HEADER_LIST_SIZE   |0x6   |(infinite)    | [Section 6.5.2](https://http2.github.io/http2-spec/#SettingValues)|
 
-**[RFC6585]**
-Nottingham, M. and R. Fielding, “[Additional HTTP Status Codes](https://tools.ietf.org/html/rfc6585)”, RFC 6585,[DOI 10.17487/RFC6585](http://dx.doi.org/10.17487/RFC6585), April 2012, <[http://www.rfc-editor.org/info/rfc6585](http://www.rfc-editor.org/info/rfc6585)>.
+## [11.4](https://http2.github.io/http2-spec/#rfc.section.11.4) [Error Code Registry](https://http2.github.io/http2-spec/#iana-errors)
 
-**[RFC7323]**
-Borman, D., Braden, B., Jacobson, V., and R. Scheffenegger, Ed., “[TCP Extensions for High Performance](https://tools.ietf.org/html/rfc7323)”, RFC 7323, [DOI 10.17487/RFC7323](http://dx.doi.org/10.17487/RFC7323), September 2014, <[http://www.rfc-editor.org/info/rfc7323](http://www.rfc-editor.org/info/rfc7323)>.
+This document establishes a registry for HTTP/2 error codes. The "HTTP/2 Error Code" registry manages a 32-bit space. The "HTTP/2 Error Code" registry operates under the ["Expert Review" policy](https://http2.github.io/http2-spec/#RFC5226) [RFC5226].
 
-**[TALKING]**
-Huang, L., Chen, E., Barth, A., Rescorla, E., and C. Jackson, “[Talking to Yourself for Fun and Profit](http://w2spconf.com/2011/papers/websocket.pdf)”, 2011, <[http://w2spconf.com/2011/papers/websocket.pdf](http://w2spconf.com/2011/papers/websocket.pdf)>.
+Registrations for error codes are required to include a description of the error code. An expert reviewer is advised to examine new registrations for possible duplication with existing error codes. Use of existing registrations is to be encouraged, but not mandated.
 
-**[TLSBCP]**
-Sheffer, Y., Holz, R., and P. Saint-Andre, “[Recommendations for Secure Use of Transport Layer Security (TLS) and Datagram Transport Layer Security (DTLS)](https://tools.ietf.org/html/rfc7525)”, BCP 195, RFC 7525, [DOI 10.17487/RFC7525](http://dx.doi.org/10.17487/RFC7525), May 2015, <[http://www.rfc-editor.org/info/rfc7525](http://www.rfc-editor.org/info/rfc7525)>.
+New registrations are advised to provide the following information:
+Name:
+A name for the error code. Specifying an error code name is optional.
+Code:
+The 32-bit error code value.
+Description:
+A brief description of the error code semantics, longer if no detailed specification is provided.
+Specification:
+An optional reference for a specification that defines the error code.
+
+The entries in the following table are registered by this document.
+
+|Name                |Code |Description                              |Specification  |
+|--------------------|-----|-----------------------------------------|-------------|
+|NO_ERROR            |0x0  |Graceful shutdown                        |[Section 7](https://http2.github.io/http2-spec/#ErrorCodes)|
+|PROTOCOL_ERROR      |0x1  |Protocol error detected                  | [Section 7](https://http2.github.io/http2-spec/#ErrorCodes)|
+|INTERNAL_ERROR      |0x2  |Implementation fault                     | [Section 7](https://http2.github.io/http2-spec/#ErrorCodes)|
+|FLOW_CONTROL_ERROR  |0x3  |Flow-control limits exceeded             | [Section 7](https://http2.github.io/http2-spec/#ErrorCodes)|
+|SETTINGS_TIMEOUT    |0x4  |Settings not acknowledged                | [Section 7](https://http2.github.io/http2-spec/#ErrorCodes)|
+|STREAM_CLOSED       |0x5  |Frame received for closed stream         | [Section 7](https://http2.github.io/http2-spec/#ErrorCodes)|
+|FRAME_SIZE_ERROR    |0x6  |Frame size incorrect                     | [Section 7](https://http2.github.io/http2-spec/#ErrorCodes)|
+|REFUSED_STREAM      |0x7  |Stream not processed                     | [Section 7](https://http2.github.io/http2-spec/#ErrorCodes)|
+|CANCEL              |0x8  |Stream cancelled                         | [Section 7](https://http2.github.io/http2-spec/#ErrorCodes)|
+|COMPRESSION_ERROR   |0x9  |Compression state not updated            | [Section 7](https://http2.github.io/http2-spec/#ErrorCodes)|
+|CONNECT_ERROR       |0xa  |TCP connection error for CONNECT method  | [Section 7](https://http2.github.io/http2-spec/#ErrorCodes)|
+|ENHANCE_YOUR_CALM   |0xb  |Processing capacity exceeded             | [Section 7](https://http2.github.io/http2-spec/#ErrorCodes)|
+|INADEQUATE_SECURITY |0xc  |Negotiated TLS parameters not acceptable | [Section 7](https://http2.github.io/http2-spec/#ErrorCodes)|
+|HTTP_1_1_REQUIRED   |0xd  |Use HTTP/1.1 for the request             | [Section 7](https://http2.github.io/http2-spec/#ErrorCodes)|
+
+## [11.5 HTTP2-Settings Header Field Registration](https://http2.github.io/http2-spec/#rfc.section.11.5)
+
+This section registers the HTTP2-Settings header field in the "Permanent Message Header Field Names" registry [[BCP90]](https://http2.github.io/http2-spec/#BCP90).
+
+Header field name: HTTP2-Settings
+
+Applicable protocol: http
+
+Status: standard
+
+Author/Change controller: IETF
+
+Specification document(s): [Section 3.2.1](https://http2.github.io/http2-spec/#Http2SettingsHeader) of this document
+
+Related information: This header field is only used by an HTTP/2 client for Upgrade-based negotiation.
+
+## [11.6 PRI 方法注册](https://http2.github.io/http2-spec/#rfc.section.11.6)
+
+这一节向"HTTP方法注册表" ([[RFC7231]
+](https://http2.github.io/http2-spec/#RFC7231)，[Section 8.1](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#method.registry))中注册了PRI方法。
+
+方法名：PRI
+
+安全的：是
+
+幂等的：是
+
+规范说明：本文档的 [Section 3.5](https://http2.github.io/http2-spec/#ConnectionHeader)
+
+相关信息：这个方法从不会由实际的客户端使用。这个方法主要在HTTP/1.1服务器或中继在解析HTTP/2连接前言（connection preface）时使用。
+
+## [11.7 421 (Misdirected Request) HTTP状态码](https://http2.github.io/http2-spec/#iana-MisdirectedRequest)
+
+本文档向 "HTTP状态码" 注册表 ([[RFC7231]
+](https://http2.github.io/http2-spec/#RFC7231)，[Section 8.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#status.code.registry))中注册了 421 (Misdirected Request) HTTP状态码。
+
+状态码：421
+
+简短描述：误重定向请求
+
+规范说明：本文档的 [Section 9.1.2](https://http2.github.io/http2-spec/#MisdirectedRequest)
+
+## [11.8  h2c 升级 Token](https://http2.github.io/http2-spec/#iana-h2c)
+
+本文档向"HTTP升级Tokens"注册表中 ([[RFC7230]
+](https://http2.github.io/http2-spec/#RFC7230)，[Section 8.6](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#upgrade.token.registry))中注册了 "h2c"升级token。
+
+值：h2c
+
+描述：超文本传输协议版本 2 (HTTP/2)
+
+期待的版本Tokens：None
+
+参考：本文档的 [Section 3.2](https://http2.github.io/http2-spec/#discover-http)。
