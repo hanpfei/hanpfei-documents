@@ -7,6 +7,8 @@ title: Chromium net design
 网络栈主要地是一个单线程跨平台的库，主要负责资源获取。它的主要接口是`URLRequest`和`URLRequestContext`。`URLRequest`，
 正如它的名字所表明的那样，表示一个[URL](http://en.wikipedia.org/wiki/URL)的请求。`URLRequestContext`包含实现URL请求所需的所有相关上下文，比如[cookies](http://en.wikipedia.org/wiki/HTTP_cookie)，主机解析器，代理解析器，[cache](http://dev.chromium.org/developers/design-documents/network-stack/http-cache)，等等。多个`URLRequest`对象可以共享相同的`URLRequestContext`。大多数的net对象不是线程安全的，尽管磁盘缓存可以使用一个专门的线程，而一些组件（主机解析，证书验证等等）可以使用unjoined worker线程。由于它主要运行于一个单独的网络线程上，因而在网络线程上的操作都不允许阻塞。所以我们通过异步的回调(典型的是CompletionCallback)来使用非阻塞操作。网络栈的代码也会把大多数操作记录到NetLog，它允许消费者把表示操作的说明记录到内存中，并以用户友好的格式用于调试中。
 
+<!--more-->
+
 Chromium开发者编写网络栈的目的是：
 
  - abstractions允许编写跨平台的抽象。

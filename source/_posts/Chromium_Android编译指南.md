@@ -4,6 +4,9 @@ title: Chromium Android编译指南
 
 ## 先决条件
 需要有一台装有**Linux操作系统环境**的主机来做编译，这个环境的搭建配置方法可以参考[Linux-specific build instructions](https://chromium.googlesource.com/chromium/src/+/master/docs/linux_build_instructions.md)。目前还不支持在其它（Mac/Windows）平台上来为Android编译Chromium。
+
+<!--more-->
+
 ## 获取代码
 首先需要下载并安装[depot_tools包](https://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up)。在一个适当得目录下clone depot_tools包：
 ```

@@ -4,6 +4,8 @@ title: Cronet android设计与实现分析--HTTP请求启动
 
 在简单地分析了cronet的初始化过程之后，我们来看HTTP请求的提交和执行。
 
+<!--more-->
+
 # UrlRequest的创建
 
 如我们在前面的[Cronet android 设计与实现分析——库的初始化](https://my.oschina.net/wolfcs/blog/752882)中看到的那样，Cronet的客户端，需要通过UrlRequest.Builder创建Request，然后提交给CronetEngine执行。这里我们从UrlRequest的创建开始我们的分析。

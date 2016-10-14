@@ -4,6 +4,8 @@ title: chromium net到android平台的移植
 
 Chromium net是chromium浏览器及ChromeOS中，用于从网络获取资源的模块。这个网络库是用C++编写的，且用了大量的C++11特性。它广泛地支持当前互联网环境中用到的大量的网络协议，如HTTP/1.1,SPDY，HTTP/2，FTP，QUIC，WebSockets等；在安全性方面也有良好的支持，如SSL等；同时，针对性能，它也有诸多的优化，如引入libevent的基于事件驱动的设计。从而，将chromium net库移植到android平台上并用起来，以提升我们的APP的网络访问性能成为了一件非常有价值的事情。
 
+<!--more-->
+
 这里我们就尝试将chromium net移植到android平台上并用起来。但由于庞大的chromium项目有着自己比较特别的开发流程，开发方式，而给我们的移植工作制造了一些障碍。具体地说是：
 
  - gn/gyp + ninja的构建方式；

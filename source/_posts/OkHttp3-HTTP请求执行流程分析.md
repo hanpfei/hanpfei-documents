@@ -1,14 +1,16 @@
 ---
 title: OkHttp3 HTTP请求执行流程分析
-﻿---
+---
 
-## OkHttp3的基本用法
+# OkHttp3的基本用法
 
 使用OkHttp3发送Http请求并获得响应的过程大体为：
 1. 创建OkHttpClient对象。OkHttpClient为网络请求执行的一个中心，它会管理连接池，缓存，SocketFactory，代理，各种超时时间，DNS，请求执行结果的分发等许多内容。
 2. 创建Request对象。Request用于描述一个HTTP请求，比如请求的方法是"GET"还是"POST"，请求的URL，请求的header，请求的body，请求的缓存策略等。
 3. 利用前面创建的OkHttpClient对象和Request对象创建Call对象。Call是一次HTTP请求的Task，它会执行网络请求以获得响应。OkHttp中的网络请求执行Call既可以同步进行，也可以异步进行。调用call.execute()将直接执行网络请求，阻塞直到获得响应。而调用call.enqueue()传入回调，则会将Call放入一个异步执行队列，由ExecutorService在后台执行。
 4. 执行网络请求并获取响应。
+
+<!--more-->
 
 通过一段示例代码来看一下具体要如何操作：
 ```

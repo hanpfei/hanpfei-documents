@@ -3,7 +3,11 @@ title: 懒人chromium net android移植指南
 ---
 
 # 编译chromium net模块
+
 首先要做的事情就是下载完整的chromium代码，这可以参考[Chromium Android编译指南](http://www.jianshu.com/p/5fce18cbe016)来完成。然后执行（假设当前目录是chromium代码库的根目录）命令：
+
+<!--more-->
+
 ```
 $ gclient runhooks
 $ cd src

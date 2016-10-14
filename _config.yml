@@ -7,7 +7,7 @@ title: WolfcsTech
 subtitle:
 description:
 author: Han Pengfei
-language:
+language: zh-Hans
 timezone:
 
 # URL
@@ -40,7 +40,7 @@ future: true
 highlight:
   enable: true
   line_number: true
-  auto_detect: false
+  auto_detect: true
   tab_replace:
 
 # Category & Tag

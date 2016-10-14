@@ -6,6 +6,8 @@ title: Cronet android设计与实现分析--库的初始化﻿
 
 我们从一段代码来开始我们对Cronet android设计与实现的探索，这段代码向我们展示要如何使用Cronet为android提供的Java接口来做HTTP请求。
 
+<!--more-->
+
 Cronet中主要通过`CronetEngine`来处理网络请求。这里我们专门创建一个class `CronetUtils`来管理`CronetEngine`对象，来处理`CronetEngine`对象的创建，HTTP请求的提交等：
 ```
 public class CronetUtils {
