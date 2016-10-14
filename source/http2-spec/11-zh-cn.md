@@ -17,19 +17,19 @@
 
 当在TLS之上使用HTTP/2时，用"h2"来标识HTTP/2：
 
-Protocol: HTTP/2 over TLS
+协议：HTTP/2 over TLS
 
-Identification Sequence: 0x68 0x32 ("h2")
+标识串：0x68 0x32 ("h2")
 
-Specification: This document
+规范说明：本文档
 
-The "h2c" string identifies HTTP/2 when used over cleartext TCP:
+"h2c"字符串标识裸TCP之上的HTTP/2。
 
-Protocol: HTTP/2 over TCP
+协议：HTTP/2 over TCP
 
-Identification Sequence: 0x68 0x32 0x63 ("h2c")
+标识串：0x68 0x32 0x63 ("h2c")
 
-Specification: This document
+规范说明：本文档
 
 ## [11.2 帧类型注册表](https://http2.github.io/http2-spec/#iana-frames)
 
@@ -61,20 +61,20 @@ Specification: This document
 
 ## [11.3 设置项注册表](https://http2.github.io/http2-spec/#iana-settings)
 
-This document establishes a registry for HTTP/2 settings. The "HTTP/2 Settings" registry manages a 16-bit space. The "HTTP/2 Settings" registry operates under the ["Expert Review" policy](https://http2.github.io/http2-spec/#RFC5226) [RFC5226]
-for values in the range from 0x0000 to 0xefff, with values between and 0xf000 and 0xffff being reserved for Experimental Use.
+本文档为 HTTP/2设置项 建立了一个注册表。“HTTP/2设置项” 注册表管理一个16位的空间。“HTTP/2设置项” 注册表在 ["Expert Review" 策略](https://http2.github.io/http2-spec/#RFC5226) [RFC5226]之下操作，其取值范围在0x0000到0xefff之间，而0xf000到0xffff之间的值被保留以备实验之用。
 
-New registrations are advised to provide the following information:
-Name:
-A symbolic name for the setting. Specifying a setting name is optional.
-Code:
-The 16-bit code assigned to the setting.
-Initial Value:
-An initial value for the setting.
-Specification:
-An optional reference to a specification that describes the use of the setting.
+建议为新的注册项提供如下的信息：
 
-The entries in the following table are registered by this document.
+
+名称：设置项的一个符号形式的名称。指定一个设置项名称是可选的。
+
+代码：分配给设置项的16位代码。
+
+初始值：设置项的初始值。
+
+规范说明：到一个规范说明的可选的引用，其中描述了设置项的使用。
+
+下表是本文档注册的项。
 
 |Name                   |Code  |Initial Value |Specification    |
 |-----------------------|------|--------------|-----------------|
@@ -85,23 +85,23 @@ The entries in the following table are registered by this document.
 |MAX_FRAME_SIZE         |0x5   |16384         | [Section 6.5.2](https://http2.github.io/http2-spec/#SettingValues)|
 |MAX_HEADER_LIST_SIZE   |0x6   |(infinite)    | [Section 6.5.2](https://http2.github.io/http2-spec/#SettingValues)|
 
-## [11.4](https://http2.github.io/http2-spec/#rfc.section.11.4) [Error Code Registry](https://http2.github.io/http2-spec/#iana-errors)
+## [11.4 错误码注册表](https://http2.github.io/http2-spec/#iana-errors)
 
-This document establishes a registry for HTTP/2 error codes. The "HTTP/2 Error Code" registry manages a 32-bit space. The "HTTP/2 Error Code" registry operates under the ["Expert Review" policy](https://http2.github.io/http2-spec/#RFC5226) [RFC5226].
+本文档为HTTP/2错误码建立了一个注册表。“HTTP/2错误码”注册表管理一个32位的空间。“HTTP/2错误码”注册表在["Expert Review"策略](https://http2.github.io/http2-spec/#RFC5226) [RFC5226]之下操作。
 
-Registrations for error codes are required to include a description of the error code. An expert reviewer is advised to examine new registrations for possible duplication with existing error codes. Use of existing registrations is to be encouraged, but not mandated.
+注册错误码需要包含一个错误码的描述。建议有一个专家审查者来检验新的注册可能与已有错误码的重复。鼓励使用已有的注册，但不强制。
 
-New registrations are advised to provide the following information:
-Name:
-A name for the error code. Specifying an error code name is optional.
-Code:
-The 32-bit error code value.
-Description:
-A brief description of the error code semantics, longer if no detailed specification is provided.
-Specification:
-An optional reference for a specification that defines the error code.
+建议新的注册提供如下的信息：
 
-The entries in the following table are registered by this document.
+名称：错误码的名称。指定一个错误码名称是可选的。
+
+代码：32位的错误码值。
+
+描述：一个错误码语义的清晰描述，如果没有提供详细的规范说明的话要更长一点。
+
+规范说明：到一个规范说明的可选的引用，其中定义了错误码。
+
+下表是本文档注册的项。
 
 |Name                |Code |Description                              |Specification  |
 |--------------------|-----|-----------------------------------------|-------------|
@@ -120,21 +120,21 @@ The entries in the following table are registered by this document.
 |INADEQUATE_SECURITY |0xc  |Negotiated TLS parameters not acceptable | [Section 7](https://http2.github.io/http2-spec/#ErrorCodes)|
 |HTTP_1_1_REQUIRED   |0xd  |Use HTTP/1.1 for the request             | [Section 7](https://http2.github.io/http2-spec/#ErrorCodes)|
 
-## [11.5 HTTP2-Settings Header Field Registration](https://http2.github.io/http2-spec/#rfc.section.11.5)
+## [11.5 HTTP2-Settings 首部字段注册](https://http2.github.io/http2-spec/#rfc.section.11.5)
 
-This section registers the HTTP2-Settings header field in the "Permanent Message Header Field Names" registry [[BCP90]](https://http2.github.io/http2-spec/#BCP90).
+这一节向 "Permanent Message Header Field Names" 注册表 [[BCP90]](https://http2.github.io/http2-spec/#BCP90) 注册了HTTP2-Settings首部字段。
 
-Header field name: HTTP2-Settings
+首部字段名称：HTTP2-Settings
 
-Applicable protocol: http
+适用的协议：http
 
-Status: standard
+状态：标准
 
-Author/Change controller: IETF
+作者/变动控制者：IETF
 
-Specification document(s): [Section 3.2.1](https://http2.github.io/http2-spec/#Http2SettingsHeader) of this document
+规范文档：本文档的 [Section 3.2.1](https://http2.github.io/http2-spec/#Http2SettingsHeader)
 
-Related information: This header field is only used by an HTTP/2 client for Upgrade-based negotiation.
+相关信息：这个首部字段只被 HTTP/2 客户端用于基于升级 (Upgrade-based) 的协商。
 
 ## [11.6 PRI 方法注册](https://http2.github.io/http2-spec/#rfc.section.11.6)
 
