@@ -1,5 +1,5 @@
 
-# [A. TLS 1.2 密文族黑名单](https://http2.github.io/http2-spec/#BadCipherSuites)
+# [A. TLS 1.2 加密套件黑名单](https://http2.github.io/http2-spec/#BadCipherSuites)
 
 HTTP/2实现 **可以(MAY)** 将以下面的TLS 1.2 密文族中的任何一个协商的作为类型是[INADEQUATE_SECURITY](https://http2.github.io/http2-spec/#INADEQUATE_SECURITY)的连接错误([Section 5.4.1](https://http2.github.io/http2-spec/#ConnectionErrorHandler))处理：
 
