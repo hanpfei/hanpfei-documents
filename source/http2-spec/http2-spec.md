@@ -32,7 +32,8 @@ HTTP/2添加了一种新的交互模式，服务器可以借以向一个客户�
 
 由于一个连接中HTTP首部字段可能包含大量冗余数据，包含它们的帧被压缩([Section4.3](http://httpwg.org/specs/rfc7540.html#HeaderBlock))。这对于常见情况下的请求大小具有特别有利的影响，它允许多个请求被压缩为一个包。
 
-## [2.1](http://httpwg.org/specs/rfc7540.html#rfc.section.2.1)文档组织
+## [2.1 文档组织](http://httpwg.org/specs/rfc7540.html#rfc.section.2.1)
+
 HTTP/2规范被分为了四个部分：
 * 启动HTTP/2 ([Section3](http://httpwg.org/specs/rfc7540.html#starting))描述了一个HTTP/2连接是如何初始化的。 
 * 帧([Section4](http://httpwg.org/specs/rfc7540.html#FramingLayer))和流([Section5](http://httpwg.org/specs/rfc7540.html#StreamsLayer))层描述了HTTP/2帧被结构化并构成多路复用的流的方式。
@@ -41,7 +42,7 @@ HTTP/2规范被分为了四个部分：
 
 尽管帧和流层的一些概念与HTTP是隔离的，但这份规范不定义一个完整的通用帧层。帧和流层被裁剪为满足HTTP协议和服务器推送的需要。
 
-## [2.2](http://httpwg.org/specs/rfc7540.html#rfc.section.2.2)约定和术语
+## [2.2 约定和术语](http://httpwg.org/specs/rfc7540.html#rfc.section.2.2)
 这份文档中关键字"MUST"，"MUST NOT"，"REQUIRED"，"SHALL"，"SHALL NOT"，"SHOULD"，"SHOULD NOT"，"RECOMMENDED"，"MAY"，和"OPTIONAL"的解释在[RFC 2119](http://httpwg.org/specs/rfc7540.html#RFC2119)[RFC2119]中描述。
 
 所有的数字值以网络子节序。值是无符号的除非特别指明。字面值以十进制或在适当的时候以16进制提供。十六进制字面值以0x为前缀以与十进制字面值进行区分。
@@ -68,7 +69,7 @@ HTTP/2规范被分为了四个部分：
 
 **流(stream)**：HTTP/2连接内一个双向的帧流。
 
-**流错误(stream error)**：独立的HTTP/2流上的一个错误。
+**流错误(stream error)**：关于独立的HTTP/2流的错误。
 
 最后，术语"网关(gateway)"，"intermediary"，"代理(proxy)"，和"隧道(tunnel)"在[[RFC7230]
 ](http://httpwg.org/specs/rfc7540.html#RFC7230)的[Section 2.3](http://httpwg.org/specs/rfc7230.html#intermediaries)中定义。Intermediaries在不同的时间客户端和服务器的角色都扮演。
@@ -94,7 +95,8 @@ HTTP/2使用了与HTTP/1.1所使用的相同的"http"和"https" URI schemes。HT
 
 协商"h2"或"h2c"暗含了对这份文档中描述的传输方式，安全，分帧，和消息语义的使用。
 
- ## [3.2 启动"http" URIs的HTTP/2](http://httpwg.org/specs/rfc7540.html#discover-http)
+## [3.2 启动"http" URIs的HTTP/2](http://httpwg.org/specs/rfc7540.html#discover-http)
+
 一个客户端为一个"http" URI创建一个请求，而又没有先验的关于是否支持HTTP/2的知识，则在下一跳使用HTTP Upgrade机制([[RFC7230]
 ](http://httpwg.org/specs/rfc7540.html#RFC7230)的[Section 6.7](http://httpwg.org/specs/rfc7230.html#header.upgrade))。客户端通过创建一个其中包含了值为"h2c" token的Upgrade首部字段的HTTP/1.1请求来做到这一点。这样一个HTTP/1.1请求**必须(MUST)**精确地包含一个HTTP2-Settings([Section3.2.1](http://httpwg.org/specs/rfc7540.html#Http2SettingsHeader))首部字段。
 
