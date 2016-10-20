@@ -46,147 +46,147 @@ This document is subject to BCP 78 and the IETF Trust's Legal Provisions Relatin
 
 # [目录](https://http2.github.io/http2-spec/compression.html#rfc.toc)
 
-## [1. Introduction](https://http2.github.io/http2-spec/compression.html#rfc.section.1)
+## [1. 简介](https://http2.github.io/http2-spec/compression.html#rfc.section.1)
 
-### [1.1 Overview](https://http2.github.io/http2-spec/compression.html#rfc.section.1.1)
+### [1.1 概述](https://http2.github.io/http2-spec/compression.html#rfc.section.1.1)
 
-### [1.2 Conventions](https://http2.github.io/http2-spec/compression.html#conventions)
+### [1.2 约定](https://http2.github.io/http2-spec/compression.html#conventions)
 
-### [1.3 Terminology](https://http2.github.io/http2-spec/compression.html#encoding.concepts)
+### [1.3 术语](https://http2.github.io/http2-spec/compression.html#encoding.concepts)
 
-## [2. Compression Process Overview](https://http2.github.io/http2-spec/compression.html#header.encoding)
+## [2. 压缩过程概述](https://http2.github.io/http2-spec/compression.html#header.encoding)
 
-### [2.1 Header List Ordering](https://http2.github.io/http2-spec/compression.html#header.list.ordering)
+### [2.1 头部列表排序](https://http2.github.io/http2-spec/compression.html#header.list.ordering)
 
-### [2.2 Encoding and Decoding Contexts](https://http2.github.io/http2-spec/compression.html#encoding.context)
+### [2.2 编码和解码上下文](https://http2.github.io/http2-spec/compression.html#encoding.context)
 
-### [2.3 Indexing Tables](https://http2.github.io/http2-spec/compression.html#indexing.tables)
+### [2.3 索引表s](https://http2.github.io/http2-spec/compression.html#indexing.tables)
 
-#### [2.3.1 Static Table](https://http2.github.io/http2-spec/compression.html#static.table)
+#### [2.3.1 静态表](https://http2.github.io/http2-spec/compression.html#static.table)
 
-#### [2.3.2 Dynamic Table](https://http2.github.io/http2-spec/compression.html#dynamic.table)
+#### [2.3.2 动态表](https://http2.github.io/http2-spec/compression.html#dynamic.table)
 
-#### [2.3.3 Index Address Space](https://http2.github.io/http2-spec/compression.html#index.address.space)
+#### [2.3.3 索引地址空间](https://http2.github.io/http2-spec/compression.html#index.address.space)
 
-### [2.4 Header Field Representation](https://http2.github.io/http2-spec/compression.html#header.representation)
+### [2.4 头部字段表示](https://http2.github.io/http2-spec/compression.html#header.representation)
 
-## [3. Header Block Decoding](https://http2.github.io/http2-spec/compression.html#header.block.decoding)
+## [3. 头部块解码](https://http2.github.io/http2-spec/compression.html#header.block.decoding)
 
-### [3.1 Header Block Processing](https://http2.github.io/http2-spec/compression.html#header.block.processing)
+### [3.1 头部块处理](https://http2.github.io/http2-spec/compression.html#header.block.processing)
 
-### [3.2 Header Field Representation Processing](https://http2.github.io/http2-spec/compression.html#header.representation.processing)
+### [3.2 头部字段表示处理](https://http2.github.io/http2-spec/compression.html#header.representation.processing)
 
-## [4. Dynamic Table Management](https://http2.github.io/http2-spec/compression.html#dynamic.table.management)
+## [4. 动态表管理](https://http2.github.io/http2-spec/compression.html#dynamic.table.management)
 
-### [4.1 Calculating Table Size](https://http2.github.io/http2-spec/compression.html#calculating.table.size)
+### [4.1 计算表大小](https://http2.github.io/http2-spec/compression.html#calculating.table.size)
 
-### [4.2 Maximum Table Size](https://http2.github.io/http2-spec/compression.html#maximum.table.size)
+### [4.2 最大表大小](https://http2.github.io/http2-spec/compression.html#maximum.table.size)
 
-### [4.3 Entry Eviction When Dynamic Table Size Changes](https://http2.github.io/http2-spec/compression.html#entry.eviction)
+### [4.3 动态表大小改变时的条目逐出](https://http2.github.io/http2-spec/compression.html#entry.eviction)
 
-### [4.4 Entry Eviction When Adding New Entries](https://http2.github.io/http2-spec/compression.html#entry.addition)
+### [4.4 添加新条目时的条目逐出](https://http2.github.io/http2-spec/compression.html#entry.addition)
 
-## [5. Primitive Type Representations](https://http2.github.io/http2-spec/compression.html#low-level.representation)
+## [5. 原始类型表示](https://http2.github.io/http2-spec/compression.html#low-level.representation)
 
-### [5.1 Integer Representation](https://http2.github.io/http2-spec/compression.html#integer.representation)
+### [5.1 整型表示](https://http2.github.io/http2-spec/compression.html#integer.representation)
 
-### [5.2 String Literal Representation](https://http2.github.io/http2-spec/compression.html#string.literal.representation)
+### [5.2 字符串字面量表示](https://http2.github.io/http2-spec/compression.html#string.literal.representation)
 
-## [6. Binary Format](https://http2.github.io/http2-spec/compression.html#detailed.format)
+## [6. 二进制格式](https://http2.github.io/http2-spec/compression.html#detailed.format)
 
-### [6.1 Indexed Header Field Representation](https://http2.github.io/http2-spec/compression.html#indexed.header.representation)
+### [6.1 索引头部字段表示](https://http2.github.io/http2-spec/compression.html#indexed.header.representation)
 
-### [6.2 Literal Header Field Representation](https://http2.github.io/http2-spec/compression.html#literal.header.representation)
+### [6.2 字面量头部字段表示](https://http2.github.io/http2-spec/compression.html#literal.header.representation)
 
-#### [6.2.1 Literal Header Field with Incremental Indexing](https://http2.github.io/http2-spec/compression.html#literal.header.with.incremental.indexing)
+#### [6.2.1 增量索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.with.incremental.indexing)
 
-#### [6.2.2 Literal Header Field without Indexing](https://http2.github.io/http2-spec/compression.html#literal.header.without.indexing)
+#### [6.2.2 无索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.without.indexing)
 
-#### [6.2.3 Literal Header Field Never Indexed](https://http2.github.io/http2-spec/compression.html#literal.header.never.indexed)
+#### [6.2.3 从不索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.never.indexed)
 
-### [6.3 Dynamic Table Size Update](https://http2.github.io/http2-spec/compression.html#encoding.context.update)
+### [6.3 动态表 大小更新](https://http2.github.io/http2-spec/compression.html#encoding.context.update)
 
-## [7. Security Considerations](https://http2.github.io/http2-spec/compression.html#Security)
+## [7. 安全注意事项](https://http2.github.io/http2-spec/compression.html#Security)
 
-### [7.1 Probing Dynamic Table State](https://http2.github.io/http2-spec/compression.html#compression.based.attacks)
+### [7.1 探测动态表状态](https://http2.github.io/http2-spec/compression.html#compression.based.attacks)
 
-#### [7.1.1 Applicability to HPACK and HTTP](https://http2.github.io/http2-spec/compression.html#rfc.section.7.1.1)
+#### [7.1.1 HPACK 和 HTTP的适用性](https://http2.github.io/http2-spec/compression.html#rfc.section.7.1.1)
 
-#### [7.1.2 Mitigation](https://http2.github.io/http2-spec/compression.html#rfc.section.7.1.2)
+#### [7.1.2 减轻](https://http2.github.io/http2-spec/compression.html#rfc.section.7.1.2)
 
-#### [7.1.3 Never-Indexed Literals](https://http2.github.io/http2-spec/compression.html#never.indexed.literals)
+#### [7.1.3 从不索引的字面量](https://http2.github.io/http2-spec/compression.html#never.indexed.literals)
 
-### [7.2 Static Huffman Encoding](https://http2.github.io/http2-spec/compression.html#rfc.section.7.2)
+### [7.2 静态Huffman编码](https://http2.github.io/http2-spec/compression.html#rfc.section.7.2)
 
-### [7.3 Memory Consumption](https://http2.github.io/http2-spec/compression.html#rfc.section.7.3)
+### [7.3 内存消耗](https://http2.github.io/http2-spec/compression.html#rfc.section.7.3)
 
-### [7.4 Implementation Limits](https://http2.github.io/http2-spec/compression.html#rfc.section.7.4)
+### [7.4 实现的限制](https://http2.github.io/http2-spec/compression.html#rfc.section.7.4)
 
-## [8. References](https://http2.github.io/http2-spec/compression.html#rfc.references)
+## [8. 参考文献](https://http2.github.io/http2-spec/compression.html#rfc.references)
 
-### [8.1 Normative References](https://http2.github.io/http2-spec/compression.html#rfc.references.1)
+### [8.1 规范性参考文献](https://http2.github.io/http2-spec/compression.html#rfc.references.1)
 
-### [8.2 Informative References](https://http2.github.io/http2-spec/compression.html#rfc.references.2)
+### [8.2 参考资料](https://http2.github.io/http2-spec/compression.html#rfc.references.2)
 
-## [A. Static Table Definition](https://http2.github.io/http2-spec/compression.html#static.table.definition)
+## [A. 静态表定义](https://http2.github.io/http2-spec/compression.html#static.table.definition)
 
-## [B. Huffman Code](https://http2.github.io/http2-spec/compression.html#huffman.code)
+## [B. Huffman 码](https://http2.github.io/http2-spec/compression.html#huffman.code)
 
-## [C. Examples](https://http2.github.io/http2-spec/compression.html#examples)
+## [C. 示例](https://http2.github.io/http2-spec/compression.html#examples)
 
-### [C.1 Integer Representation Examples](https://http2.github.io/http2-spec/compression.html#integer.representation.examples)
+### [C.1 整数表示示例](https://http2.github.io/http2-spec/compression.html#integer.representation.examples)
 
-#### [C.1.1 Example 1: Encoding 10 Using a 5-Bit Prefix](https://http2.github.io/http2-spec/compression.html#integer.representation.example1)
+#### [C.1.1 示例 1：使用5位前缀编码10](https://http2.github.io/http2-spec/compression.html#integer.representation.example1)
 
-#### [C.1.2 Example 2: Encoding 1337 Using a 5-Bit Prefix](https://http2.github.io/http2-spec/compression.html#integer.representation.example2)
+#### [C.1.2 示例 2：使用5位前缀编码1337](https://http2.github.io/http2-spec/compression.html#integer.representation.example2)
 
-#### [C.1.3 Example 3: Encoding 42 Starting at an Octet Boundary](https://http2.github.io/http2-spec/compression.html#integer.representation.example3)
+#### [C.1.3 示例 3: 以字节边界为起始编码42](https://http2.github.io/http2-spec/compression.html#integer.representation.example3)
 
-### [C.2 Header Field Representation Examples](https://http2.github.io/http2-spec/compression.html#header.field.representation.examples)
+### [C.2 头部字段表示示例](https://http2.github.io/http2-spec/compression.html#header.field.representation.examples)
 
-#### [C.2.1 Literal Header Field with Indexing](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.1)
+#### [C.2.1 有索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.1)
 
-#### [C.2.2 Literal Header Field without Indexing](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.2)
+#### [C.2.2 无索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.2)
 
-#### [C.2.3 Literal Header Field Never Indexed](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.3)
+#### [C.2.3 从不索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.3)
 
-#### [C.2.4 Indexed Header Field](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.4)
+#### [C.2.4 索引的头部字段](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.4)
 
-### [C.3 Request Examples without Huffman Coding](https://http2.github.io/http2-spec/compression.html#request.examples.without.huffman.coding)
+### [C.3 没有Huffman编码的请求的例子](https://http2.github.io/http2-spec/compression.html#request.examples.without.huffman.coding)
 
-#### [C.3.1 First Request](https://http2.github.io/http2-spec/compression.html#rfc.section.C.3.1)
+#### [C.3.1 第一个请求](https://http2.github.io/http2-spec/compression.html#rfc.section.C.3.1)
 
-#### [C.3.2 Second Request](https://http2.github.io/http2-spec/compression.html#rfc.section.C.3.2)
+#### [C.3.2 第二个请求](https://http2.github.io/http2-spec/compression.html#rfc.section.C.3.2)
 
-#### [C.3.3 Third Request](https://http2.github.io/http2-spec/compression.html#rfc.section.C.3.3)
+#### [C.3.3 第三个请求](https://http2.github.io/http2-spec/compression.html#rfc.section.C.3.3)
 
-### [C.4 Request Examples with Huffman Coding](https://http2.github.io/http2-spec/compression.html#request.examples.with.huffman.coding)
+### [C.4 Huffman编码的请求示例](https://http2.github.io/http2-spec/compression.html#request.examples.with.huffman.coding)
 
-#### [C.4.1 First Request](https://http2.github.io/http2-spec/compression.html#rfc.section.C.4.1)
+#### [C.4.1 第一个请求](https://http2.github.io/http2-spec/compression.html#rfc.section.C.4.1)
 
-#### [C.4.2 Second Request](https://http2.github.io/http2-spec/compression.html#rfc.section.C.4.2)
+#### [C.4.2 第二个请求](https://http2.github.io/http2-spec/compression.html#rfc.section.C.4.2)
 
-#### [C.4.3 Third Request](https://http2.github.io/http2-spec/compression.html#rfc.section.C.4.3)
+#### [C.4.3 第三个请求](https://http2.github.io/http2-spec/compression.html#rfc.section.C.4.3)
 
-### [C.5 Response Examples without Huffman Coding](https://http2.github.io/http2-spec/compression.html#response.examples.without.huffman.coding)
+### [C.5 没有Huffman编码的响应示例](https://http2.github.io/http2-spec/compression.html#response.examples.without.huffman.coding)
 
-#### [C.5.1 First Response](https://http2.github.io/http2-spec/compression.html#rfc.section.C.5.1)
+#### [C.5.1 第一个响应](https://http2.github.io/http2-spec/compression.html#rfc.section.C.5.1)
 
-#### [C.5.2 Second Response](https://http2.github.io/http2-spec/compression.html#rfc.section.C.5.2)
+#### [C.5.2 第二个响应](https://http2.github.io/http2-spec/compression.html#rfc.section.C.5.2)
 
-#### [C.5.3 Third Response](https://http2.github.io/http2-spec/compression.html#rfc.section.C.5.3)
+#### [C.5.3 第三个响应](https://http2.github.io/http2-spec/compression.html#rfc.section.C.5.3)
 
-### [C.6 Response Examples with Huffman Coding](https://http2.github.io/http2-spec/compression.html#response.examples.with.huffman.coding)
+### [C.6 Huffman编码的响应示例](https://http2.github.io/http2-spec/compression.html#response.examples.with.huffman.coding)
 
-#### [C.6.1 First Response](https://http2.github.io/http2-spec/compression.html#rfc.section.C.6.1)
+#### [C.6.1 第一个响应](https://http2.github.io/http2-spec/compression.html#rfc.section.C.6.1)
 
-#### [C.6.2 Second Response](https://http2.github.io/http2-spec/compression.html#rfc.section.C.6.2)
+#### [C.6.2 第二个响应](https://http2.github.io/http2-spec/compression.html#rfc.section.C.6.2)
 
-#### [C.6.3 Third Response](https://http2.github.io/http2-spec/compression.html#rfc.section.C.6.3)
+#### [C.6.3 第三个响应](https://http2.github.io/http2-spec/compression.html#rfc.section.C.6.3)
 
-## [Acknowledgments](https://http2.github.io/http2-spec/compression.html#rfc.section.unnumbered-1)
+## [鸣谢](https://http2.github.io/http2-spec/compression.html#rfc.section.unnumbered-1)
 
-## [Authors' Addresses](https://http2.github.io/http2-spec/compression.html#rfc.authors)
+## [作者地址](https://http2.github.io/http2-spec/compression.html#rfc.authors)
 
 ## Figures
 
@@ -214,7 +214,7 @@ This document is subject to BCP 78 and the IETF Trust's Legal Provisions Relatin
 
 [Figure 12: Maximum Dynamic Table Size Change](https://http2.github.io/http2-spec/compression.html#rfc.figure.12)
 
-# [1. Introduction](https://http2.github.io/http2-spec/compression.html#rfc.section.1)
+# [1. 简介](https://http2.github.io/http2-spec/compression.html#rfc.section.1)
 
 In HTTP/1.1 (see [[RFC7230]
 ](https://http2.github.io/http2-spec/compression.html#RFC7230)), header fields are not compressed. As web pages have grown to require dozens to hundreds of requests, the redundant header fields in these requests unnecessarily consume bandwidth, measurably increasing latency.
@@ -225,7 +225,7 @@ This specification defines HPACK, a new compressor that eliminates redundant hea
 
 The HPACK format is intentionally simple and inflexible. Both characteristics reduce the risk of interoperability or security issues due to implementation error. No extensibility mechanisms are defined; changes to the format are only possible by defining a complete replacement.
 
-## [1.1 Overview](https://http2.github.io/http2-spec/compression.html#rfc.section.1.1)
+## [1.1 概述](https://http2.github.io/http2-spec/compression.html#rfc.section.1.1)
 
 The format defined in this specification treats a list of header fields as an ordered collection of name-value pairs that can include duplicate pairs. Names and values are considered to be opaque sequences of octets, and the order of header fields is preserved after being compressed and decompressed.
 
@@ -239,53 +239,59 @@ The encoder is responsible for deciding which header fields to insert as new ent
 
 Examples illustrating the use of these different mechanisms to represent header fields are available in [Appendix C](https://http2.github.io/http2-spec/compression.html#examples).
 
-## [1.2 Conventions](https://http2.github.io/http2-spec/compression.html#conventions)
+## [1.2 约定](https://http2.github.io/http2-spec/compression.html#conventions)
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://http2.github.io/http2-spec/compression.html#RFC2119) [RFC2119] .
 
 All numeric values are in network byte order. Values are unsigned unless otherwise indicated. Literal values are provided in decimal or hexadecimal as appropriate.
 
-[1.3 Terminology](https://http2.github.io/http2-spec/compression.html#encoding.concepts)
+## [1.3 术语](https://http2.github.io/http2-spec/compression.html#encoding.concepts)
 
 This specification uses the following terms:
+
 Header Field:
 A name-value pair. Both the name and value are treated as opaque sequences of octets.
+
 Dynamic Table:
 The dynamic table (see [Section 2.3.2](https://http2.github.io/http2-spec/compression.html#dynamic.table)) is a table that associates stored header fields with index values. This table is dynamic and specific to an encoding or decoding context.
+
 Static Table:
 The static table (see [Section 2.3.1](https://http2.github.io/http2-spec/compression.html#static.table)) is a table that statically associates header fields that occur frequently with index values. This table is ordered, read-only, always accessible, and it may be shared amongst all encoding or decoding contexts.
+
 Header List:
 A header list is an ordered collection of header fields that are encoded jointly and can contain duplicate header fields. A complete list of header fields contained in an HTTP/2 header block is a header list.
+
 Header Field Representation:
 A header field can be represented in encoded form either as a literal or as an index (see [Section 2.4](https://http2.github.io/http2-spec/compression.html#header.representation)).
+
 Header Block:
 An ordered list of header field representations, which, when decoded, yields a complete header list.
 
-[2. Compression Process Overview](https://http2.github.io/http2-spec/compression.html#header.encoding)
+# [2. 压缩过程概述](https://http2.github.io/http2-spec/compression.html#header.encoding)
 
 This specification does not describe a specific algorithm for an encoder. Instead, it defines precisely how a decoder is expected to operate, allowing encoders to produce any encoding that this definition permits.
 
-[2.1 Header List Ordering](https://http2.github.io/http2-spec/compression.html#header.list.ordering)
+## [2.1 头部列表排序](https://http2.github.io/http2-spec/compression.html#header.list.ordering)
 
 HPACK preserves the ordering of header fields inside the header list. An encoder MUST order header field representations in the header block according to their ordering in the original header list. A decoder MUST order header fields in the decoded header list according to their ordering in the header block.
 
-[2.2 Encoding and Decoding Contexts](https://http2.github.io/http2-spec/compression.html#encoding.context)
+## [2.2 编码和解码上下文](https://http2.github.io/http2-spec/compression.html#encoding.context)
 
 To decompress header blocks, a decoder only needs to maintain a dynamic table (see [Section 2.3.2](https://http2.github.io/http2-spec/compression.html#dynamic.table)) as a decoding context. No other dynamic state is needed.
 
 When used for bidirectional communication, such as in HTTP, the encoding and decoding dynamic tables maintained by an endpoint are completely independent, i.e., the request and response dynamic tables are separate.
 
-[2.3 Indexing Tables](https://http2.github.io/http2-spec/compression.html#indexing.tables)
+## [2.3 索引表](https://http2.github.io/http2-spec/compression.html#indexing.tables)
 
 HPACK uses two tables for associating header fields to indexes. The static table (see [Section 2.3.1](https://http2.github.io/http2-spec/compression.html#static.table)) is predefined and contains common header fields (most of them with an empty value). The dynamic table (see [Section 2.3.2](https://http2.github.io/http2-spec/compression.html#dynamic.table)) is dynamic and can be used by the encoder to index header fields repeated in the encoded header lists.
 
 These two tables are combined into a single address space for defining index values (see[Section 2.3.3](https://http2.github.io/http2-spec/compression.html#index.address.space)).
 
-[2.3.1 Static Table](https://http2.github.io/http2-spec/compression.html#static.table)
+### [2.3.1 静态表](https://http2.github.io/http2-spec/compression.html#static.table)
 
 The static table consists of a predefined static list of header fields. Its entries are defined in[Appendix A](https://http2.github.io/http2-spec/compression.html#static.table.definition).
 
-[2.3.2 Dynamic Table](https://http2.github.io/http2-spec/compression.html#dynamic.table)
+### [2.3.2 动态表](https://http2.github.io/http2-spec/compression.html#dynamic.table)
 
 The dynamic table consists of a list of header fields maintained in first-in, first-out order. The first and newest entry in a dynamic table is at the lowest index, and the oldest entry of a dynamic table is at the highest index.
 
@@ -297,7 +303,7 @@ The encoder decides how to update the dynamic table and as such can control how 
 
 The decoder updates the dynamic table during the processing of a list of header field representations (see [Section 3.2](https://http2.github.io/http2-spec/compression.html#header.representation.processing)).
 
-[2.3.3 Index Address Space](https://http2.github.io/http2-spec/compression.html#index.address.space)
+### [2.3.3 索引地址空间](https://http2.github.io/http2-spec/compression.html#index.address.space)
 
 The static table and the dynamic table are combined into a single index address space.
 
@@ -308,11 +314,20 @@ Indices strictly greater than the length of the static table refer to elements i
 Indices strictly greater than the sum of the lengths of both tables MUST be treated as a decoding error.
 
 For a static table size of s and a dynamic table size of k, the following diagram shows the entire valid index address space.
-<---------- Index Address Space ----------> <-- Static Table --> <-- Dynamic Table --> +---+-----------+---+ +---+-----------+---+ | 1 | ... | s | |s+1| ... |s+k| +---+-----------+---+ +---+-----------+---+ ^ | | V Insertion Point Dropping Point
 
+```
+        <----------  Index Address Space ---------->
+        <-- Static  Table -->  <-- Dynamic Table -->
+        +---+-----------+---+  +---+-----------+---+
+        | 1 |    ...    | s |  |s+1|    ...    |s+k|
+        +---+-----------+---+  +---+-----------+---+
+                               ^                   |
+                               |                   V
+                        Insertion Point      Dropping Point
+```
 Figure 1: Index Address Space
 
-[2.4 Header Field Representation](https://http2.github.io/http2-spec/compression.html#header.representation)
+## [2.4 头部字段表示](https://http2.github.io/http2-spec/compression.html#header.representation)
 
 An encoded header field can be represented either as an index or as a literal.
 
@@ -331,9 +346,9 @@ The selection of one of these literal representations can be guided by security 
 
 The literal representation of a header field name or of a header field value can encode the sequence of octets either directly or using a static Huffman code (see [Section 5.2](https://http2.github.io/http2-spec/compression.html#string.literal.representation)).
 
-[3. Header Block Decoding](https://http2.github.io/http2-spec/compression.html#header.block.decoding)
+# [3. 头部块解码](https://http2.github.io/http2-spec/compression.html#header.block.decoding)
 
-[3.1 Header Block Processing](https://http2.github.io/http2-spec/compression.html#header.block.processing)
+## [3.1 头部块处理](https://http2.github.io/http2-spec/compression.html#header.block.processing)
 
 A decoder processes a header block sequentially to reconstruct the original header list.
 
@@ -343,7 +358,7 @@ Once a header field is decoded and added to the reconstructed header list, the h
 
 By passing the resulting header fields to the application, a decoder can be implemented with minimal transitory memory commitment in addition to the memory required for the dynamic table.
 
-[3.2 Header Field Representation Processing](https://http2.github.io/http2-spec/compression.html#header.representation.processing)
+## [3.2 头部字段表示处理](https://http2.github.io/http2-spec/compression.html#header.representation.processing)
 
 The processing of a header block to obtain a header list is defined in this section. To ensure that the decoding will successfully produce a header list, a decoder MUST obey the following rules.
 
@@ -359,11 +374,11 @@ A *literal representation* that is *added* to the dynamic table entails the 
 The header field is appended to the decoded header list.
 The header field is inserted at the beginning of the dynamic table. This insertion could result in the eviction of previous entries in the dynamic table (see [Section 4.4](https://http2.github.io/http2-spec/compression.html#entry.addition)).
 
-[4. Dynamic Table Management](https://http2.github.io/http2-spec/compression.html#dynamic.table.management)
+# [4. 动态表管理](https://http2.github.io/http2-spec/compression.html#dynamic.table.management)
 
 To limit the memory requirements on the decoder side, the dynamic table is constrained in size.
 
-[4.1 Calculating Table Size](https://http2.github.io/http2-spec/compression.html#calculating.table.size)
+## [4.1 计算表大小](https://http2.github.io/http2-spec/compression.html#calculating.table.size)
 
 The size of the dynamic table is the sum of the size of its entries.
 
@@ -373,7 +388,7 @@ The size of an entry is calculated using the length of its name and value withou
 
 **Note:** The additional 32 octets account for an estimated overhead associated with an entry. For example, an entry structure using two 64-bit pointers to reference the name and the value of the entry and two 64-bit integers for counting the number of references to the name and value would have 32 octets of overhead.
 
-[4.2 Maximum Table Size](https://http2.github.io/http2-spec/compression.html#maximum.table.size)
+## [4.2 最大表大小](https://http2.github.io/http2-spec/compression.html#maximum.table.size)
 
 Protocols that use HPACK determine the maximum size that the encoder is permitted to use for the dynamic table. In HTTP/2, this value is determined by the SETTINGS_HEADER_TABLE_SIZE setting (see [Section 6.5.2](https://tools.ietf.org/html/rfc7540#section-6.5.2) of [[HTTP2]
 ](https://http2.github.io/http2-spec/compression.html#HTTP2)).
@@ -387,11 +402,11 @@ Multiple updates to the maximum table size can occur between the transmission of
 
 This mechanism can be used to completely clear entries from the dynamic table by setting a maximum size of 0, which can subsequently be restored.
 
-[4.3 Entry Eviction When Dynamic Table Size Changes](https://http2.github.io/http2-spec/compression.html#entry.eviction)
+## [4.3 动态表大小改变时的条目逐出](https://http2.github.io/http2-spec/compression.html#entry.eviction)
 
 Whenever the maximum size for the dynamic table is reduced, entries are evicted from the end of the dynamic table until the size of the dynamic table is less than or equal to the maximum size.
 
-[4.4 Entry Eviction When Adding New Entries](https://http2.github.io/http2-spec/compression.html#entry.addition)
+## [4.4 添加新条目时的条目逐出](https://http2.github.io/http2-spec/compression.html#entry.addition)
 
 Before a new entry is added to the dynamic table, entries are evicted from the end of the dynamic table until the size of the dynamic table is less than or equal to (maximum size - new entry size) or until the table is empty.
 
@@ -399,11 +414,11 @@ If the size of the new entry is less than or equal to the maximum size, that ent
 
 A new entry can reference the name of an entry in the dynamic table that will be evicted when adding this new entry into the dynamic table. Implementations are cautioned to avoid deleting the referenced name if the referenced entry is evicted from the dynamic table prior to inserting the new entry.
 
-[5. Primitive Type Representations](https://http2.github.io/http2-spec/compression.html#low-level.representation)
+# [5. 原始类型表示](https://http2.github.io/http2-spec/compression.html#low-level.representation)
 
 HPACK encoding uses two primitive types: unsigned variable-length integers and strings of octets.
 
-[5.1 Integer Representation](https://http2.github.io/http2-spec/compression.html#integer.representation)
+## [5.1 整型表示](https://http2.github.io/http2-spec/compression.html#integer.representation)
 
 Integers are used to represent name indexes, header field indexes, or string lengths. An integer representation can start anywhere within an octet. To allow for optimized processing, an integer representation always finishes at the end of an octet.
 
@@ -412,14 +427,29 @@ An integer is represented in two parts: a prefix that fills the current octet an
 If the integer value is small enough, i.e., strictly less than 2N
 -1, it is encoded within the N-bit prefix.
 
-0 1 2 3 4 5 6 7+---+---+---+---+---+---+---+---+| ? | ? | ? | Value |+---+---+---+-------------------+
-
+```
+  0   1   2   3   4   5   6   7
++---+---+---+---+---+---+---+---+
+| ? | ? | ? |       Value       |
++---+---+---+-------------------+
+```
 Figure 2: Integer Value Encoded within the Prefix (Shown for N = 5)
+
 Otherwise, all the bits of the prefix are set to 1, and the value, decreased by 2N
 -1, is encoded using a list of one or more octets. The most significant bit of each octet is used as a continuation flag: its value is set to 1 except for the last octet in the list. The remaining bits of the octets are used to encode the decreased value.
 
-0 1 2 3 4 5 6 7+---+---+---+---+---+---+---+---+| ? | ? | ? | 1 1 1 1 1 |+---+---+---+-------------------+| 1 | Value-(2^N-1) LSB |+---+---------------------------+ ...+---+---------------------------+| 0 | Value-(2^N-1) MSB |+---+---------------------------+
-
+```
+  0   1   2   3   4   5   6   7
++---+---+---+---+---+---+---+---+
+| ? | ? | ? | 1   1   1   1   1 |
++---+---+---+-------------------+
+| 1 |    Value-(2^N-1) LSB      |
++---+---------------------------+
+               ...
++---+---------------------------+
+| 0 |    Value-(2^N-1) MSB      |
++---+---------------------------+
+```
 Figure 3: Integer Value Encoded after the Prefix (Shown for N = 5)
 
 Decoding the integer value from the list of octets starts by reversing the order of the octets in the list. Then, for each octet, its most significant bit is removed. The remaining bits of the octets are concatenated, and the resulting value is increased by 2N - 1 to obtain the integer value.
@@ -427,23 +457,53 @@ Decoding the integer value from the list of octets starts by reversing the order
 The prefix size, N, is always between 1 and 8 bits. An integer starting at an octet boundary will have an 8-bit prefix.
 
 Pseudocode to represent an integer I is as follows:
-if I < 2^N - 1, encode I on N bitselse encode (2^N - 1) on N bits I = I - (2^N - 1) while I >= 128 encode (I % 128 + 128) on 8 bits I = I / 128 encode I on 8 bits
+
+```
+if I < 2^N - 1, encode I on N bits
+else
+    encode (2^N - 1) on N bits
+    I = I - (2^N - 1)
+    while I >= 128
+         encode (I % 128 + 128) on 8 bits
+         I = I / 128
+    encode I on 8 bits
+```
 
 Pseudocode to decode an integer I is as follows:
-decode I from the next N bitsif I < 2^N - 1, return Ielse M = 0 repeat B = next octet I = I + (B & 127) * 2^M M = M + 7 while B & 128 == 128 return I
+
+
+```
+decode I from the next N bits
+if I < 2^N - 1, return I
+else
+    M = 0
+    repeat
+        B = next octet
+        I = I + (B & 127) * 2^M
+        M = M + 7
+    while B & 128 == 128
+    return I
+```
 
 Examples illustrating the encoding of integers are available in [Appendix C.1](https://http2.github.io/http2-spec/compression.html#integer.representation.examples).
 
 This integer representation allows for values of indefinite size. It is also possible for an encoder to send a large number of zero values, which can waste octets and could be used to overflow integer values. Integer encodings that exceed implementation limits — in value or octet length — MUST be treated as decoding errors. Different limits can be set for each of the different uses of integers, based on implementation constraints.
 
-[5.2 String Literal Representation](https://http2.github.io/http2-spec/compression.html#string.literal.representation)
+## [5.2 字符串字面量表示](https://http2.github.io/http2-spec/compression.html#string.literal.representation)
 
 Header field names and header field values can be represented as string literals. A string literal is encoded as a sequence of octets, either by directly encoding the string literal's octets or by using a Huffman code (see [[HUFFMAN]
 ](https://http2.github.io/http2-spec/compression.html#HUFFMAN)).
 
-0 1 2 3 4 5 6 7+---+---+---+---+---+---+---+---+| H | String Length (7+) |+---+---------------------------+| String Data (Length octets) |+-------------------------------+
-
+```
+  0   1   2   3   4   5   6   7
++---+---+---+---+---+---+---+---+
+| H |    String Length (7+)     |
++---+---------------------------+
+|  String Data (Length octets)  |
++-------------------------------+
+```
 Figure 4: String Literal Representation
+
 A string literal representation contains the following fields:
 H:
 A one-bit flag, H, indicating whether or not the octets of the string are Huffman encoded.
@@ -458,40 +518,65 @@ As the Huffman-encoded data doesn't always end at an octet boundary, some paddin
 
 Upon decoding, an incomplete code at the end of the encoded data is to be considered as padding and discarded. A padding strictly longer than 7 bits MUST be treated as a decoding error. A padding not corresponding to the most significant bits of the code for the EOS symbol MUST be treated as a decoding error. A Huffman-encoded string literal containing the EOS symbol MUST be treated as a decoding error.
 
-[6. Binary Format](https://http2.github.io/http2-spec/compression.html#detailed.format)
+# [6. 二进制格式](https://http2.github.io/http2-spec/compression.html#detailed.format)
 
 This section describes the detailed format of each of the different header field representations and the dynamic table size update instruction.
 
-[6.1 Indexed Header Field Representation](https://http2.github.io/http2-spec/compression.html#indexed.header.representation)
+## [6.1 索引头部字段表示](https://http2.github.io/http2-spec/compression.html#indexed.header.representation)
 
 An indexed header field representation identifies an entry in either the static table or the dynamic table (see [Section 2.3](https://http2.github.io/http2-spec/compression.html#indexing.tables)).
 
 An indexed header field representation causes a header field to be added to the decoded header list, as described in [Section 3.2](https://http2.github.io/http2-spec/compression.html#header.representation.processing).
 
-0 1 2 3 4 5 6 7+---+---+---+---+---+---+---+---+| 1 | Index (7+) |+---+---------------------------+
-
+```
+  0   1   2   3   4   5   6   7
++---+---+---+---+---+---+---+---+
+| 1 |        Index (7+)         |
++---+---------------------------+
+```
 Figure 5: Indexed Header Field
 
 An indexed header field starts with the '1' 1-bit pattern, followed by the index of the matching header field, represented as an integer with a 7-bit prefix (see [Section 5.1](https://http2.github.io/http2-spec/compression.html#integer.representation)).
 
 The index value of 0 is not used. It MUST be treated as a decoding error if found in an indexed header field representation.
 
-[6.2 Literal Header Field Representation](https://http2.github.io/http2-spec/compression.html#literal.header.representation)
+## [6.2 字面量头部字段表示](https://http2.github.io/http2-spec/compression.html#literal.header.representation)
 
 A literal header field representation contains a literal header field value. Header field names are provided either as a literal or by reference to an existing table entry, either from the static table or the dynamic table (see [Section 2.3](https://http2.github.io/http2-spec/compression.html#indexing.tables)).
 
 This specification defines three forms of literal header field representations: with indexing, without indexing, and never indexed.
 
-[6.2.1 Literal Header Field with Incremental Indexing](https://http2.github.io/http2-spec/compression.html#literal.header.with.incremental.indexing)
+### [6.2.1 增量索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.with.incremental.indexing)
 
 A literal header field with incremental indexing representation results in appending a header field to the decoded header list and inserting it as a new entry into the dynamic table.
 
-0 1 2 3 4 5 6 7+---+---+---+---+---+---+---+---+| 0 | 1 | Index (6+) |+---+---+-----------------------+| H | Value Length (7+) |+---+---------------------------+| Value String (Length octets) |+-------------------------------+
-
+```
+  0   1   2   3   4   5   6   7
++---+---+---+---+---+---+---+---+
+| 0 | 1 |      Index (6+)       |
++---+---+-----------------------+
+| H |     Value Length (7+)     |
++---+---------------------------+
+| Value String (Length octets)  |
++-------------------------------+
+```
 Figure 6: Literal Header Field with Incremental Indexing — Indexed Name
 
-0 1 2 3 4 5 6 7+---+---+---+---+---+---+---+---+| 0 | 1 | 0 |+---+---+-----------------------+| H | Name Length (7+) |+---+---------------------------+| Name String (Length octets) |+---+---------------------------+| H | Value Length (7+) |+---+---------------------------+| Value String (Length octets) |+-------------------------------+
 
+```
+  0   1   2   3   4   5   6   7
++---+---+---+---+---+---+---+---+
+| 0 | 1 |           0           |
++---+---+-----------------------+
+| H |     Name Length (7+)      |
++---+---------------------------+
+|  Name String (Length octets)  |
++---+---------------------------+
+| H |     Value Length (7+)     |
++---+---------------------------+
+| Value String (Length octets)  |
++-------------------------------+
+```
 Figure 7: Literal Header Field with Incremental Indexing — New Name
 
 A literal header field with incremental indexing representation starts with the '01' 2-bit pattern.
@@ -502,16 +587,36 @@ Otherwise, the header field name is represented as a string literal (see [Secti
 
 Either form of header field name representation is followed by the header field value represented as a string literal (see [Section 5.2](https://http2.github.io/http2-spec/compression.html#string.literal.representation)).
 
-[6.2.2 Literal Header Field without Indexing](https://http2.github.io/http2-spec/compression.html#literal.header.without.indexing)
+### [6.2.2 无索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.without.indexing)
 
 A literal header field without indexing representation results in appending a header field to the decoded header list without altering the dynamic table.
 
-0 1 2 3 4 5 6 7+---+---+---+---+---+---+---+---+| 0 | 0 | 0 | 0 | Index (4+) |+---+---+-----------------------+| H | Value Length (7+) |+---+---------------------------+| Value String (Length octets) |+-------------------------------+
-
+```
+  0   1   2   3   4   5   6   7
++---+---+---+---+---+---+---+---+
+| 0 | 0 | 0 | 0 |  Index (4+)   |
++---+---+-----------------------+
+| H |     Value Length (7+)     |
++---+---------------------------+
+| Value String (Length octets)  |
++-------------------------------+
+```
 Figure 8: Literal Header Field without Indexing — Indexed Name
 
-0 1 2 3 4 5 6 7+---+---+---+---+---+---+---+---+| 0 | 0 | 0 | 0 | 0 |+---+---+-----------------------+| H | Name Length (7+) |+---+---------------------------+| Name String (Length octets) |+---+---------------------------+| H | Value Length (7+) |+---+---------------------------+| Value String (Length octets) |+-------------------------------+
-
+```
+  0   1   2   3   4   5   6   7
++---+---+---+---+---+---+---+---+
+| 0 | 0 | 0 | 0 |       0       |
++---+---+-----------------------+
+| H |     Name Length (7+)      |
++---+---------------------------+
+|  Name String (Length octets)  |
++---+---------------------------+
+| H |     Value Length (7+)     |
++---+---------------------------+
+| Value String (Length octets)  |
++-------------------------------+
+```
 Figure 9: Literal Header Field without Indexing — New Name
 
 A literal header field without indexing representation starts with the '0000' 4-bit pattern.
@@ -522,16 +627,37 @@ Otherwise, the header field name is represented as a string literal (see [Secti
 
 Either form of header field name representation is followed by the header field value represented as a string literal (see [Section 5.2](https://http2.github.io/http2-spec/compression.html#string.literal.representation)).
 
-[6.2.3 Literal Header Field Never Indexed](https://http2.github.io/http2-spec/compression.html#literal.header.never.indexed)
+### [6.2.3 从不索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.never.indexed)
 
 A literal header field never-indexed representation results in appending a header field to the decoded header list without altering the dynamic table. Intermediaries MUST use the same representation for encoding this header field.
 
-0 1 2 3 4 5 6 7+---+---+---+---+---+---+---+---+| 0 | 0 | 0 | 1 | Index (4+) |+---+---+-----------------------+| H | Value Length (7+) |+---+---------------------------+| Value String (Length octets) |+-------------------------------+
+```
+  0   1   2   3   4   5   6   7
++---+---+---+---+---+---+---+---+
+| 0 | 0 | 0 | 1 |  Index (4+)   |
++---+---+-----------------------+
+| H |     Value Length (7+)     |
++---+---------------------------+
+| Value String (Length octets)  |
++-------------------------------+
 
+```
 Figure 10: Literal Header Field Never Indexed — Indexed Name
 
-0 1 2 3 4 5 6 7+---+---+---+---+---+---+---+---+| 0 | 0 | 0 | 1 | 0 |+---+---+-----------------------+| H | Name Length (7+) |+---+---------------------------+| Name String (Length octets) |+---+---------------------------+| H | Value Length (7+) |+---+---------------------------+| Value String (Length octets) |+-------------------------------+
-
+```
+  0   1   2   3   4   5   6   7
++---+---+---+---+---+---+---+---+
+| 0 | 0 | 0 | 1 |       0       |
++---+---+-----------------------+
+| H |     Name Length (7+)      |
++---+---------------------------+
+|  Name String (Length octets)  |
++---+---------------------------+
+| H |     Value Length (7+)     |
++---+---------------------------+
+| Value String (Length octets)  |
++-------------------------------+
+```
 Figure 11: Literal Header Field Never Indexed — New Name
 A literal header field never-indexed representation starts with the '0001' 4-bit pattern.
 
@@ -541,27 +667,34 @@ This representation is intended for protecting header field values that are not 
 
 The encoding of the representation is identical to the literal header field without indexing (see[Section 6.2.2](https://http2.github.io/http2-spec/compression.html#literal.header.without.indexing)).
 
-[6.3 Dynamic Table Size Update](https://http2.github.io/http2-spec/compression.html#encoding.context.update)
+## [6.3 动态表 大小更新](https://http2.github.io/http2-spec/compression.html#encoding.context.update)
 
 A dynamic table size update signals a change to the size of the dynamic table.
 
-0 1 2 3 4 5 6 7+---+---+---+---+---+---+---+---+| 0 | 0 | 1 | Max size (5+) |+---+---------------------------+
+```
+  0   1   2   3   4   5   6   7
++---+---+---+---+---+---+---+---+
+| 0 | 0 | 1 |   Max size (5+)   |
++---+---------------------------+
+
+```
 
 Figure 12: Maximum Dynamic Table Size Change
+
 A dynamic table size update starts with the '001' 3-bit pattern, followed by the new maximum size, represented as an integer with a 5-bit prefix (see [Section 5.1](https://http2.github.io/http2-spec/compression.html#integer.representation)).
 
 The new maximum size MUST be lower than or equal to the limit determined by the protocol using HPACK. A value that exceeds this limit MUST be treated as a decoding error. In HTTP/2, this limit is the last value of the SETTINGS_HEADER_TABLE_SIZE parameter (see [Section 6.5.2](https://tools.ietf.org/html/rfc7540#section-6.5.2) of [[HTTP2]](https://http2.github.io/http2-spec/compression.html#HTTP2)) received from the decoder and acknowledged by the encoder (see [Section 6.5.3](https://tools.ietf.org/html/rfc7540#section-6.5.3) of [[HTTP2]](https://http2.github.io/http2-spec/compression.html#HTTP2)).
 
 Reducing the maximum size of the dynamic table can cause entries to be evicted (see [Section 4.3](https://http2.github.io/http2-spec/compression.html#entry.eviction)).
 
-[7.](https://http2.github.io/http2-spec/compression.html#rfc.section.7) [Security Considerations](https://http2.github.io/http2-spec/compression.html#Security)
+# [7. 安全注意事项](https://http2.github.io/http2-spec/compression.html#Security)
 
 This section describes potential areas of security concern with HPACK:
 
 * Use of compression as a length-based oracle for verifying guesses about secrets that are compressed into a shared compression context.
 * Denial of service resulting from exhausting processing or memory capacity at a decoder.
 
-[7.1 Probing Dynamic Table State](https://http2.github.io/http2-spec/compression.html#compression.based.attacks)
+## [7.1 探测动态表状态](https://http2.github.io/http2-spec/compression.html#compression.based.attacks)
 
 HPACK reduces the length of header field encodings by exploiting the redundancy inherent in protocols like HTTP. The ultimate goal of this is to reduce the amount of data that is required to send HTTP requests or responses.
 
@@ -573,7 +706,7 @@ This is possible even over the Transport Layer Security (TLS) protocol (see [[T
 
 Attacks like [CRIME](https://http2.github.io/http2-spec/compression.html#CRIME) [CRIME] demonstrated the existence of these general attacker capabilities. The specific attack exploited the fact that [DEFLATE](https://http2.github.io/http2-spec/compression.html#DEFLATE) [DEFLATE] removes redundancy based on prefix matching. This permitted the attacker to confirm guesses a character at a time, reducing an exponential-time attack into a linear-time attack.
 
-[7.1.1](https://http2.github.io/http2-spec/compression.html#rfc.section.7.1.1) Applicability to HPACK and HTTP
+### [7.1.1 HPACK 和 HTTP的适用性](https://http2.github.io/http2-spec/compression.html#rfc.section.7.1.1)
 
 HPACK mitigates but does not completely prevent attacks modeled on [CRIME](https://http2.github.io/http2-spec/compression.html#CRIME) [CRIME] by forcing a guess to match an entire header field value rather than individual characters. Attackers can only learn whether a guess is correct or not, so they are reduced to brute-force guesses for the header field values.
 
@@ -585,7 +718,7 @@ Having requests or responses from mutually distrustful entities occurs when an i
 
 Web browsers also need to assume that requests made on the same connection by different [web origins](https://http2.github.io/http2-spec/compression.html#ORIGIN) [ORIGIN] are made by mutually distrustful entities.
 
-[7.1.2](https://http2.github.io/http2-spec/compression.html#rfc.section.7.1.2) Mitigation
+### [7.1.2 减轻](https://http2.github.io/http2-spec/compression.html#rfc.section.7.1.2)
 
 Users of HTTP that require confidentiality for header fields can use values with entropy sufficient to make guessing infeasible. However, this is impractical as a general solution because it forces all users of HTTP to take steps to mitigate attacks. It would impose new constraints on how HTTP is used.
 
@@ -601,7 +734,7 @@ An encoder without good knowledge of the provenance of header fields might inste
 
 This response might be made inversely proportional to the length of the header field value. Marking a header field as not using the dynamic table anymore might occur for shorter values more quickly or with higher probability than for longer values.
 
-[7.1.3 Never-Indexed Literals](https://http2.github.io/http2-spec/compression.html#never.indexed.literals)
+### [7.1.3 从不索引的字面量](https://http2.github.io/http2-spec/compression.html#never.indexed.literals)
 
 Implementations can also choose to protect sensitive header fields by not compressing them and instead encoding their value as literals.
 
@@ -617,12 +750,12 @@ On the contrary, an encoder might prefer indexing values for header fields that 
 
 Note that these criteria for deciding to use a never-indexed literal representation will evolve over time as new attacks are discovered.
 
-[7.2](https://http2.github.io/http2-spec/compression.html#rfc.section.7.2) Static Huffman Encoding
+## [7.2 静态Huffman编码](https://http2.github.io/http2-spec/compression.html#rfc.section.7.2)
 
 There is no currently known attack against a static Huffman encoding. A study has shown that using a static Huffman encoding table created an information leakage; however, this same study concluded that an attacker could not take advantage of this information leakage to recover any meaningful amount of information (see [[PETAL]
 ](https://http2.github.io/http2-spec/compression.html#PETAL)).
 
-[7.3](https://http2.github.io/http2-spec/compression.html#rfc.section.7.3) Memory Consumption
+## [7.3 内存消耗](https://http2.github.io/http2-spec/compression.html#rfc.section.7.3)
 
 An attacker can try to cause an endpoint to exhaust its memory. HPACK is designed to limit both the peak and state amounts of memory allocated by an endpoint.
 
@@ -633,50 +766,61 @@ A decoder can limit the amount of state memory used by setting an appropriate va
 
 The amount of temporary memory consumed by an encoder or decoder can be limited by processing header fields sequentially. An implementation does not need to retain a complete list of header fields. Note, however, that it might be necessary for an application to retain a complete header list for other reasons; even though HPACK does not force this to occur, application constraints might make this necessary.
 
-[7.4](https://http2.github.io/http2-spec/compression.html#rfc.section.7.4) Implementation Limits
+## [7.4 实现的限制](https://http2.github.io/http2-spec/compression.html#rfc.section.7.4)
 
 An implementation of HPACK needs to ensure that large values for integers, long encoding for integers, or long string literals do not create security weaknesses.
 
 An implementation has to set a limit for the values it accepts for integers, as well as for the encoded length (see [Section 5.1](https://http2.github.io/http2-spec/compression.html#integer.representation)). In the same way, it has to set a limit to the length it accepts for string literals (see [Section 5.2](https://http2.github.io/http2-spec/compression.html#string.literal.representation)).
 
-[8. References](https://http2.github.io/http2-spec/compression.html#rfc.section.8) 
+# [8. 参考文献](https://http2.github.io/http2-spec/compression.html#rfc.section.8) 
 
-[8.1 Normative References](https://http2.github.io/http2-spec/compression.html#rfc.section.8.1) 
+## [8.1 规范性参考文献](https://http2.github.io/http2-spec/compression.html#rfc.section.8.1) 
 
-**[HTTP2]**
-Belshe, M., Peon, R., and M. Thomson, Ed., “[Hypertext Transfer Protocol Version 2 (HTTP/2)](https://tools.ietf.org/html/rfc7540)”, RFC 7540, [DOI 10.17487/RFC7540](http://dx.doi.org/10.17487/RFC7540), May 2015, <[http://www.rfc-editor.org/info/rfc7540](http://www.rfc-editor.org/info/rfc7540)>.
+```
+**[HTTP2]**     Belshe, M., Peon, R., and M. Thomson, Ed., “[Hypertext Transfer Protocol Version 2 
+                (HTTP/2)](https://tools.ietf.org/html/rfc7540)”, RFC 7540, [DOI 10.17487/RFC7540](http://dx.doi.org/10.17487/RFC7540), May 2015, <[http://www.rfc-
+                editor.org/info/rfc7540](http://www.rfc-editor.org/info/rfc7540)>.
 
-**[RFC2119]**
-Bradner, S., “[Key words for use in RFCs to Indicate Requirement Levels](https://tools.ietf.org/html/rfc2119)”, BCP 14, RFC 2119, [DOI 10.17487/RFC2119](http://dx.doi.org/10.17487/RFC2119), March 1997, <[http://www.rfc-editor.org/info/rfc2119](http://www.rfc-editor.org/info/rfc2119)>.
+**[RFC2119]**   Bradner, S., “[Key words for use in RFCs to Indicate Requirement Levels](https://tools.ietf.org/html/rfc2119)”, BCP 14, 
+                RFC 2119, [DOI 10.17487/RFC2119](http://dx.doi.org/10.17487/RFC2119), March 1997, <[http://www.rfc-
+                editor.org/info/rfc2119](http://www.rfc-editor.org/info/rfc2119)>.
 
-**[RFC7230]**
-Fielding, R., Ed. and J. Reschke, Ed., “[Hypertext Transfer Protocol (HTTP/1.1): Message Syntax and Routing](https://tools.ietf.org/html/rfc7230)”, RFC 7230, [DOI 10.17487/RFC7230](http://dx.doi.org/10.17487/RFC7230), June 2014, <[http://www.rfc-editor.org/info/rfc7230](http://www.rfc-editor.org/info/rfc7230)>.
+**[RFC7230]**   Fielding, R., Ed. and J. Reschke, Ed., “[Hypertext Transfer Protocol (HTTP/1.1): 
+                Message Syntax and Routing](https://tools.ietf.org/html/rfc7230)”, RFC 7230, [DOI 10.17487/RFC7230](http://dx.doi.org/10.17487/RFC7230), June 2014, 
+                <[http://www.rfc-editor.org/info/rfc7230](http://www.rfc-editor.org/info/rfc7230)>.
+```
 
-[8.2](https://http2.github.io/http2-spec/compression.html#rfc.section.8.2) Informative References
+## [8.2 参考资料](https://http2.github.io/http2-spec/compression.html#rfc.section.8.2)
+```
+**[CANONICAL]**  Schwartz, E. and B. Kallick, “[Generating a canonical prefix encoding](https://dl.acm.org/citation.cfm?id=363991)”, 
+                 Communications of the ACM, Volume 7 Issue 3, pp. 166-169, March 1964, 
+                 <[https://dl.acm.org/citation.cfm?id=363991](https://dl.acm.org/citation.cfm?id=363991)>.
 
-**[CANONICAL]**
-Schwartz, E. and B. Kallick, “[Generating a canonical prefix encoding](https://dl.acm.org/citation.cfm?id=363991)”, Communications of the ACM, Volume 7 Issue 3, pp. 166-169, March 1964, <[https://dl.acm.org/citation.cfm?id=363991](https://dl.acm.org/citation.cfm?id=363991)>.
+**[CRIME]**      Wikipedia, “[CRIME](http://en.wikipedia.org/w/index.php?
+                 title=CRIME&oldid=660948120)”, May 2015, <[http://en.wikipedia.org/w/index.php?title=CRIME&oldid=660948120](http://en.wikipedia.org/w/index.php?title=CRIME&oldid=660948120)>.
 
-**[CRIME]**
-Wikipedia, “[CRIME](http://en.wikipedia.org/w/index.php?title=CRIME&oldid=660948120)”, May 2015, <[http://en.wikipedia.org/w/index.php?title=CRIME&oldid=660948120](http://en.wikipedia.org/w/index.php?title=CRIME&oldid=660948120)>.
+**[DEFLATE]**    Deutsch, P., “[DEFLATE Compressed Data Format Specification version 1.3](https://tools.ietf.org/html/rfc1951)”, 
+                 RFC 1951, [DOI 10.17487/RFC1951](http://dx.doi.org/10.17487/RFC1951), May 1996, <[http://www.rfc-
+                 editor.org/info/rfc1951](http://www.rfc-editor.org/info/rfc1951)>.
 
-**[DEFLATE]**
-Deutsch, P., “[DEFLATE Compressed Data Format Specification version 1.3](https://tools.ietf.org/html/rfc1951)”, RFC 1951, [DOI 10.17487/RFC1951](http://dx.doi.org/10.17487/RFC1951), May 1996, <[http://www.rfc-editor.org/info/rfc1951](http://www.rfc-editor.org/info/rfc1951)>.
+**[HUFFMAN]**    Huffman, D., “[A Method for the Construction of Minimum-Redundancy Codes](http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=4051119)”, 
+                 Proceedings of the Institute of Radio Engineers, Volume 40, Number 9, pp. 1098-
+                 1101, September 1952, <[http://ieeexplore.ieee.org/xpl/articleDetails.jsp?
+                 arnumber=4051119](http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=4051119)>.
 
-**[HUFFMAN]**
-Huffman, D., “[A Method for the Construction of Minimum-Redundancy Codes](http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=4051119)”, Proceedings of the Institute of Radio Engineers, Volume 40, Number 9, pp. 1098-1101, September 1952, <[http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=4051119](http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=4051119)>.
+**[ORIGIN]**     Barth, A., “[The Web Origin Concept](https://tools.ietf.org/html/rfc6454)”, RFC 6454, [DOI 10.17487/RFC6454](http://dx.doi.org/10.17487/RFC6454), 
+                 December 2011, <[http://www.rfc-editor.org/info/rfc6454](http://www.rfc-editor.org/info/rfc6454)>.
 
-**[ORIGIN]**
-Barth, A., “[The Web Origin Concept](https://tools.ietf.org/html/rfc6454)”, RFC 6454, [DOI 10.17487/RFC6454](http://dx.doi.org/10.17487/RFC6454), December 2011, <[http://www.rfc-editor.org/info/rfc6454](http://www.rfc-editor.org/info/rfc6454)>.
+**[PETAL]**      Tan, J. and J. Nahata, “[PETAL: Preset Encoding Table Information Leakage](http://www.pdl.cmu.edu/PDL-FTP/associated/CMU-PDL-13-106.pdf)”, 
+                 April 2013, <[http://www.pdl.cmu.edu/PDL-FTP/associated/CMU-PDL-13-106.pdf](http://www.pdl.cmu.edu/PDL-FTP/associated/CMU-PDL-13-106.pdf)>.
 
-**[PETAL]**
-Tan, J. and J. Nahata, “[PETAL: Preset Encoding Table Information Leakage](http://www.pdl.cmu.edu/PDL-FTP/associated/CMU-PDL-13-106.pdf)”, April 2013, <[http://www.pdl.cmu.edu/PDL-FTP/associated/CMU-PDL-13-106.pdf](http://www.pdl.cmu.edu/PDL-FTP/associated/CMU-PDL-13-106.pdf)>.
+**[SPDY]**       Belshe, M. and R. Peon, “[SPDY Protocol](https://tools.ietf.org/html/draft-mbelshe-httpbis-spdy-00)”, Internet-Draft draft-mbelshe-httpbis-
+                 spdy-00 (work in progress), February 2012.
 
-**[SPDY]**
-Belshe, M. and R. Peon, “[SPDY Protocol](https://tools.ietf.org/html/draft-mbelshe-httpbis-spdy-00)”, Internet-Draft draft-mbelshe-httpbis-spdy-00 (work in progress), February 2012.
-
-**[TLS12]**
-Dierks, T. and E. Rescorla, “[The Transport Layer Security (TLS) Protocol Version 1.2](https://tools.ietf.org/html/rfc5246)”, RFC 5246, [DOI 10.17487/RFC5246](http://dx.doi.org/10.17487/RFC5246), August 2008, <[http://www.rfc-editor.org/info/rfc5246](http://www.rfc-editor.org/info/rfc5246)>.
+**[TLS12]**      Dierks, T. and E. Rescorla, “[The Transport Layer Security (TLS) Protocol Version 
+                 1.2](https://tools.ietf.org/html/rfc5246)”, RFC 5246, [DOI 10.17487/RFC5246](http://dx.doi.org/10.17487/RFC5246), August 2008, <[http://www.rfc-
+                 editor.org/info/rfc5246](http://www.rfc-editor.org/info/rfc5246)>.
+```
 
 # [A. 静态表定义](https://http2.github.io/http2-spec/compression.html#static.table.definition)
 
@@ -687,10 +831,6 @@ Dierks, T. and E. Rescorla, “[The Transport Layer Security (TLS) Protocol Vers
 
 [Table 1](https://http2.github.io/http2-spec/compression.html#static.table.entries) 列出了组成静态表的预定义的头部字段，并给出了每个条目的索引。
 
-
-
-Table 1: Static Table Entries
-
 |Index |Header Name	                |Header Value  |
 |------|----------------------------|--------------|
 |1	   |`:authority`	            |              |
@@ -699,61 +839,63 @@ Table 1: Static Table Entries
 |4	   |`:path`	                	|/             |
 |5	   |`:path`	                	|/index.html   |
 |6	   |`:scheme`	                |http          |
-|7	   |`:scheme`	            	|https
-|8	   |`:status`	            	|200
-|9	   |`:status`               	|204
-|10	   |`:status`	            	|206
-|11	   |`:status`	            	|304
-|12	   |`:status`	            	|400
-|13	   |`:status`	            	|404
-|14    |`:status`	            	|500
-|15	   |accept-charset	            |
-|16	   |accept-encoding	            |gzip, deflate
-|17	   |accept-language	            |
-|18	   |accept-ranges	            |
-|19	   |accept	                    |
-|20	   |access-control-allow-origin	|
-|21	   |age	
-|22	   |allow	
-|23	   |authorization	
-|24	   |cache-control	
-|25	   |content-disposition	
-|26	   |content-encoding	
-|27	   |content-language	
-|28	   |content-length	
-|29	   |content-location	
-|30	   |content-range	
-|31	   |content-type	
-|32	   |cookie	
-|33	   |date	
-|34	   |etag	
-|35	   |expect	
-|36	   |expires	
-|37	   |from	
-|38	   |host	
-|39	   |if-match	
-|40	   |if-modified-since	
-|41	   |if-none-match	
-|42	   |if-range	
-|43	   |if-unmodified-since	
-|44	   |last-modified	
-|45	   |link	
-|46	   |location	
-|47	   |max-forwards	
-|48	   |proxy-authenticate	
-|49	   |proxy-authorization	
-|50	   |range	
-|51	   |referer	
-|52	   |refresh	
-|53	   |retry-after	
-|54	   |server	
-|55	   |set-cookie	
-|56	   |strict-transport-security	
-|57	   |transfer-encoding	
-|58	   |user-agent	
-|59	   |vary	
-|60	   |via	
-|61	   |www-authenticate	
+|7	   |`:scheme`	            	|https         |
+|8	   |`:status`	            	|200           |
+|9	   |`:status`               	|204           |
+|10	   |`:status`	            	|206           |
+|11	   |`:status`	            	|304           |
+|12	   |`:status`	            	|400           |
+|13	   |`:status`	            	|404           |
+|14    |`:status`	            	|500           |
+|15	   |accept-charset	            |              |
+|16	   |accept-encoding	            |gzip, deflate |
+|17	   |accept-language	            |              |
+|18	   |accept-ranges	            |              |
+|19	   |accept	                    |              |
+|20	   |access-control-allow-origin	|              |
+|21	   |age	                        |              |
+|22	   |allow	                    |              |
+|23	   |authorization	            |              |
+|24	   |cache-control	            |              |
+|25	   |content-disposition	        |              |
+|26	   |content-encoding	        |              |
+|27	   |content-language	        |              |
+|28	   |content-length	            |              |
+|29	   |content-location	        |              |
+|30	   |content-range	            |              |
+|31	   |content-type	            |              |
+|32	   |cookie	                    |              |
+|33	   |date	                    |              |
+|34	   |etag	                    |              |
+|35	   |expect	                    |              |
+|36	   |expires	                    |              |
+|37	   |from	                    |              |
+|38	   |host	                    |              |
+|39	   |if-match	                |              |
+|40	   |if-modified-since	        |              |
+|41	   |if-none-match	            |              |
+|42	   |if-range	                |              |
+|43	   |if-unmodified-since	        |              |
+|44	   |last-modified	            |              |
+|45	   |link	                    |              |
+|46	   |location	                |              |
+|47	   |max-forwards	            |              |
+|48	   |proxy-authenticate	        |              |
+|49	   |proxy-authorization	        |              |
+|50	   |range	                    |              |
+|51	   |referer	                    |              |
+|52	   |refresh	                    |              |
+|53	   |retry-after	                |              |
+|54	   |server	                    |              |
+|55	   |set-cookie	                |              |
+|56	   |strict-transport-security	|              |
+|57	   |transfer-encoding	        |              |
+|58	   |user-agent	                |              |
+|59	   |vary	                    |              |
+|60	   |via	                        |              |
+|61	   |www-authenticate	        |              |
+
+Table 1: 静态表条目
 
 # [B. Huffman码](https://http2.github.io/http2-spec/compression.html#huffman.code)
 
@@ -1095,9 +1237,9 @@ I = 1337 - (25 - 1) = 1306.
 
 本节显示了几个独立的表示的例子。
 
-### [C.2.1 以索引表示字面值头部字段](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.1)
+### [C.2.1 有索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.1)
 
-The header field representation uses a literal name and a literal value. The header field is added to the dynamic table.
+头部字段表示使用一个字面量名字和一个字面量值。头部字段被添加进动态表。
 
 要编码的头部列表：
 
@@ -1137,9 +1279,9 @@ custom-key: custom-header
 custom-key: custom-header
 ```
 
-[C.2.2 Literal Header Field without Indexing](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.2)
+### [C.2.2 无索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.2)
 
-The header field representation uses an indexed name and a literal value. The header field is not added to the dynamic table.
+头部字段表示使用一个索引的名字和一个字面量值。头部字段不加进动态表。
 
 要编码的头部列表：
 
@@ -1172,9 +1314,9 @@ The header field representation uses an indexed name and a literal value. The he
 :path: /sample/path
 ```
 
-[C.2.3 Literal Header Field Never Indexed](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.3)
+### [C.2.3 从不索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.3)
 
-The header field representation uses a literal name and a literal value. The header field is not added to the dynamic table and must use the same representation if re-encoded by an intermediary.
+头部字段表示使用一个字面量名字和一个字面量值。头部字段不加进动态表，而且如果由一个中介重编码的话必须使用相同的表示。
 
 要编码的头部列表：
 
@@ -1208,9 +1350,9 @@ password: secre
 password: secret
 ```
 
-[C.2.4 Indexed Header Field](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.4)
+### [C.2.4 索引的头部字段](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.4)
 
-The header field representation uses an indexed header field from the static table.
+头部字段表示使用静态表中一个索引的头部字段。
 
 要编码的头部列表：
 
