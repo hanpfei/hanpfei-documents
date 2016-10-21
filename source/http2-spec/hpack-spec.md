@@ -342,82 +342,84 @@ HPACK使用了两个表来将头部字段与索引关联起来。静态表 (见 
 
 ## [3.1 头部块处理](https://http2.github.io/http2-spec/compression.html#header.block.processing)
 
-A decoder processes a header block sequentially to reconstruct the original header list.
+解码器顺序地处理首部块来重建原始的头部列表。
 
-A header block is the concatenation of header field representations. The different possible header field representations are described in [Section 6](https://http2.github.io/http2-spec/compression.html#detailed.format).
+头部块是头部字段表示的级联。不同的可能的头部字段表示在 [Section 6](https://http2.github.io/http2-spec/compression.html#detailed.format) 描述。
 
-Once a header field is decoded and added to the reconstructed header list, the header field cannot be removed. A header field added to the header list can be safely passed to the application.
+头部字段被解码并添加进经过重建的头部列表后，头部字段不能被移除。被添加进头部列表的头部字段可以被安全的传递给应用程序。
 
-By passing the resulting header fields to the application, a decoder can be implemented with minimal transitory memory commitment in addition to the memory required for the dynamic table.
+通过将所得到的头部字段传递给应用，除了动态表所需的内存外，可以利用最小的临时存储器承诺来实现解码器。
 
 ## [3.2 头部字段表示处理](https://http2.github.io/http2-spec/compression.html#header.representation.processing)
 
-The processing of a header block to obtain a header list is defined in this section. To ensure that the decoding will successfully produce a header list, a decoder MUST obey the following rules.
+在本节中定义了对报头块进行处理以获得报头列表。为了确保解码将成功地产生报头列表，解码器 **必须(MUST)** 遵守以下规则。
 
-All the header field representations contained in a header block are processed in the order in which they appear, as specified below. Details on the formatting of the various header field representations and some additional processing instructions are found in [Section 6](https://http2.github.io/http2-spec/compression.html#detailed.format).
+所有的头部字段表示包含在一个头部块中则按照它们出现的顺序处理，如下所述。关于不同的头部字段表示和一些附加处理指令的格式化的细节请参见 [Section 6](https://http2.github.io/http2-spec/compression.html#detailed.format)。
 
-An *indexed representation* entails the following actions:
-The header field corresponding to the referenced entry in either the static table or dynamic table is appended to the decoded header list.
 
-A *literal representation* that is *not added* to the dynamic table entails the following action:
-The header field is appended to the decoded header list.
+*索引表示*需要执行以下操作：
 
-A *literal representation* that is *added* to the dynamic table entails the following actions:
-The header field is appended to the decoded header list.
-The header field is inserted at the beginning of the dynamic table. This insertion could result in the eviction of previous entries in the dynamic table (see [Section 4.4](https://http2.github.io/http2-spec/compression.html#entry.addition)).
+* 与静态表或动态表中的被引用条目相对应的头部字段被附加到解码的头部列表。
+
+*不添加*进动态表的*字面量表示*需要以下操作：
+
+* 头部字段被附加到解码的头部列表。
+
+*添加*进动态表的*字面量表示*需要以下操作：
+
+* 头部字段被附加到解码的头部列表。
+* 头部字段被插入动态表的起始位置。这个插入可能导致动态表中之前的条目被逐出 (见 [Section 4.4](https://http2.github.io/http2-spec/compression.html#entry.addition))。
 
 # [4. 动态表管理](https://http2.github.io/http2-spec/compression.html#dynamic.table.management)
 
-To limit the memory requirements on the decoder side, the dynamic table is constrained in size.
+为了限制解码器侧的存储器要求，动态表在大小上受到约束。
 
 ## [4.1 计算表大小](https://http2.github.io/http2-spec/compression.html#calculating.table.size)
 
-The size of the dynamic table is the sum of the size of its entries.
+动态表的大小是它的条目大小的总和。
 
-The size of an entry is the sum of its name's length in octets (as defined in [Section 5.2](https://http2.github.io/http2-spec/compression.html#string.literal.representation)), its value's length in octets, and 32.
+条目的大小是它的名字的字节长度 ( 如 [Section 5.2](https://http2.github.io/http2-spec/compression.html#string.literal.representation) 所述) 及它的值的字节长度的总和，外加32。
 
-The size of an entry is calculated using the length of its name and value without any Huffman encoding applied.
+条目的大小使用未应用Huffman编码条件下的它的名字和值的长度来计算。
 
-**Note:** The additional 32 octets account for an estimated overhead associated with an entry. For example, an entry structure using two 64-bit pointers to reference the name and the value of the entry and two 64-bit integers for counting the number of references to the name and value would have 32 octets of overhead.
+**注意：**额外的32字节是考虑到与一个条目关联的预估开销。比如，条目结构使用两个64位的指针引用条目的名字和值，及两个64位整数来技术引用了名字和值的引用数目，这将有32字节的开销。
 
 ## [4.2 最大表大小](https://http2.github.io/http2-spec/compression.html#maximum.table.size)
 
-Protocols that use HPACK determine the maximum size that the encoder is permitted to use for the dynamic table. In HTTP/2, this value is determined by the SETTINGS_HEADER_TABLE_SIZE setting (see [Section 6.5.2](https://tools.ietf.org/html/rfc7540#section-6.5.2) of [[HTTP2]
-](https://http2.github.io/http2-spec/compression.html#HTTP2)).
+使用HPACK的协议决定编码器允许为动态表使用的最大大小。在HTTP/2中，这个值由SETTINGS_HEADER_TABLE_SIZE 设置项决定 (参见 [[HTTP2]](https://http2.github.io/http2-spec/compression.html#HTTP2) 的 [Section 6.5.2](https://tools.ietf.org/html/rfc7540#section-6.5.2))。
 
-An encoder can choose to use less capacity than this maximum size (see [Section 6.3](https://http2.github.io/http2-spec/compression.html#encoding.context.update)), but the chosen size MUST stay lower than or equal to the maximum set by the protocol.
+编码器可以选择使用比此最大大小(见 [Section 6.3](https://http2.github.io/http2-spec/compression.html#encoding.context.update))更小的容量，但所选择的大小 **必须(MUST)** 小于等于协议设置的最大大小。
 
-A change in the maximum size of the dynamic table is signaled via a dynamic table size update (see[Section 6.3](https://http2.github.io/http2-spec/compression.html#encoding.context.update)). This dynamic table size update MUST occur at the beginning of the first header block following the change to the dynamic table size. In HTTP/2, this follows a settings acknowledgment (see [Section 6.5.3](https://tools.ietf.org/html/rfc7540#section-6.5.3) of [[HTTP2]
-](https://http2.github.io/http2-spec/compression.html#HTTP2)).
+动态表最大大小的修改通过动态表大小更新(见 [Section 6.3](https://http2.github.io/http2-spec/compression.html#encoding.context.update))来通知。这个动态表大小更新 **必须(MUST)** 发生在利用了动态表大小的改变的第一个头部块的起始处。在HTTP/2中，这在一个设置项确认(见 [[HTTP2]
+](https://http2.github.io/http2-spec/compression.html#HTTP2)的 [Section 6.5.3](https://tools.ietf.org/html/rfc7540#section-6.5.3))之后。
 
-Multiple updates to the maximum table size can occur between the transmission of two header blocks. In the case that this size is changed more than once in this interval, the smallest maximum table size that occurs in that interval MUST be signaled in a dynamic table size update. The final maximum size is always signaled, resulting in at most two dynamic table size updates. This ensures that the decoder is able to perform eviction based on reductions in dynamic table size (see[Section 4.3](https://http2.github.io/http2-spec/compression.html#entry.eviction)).
+对最大表大小的多次更新可能发生两个头部块传输之间。对于在这个间隔内大小改变超过一次的情况，在那个间隔内发生的最小的最大表大小 **必须(MUST)** 在一个动态表大小中通知。最终的最大大小总是用信号通知的，导致至多两个动态表大小更新。这确保解码器能够基于动态表大小的减少来执行逐出(见 [Section 4.3](https://http2.github.io/http2-spec/compression.html#entry.eviction))。
 
-This mechanism can be used to completely clear entries from the dynamic table by setting a maximum size of 0, which can subsequently be restored.
+此机制可用于通过将最大大小设置为0从而完全清除动态表中的条目，随后可以恢复这些条目。
 
 ## [4.3 动态表大小改变时的条目逐出](https://http2.github.io/http2-spec/compression.html#entry.eviction)
 
-Whenever the maximum size for the dynamic table is reduced, entries are evicted from the end of the dynamic table until the size of the dynamic table is less than or equal to the maximum size.
+无论何时动态表最大大小被减小，条目被从动态表的结尾处逐出，直到动态表的大小小于或等于最大大小。
 
 ## [4.4 添加新条目时的条目逐出](https://http2.github.io/http2-spec/compression.html#entry.addition)
 
-Before a new entry is added to the dynamic table, entries are evicted from the end of the dynamic table until the size of the dynamic table is less than or equal to (maximum size - new entry size) or until the table is empty.
+在把新的条目添加到动态表之前，需要先把条目从动态表的结尾处逐出，直到动态表的大小小于或等于(最大大小 - 新的条目大小)，或直到表为空。
 
-If the size of the new entry is less than or equal to the maximum size, that entry is added to the table. It is not an error to attempt to add an entry that is larger than the maximum size; an attempt to add an entry larger than the maximum size causes the table to be emptied of all existing entries and results in an empty table.
+如果新的条目小于等于最大大小，则将那个条目加进表里。尝试添加一个大于最大大小的条目不是一个错误；尝试添加一个大于最大大小的条目导致所有已有条目被清空，并产生一个空表。
 
-A new entry can reference the name of an entry in the dynamic table that will be evicted when adding this new entry into the dynamic table. Implementations are cautioned to avoid deleting the referenced name if the referenced entry is evicted from the dynamic table prior to inserting the new entry.
+当把新条目加进动态表时，该新条目可以引用动态表中将被逐出的条目的名字。实现要注意，如果引用的条目在新条目插入之前被从动态表逐出了，则要避免删除引用的名字。
 
 # [5. 原始类型表示](https://http2.github.io/http2-spec/compression.html#low-level.representation)
 
-HPACK encoding uses two primitive types: unsigned variable-length integers and strings of octets.
+HPACK编码使用了两种原始数据类型：无符号的变量长度整数和字节串。
 
 ## [5.1 整型表示](https://http2.github.io/http2-spec/compression.html#integer.representation)
 
-Integers are used to represent name indexes, header field indexes, or string lengths. An integer representation can start anywhere within an octet. To allow for optimized processing, an integer representation always finishes at the end of an octet.
+整数用于表示名字索引，头部字段索引或字符串长度。整数的表示可在字节内的任何位置开始。为了允许优化的处理，整数的表示总是在字节的结尾处结束。
 
-An integer is represented in two parts: a prefix that fills the current octet and an optional list of octets that are used if the integer value does not fit within the prefix. The number of bits of the prefix (called N) is a parameter of the integer representation.
+证书表示为两个部分：填充了当前字节的前缀，及如果整数值不适合在前缀内表示时的一个可选的字节列表。前缀的位数 (称为 N) 是整数表示的一个参数。
 
-If the integer value is small enough, i.e., strictly less than 2N
--1, it is encoded within the N-bit prefix.
+如果整数值足够小，比如，严格小于2^N-1，则把它编码进N位前缀。
 
 ```
   0   1   2   3   4   5   6   7
@@ -425,10 +427,9 @@ If the integer value is small enough, i.e., strictly less than 2N
 | ? | ? | ? |       Value       |
 +---+---+---+-------------------+
 ```
-Figure 2: Integer Value Encoded within the Prefix (Shown for N = 5)
+图 2：在前缀内编码整数值 (显示为 N = 5)
 
-Otherwise, all the bits of the prefix are set to 1, and the value, decreased by 2N
--1, is encoded using a list of one or more octets. The most significant bit of each octet is used as a continuation flag: its value is set to 1 except for the last octet in the list. The remaining bits of the octets are used to encode the decreased value.
+否则前缀的所有位被设为1，而值被减去2^N-1，然后使用一个或多个字节的列表编码。每个字节的最高有效位被用做继续标志：除了列表的最后一个字节外，它的值都被设置为1。字节剩余的位被用于编码减小过的值。
 
 ```
   0   1   2   3   4   5   6   7
@@ -442,14 +443,13 @@ Otherwise, all the bits of the prefix are set to 1, and the value, decreased by 
 | 0 |    Value-(2^N-1) MSB      |
 +---+---------------------------+
 ```
-Figure 3: Integer Value Encoded after the Prefix (Shown for N = 5)
+图 3：前缀之后的整数值编码 (显示为 N = 5)
 
-Decoding the integer value from the list of octets starts by reversing the order of the octets in the list. Then, for each octet, its most significant bit is removed. The remaining bits of the octets are concatenated, and the resulting value is increased by 2N - 1 to obtain the integer value.
+要从字节列表中解码整数值，需要先将列表中的字节的顺序反转过来。然后，移除每个字节的最高有效位。连接字节剩余的位，结果值再加2^N-1获得整数值。
 
-The prefix size, N, is always between 1 and 8 bits. An integer starting at an octet boundary will have an 8-bit prefix.
+前缀大小，N，总是在1到8位之间。从字节的边界开始的整数值的前缀是8位的。
 
-Pseudocode to represent an integer I is as follows:
-
+表示一个整数I的伪代码如下：
 ```
 if I < 2^N - 1, encode I on N bits
 else
@@ -460,10 +460,7 @@ else
          I = I / 128
     encode I on 8 bits
 ```
-
-Pseudocode to decode an integer I is as follows:
-
-
+解码一个整数I的伪代码如如下：
 ```
 decode I from the next N bits
 if I < 2^N - 1, return I
@@ -476,15 +473,13 @@ else
     while B & 128 == 128
     return I
 ```
+说明整数的编码的示例可在[Appendix C.1](https://http2.github.io/http2-spec/compression.html#integer.representation.examples)找到。
 
-Examples illustrating the encoding of integers are available in [Appendix C.1](https://http2.github.io/http2-spec/compression.html#integer.representation.examples).
-
-This integer representation allows for values of indefinite size. It is also possible for an encoder to send a large number of zero values, which can waste octets and could be used to overflow integer values. Integer encodings that exceed implementation limits — in value or octet length — MUST be treated as decoding errors. Different limits can be set for each of the different uses of integers, based on implementation constraints.
+这种整数表示允许无限大小的值。编码器发送一个值为0的大数字也是可能的，这可以浪费字节，并且可被用于溢出整数值。超出实现限制的整数编码——值或字节长度—— **必须(MUST)** 被当作解码错误。可以基于实现的限制为每个不同的整数的使用设置不同的限制。
 
 ## [5.2 字符串字面量表示](https://http2.github.io/http2-spec/compression.html#string.literal.representation)
 
-Header field names and header field values can be represented as string literals. A string literal is encoded as a sequence of octets, either by directly encoding the string literal's octets or by using a Huffman code (see [[HUFFMAN]
-](https://http2.github.io/http2-spec/compression.html#HUFFMAN)).
+头部字段名和头部字段值可由字符串字面量表示。字符串字面量被编码为字节的序列，通过直接编码字符串字面量的字节或使用Huffman码。(见 [[HUFFMAN]](https://http2.github.io/http2-spec/compression.html#HUFFMAN)).
 
 ```
   0   1   2   3   4   5   6   7
@@ -494,31 +489,31 @@ Header field names and header field values can be represented as string literals
 |  String Data (Length octets)  |
 +-------------------------------+
 ```
-Figure 4: String Literal Representation
+图 4：字符串字面量表示
 
-A string literal representation contains the following fields:
-H:
-A one-bit flag, H, indicating whether or not the octets of the string are Huffman encoded.
-String Length:
-The number of octets used to encode the string literal, encoded as an integer with a 7-bit prefix (see [Section 5.1](https://http2.github.io/http2-spec/compression.html#integer.representation)).
-String Data:
-The encoded data of the string literal. If H is '0', then the encoded data is the raw octets of the string literal. If H is '1', then the encoded data is the Huffman encoding of the string literal.
+字符串字面量表示包含了如下的字段：
 
-String literals that use Huffman encoding are encoded with the Huffman code defined in [Appendix B](https://http2.github.io/http2-spec/compression.html#huffman.code)(see examples for requests in [Appendix C.4](https://http2.github.io/http2-spec/compression.html#request.examples.with.huffman.coding) and for responses in [Appendix C.6](https://http2.github.io/http2-spec/compression.html#response.examples.with.huffman.coding)). The encoded data is the bitwise concatenation of the codes corresponding to each octet of the string literal.
+H: 一位的标记，H，指示字符串的字节是否是Huffman编码的。
 
-As the Huffman-encoded data doesn't always end at an octet boundary, some padding is inserted after it, up to the next octet boundary. To prevent this padding from being misinterpreted as part of the string literal, the most significant bits of the code corresponding to the EOS (end-of-string) symbol are used.
+字符串长度：用于编码字符串字面量的字节的数目，用一个7位前缀编码的整数(见 [Section 5.1](https://http2.github.io/http2-spec/compression.html#integer.representation)).。
 
-Upon decoding, an incomplete code at the end of the encoded data is to be considered as padding and discarded. A padding strictly longer than 7 bits MUST be treated as a decoding error. A padding not corresponding to the most significant bits of the code for the EOS symbol MUST be treated as a decoding error. A Huffman-encoded string literal containing the EOS symbol MUST be treated as a decoding error.
+字符串数据：编码的字符串字面量的数据。如果H是'0'，则编码的数据是字符串字面量的原始字节。如果H是'1'，则编码的数据是字符串字面量的Huffman编码。
+
+使用Huffman编码的字符串字面量使用 [Appendix B](https://http2.github.io/http2-spec/compression.html#huffman.code) 中定义的Huffman码编码 ( 参见 [Appendix C.4](https://http2.github.io/http2-spec/compression.html#request.examples.with.huffman.coding) 中请求的例子和[Appendix C.6](https://http2.github.io/http2-spec/compression.html#response.examples.with.huffman.coding) 中响应的例子)。编码的数据是字符串字面量每个字节对应的代码的位的连接。
+
+由于Huffman编码的数据不总是在字节边界结束，而在它的后面插入一些填充，直到下个字节的边界。为了防止这种填充被错误地解释为字符串字面量的一部分，而使用了与 EOS (end-of-string) 符号相对应的代码的最高有效位。
+
+一旦解码完成，编码数据的结尾处不完整的代码被认为是填充并被丢弃。严格地长于7位的填充 **必须(MUST)** 被当作一个解码错误。包含EOS符号的Huffman编码的字符串字面量 **必须(MUST)** 被当作一个解码错误
 
 # [6. 二进制格式](https://http2.github.io/http2-spec/compression.html#detailed.format)
 
-This section describes the detailed format of each of the different header field representations and the dynamic table size update instruction.
+本节描述了每个不同的头部字段表示和动态表大小更新指令的详细格式。
 
 ## [6.1 索引头部字段表示](https://http2.github.io/http2-spec/compression.html#indexed.header.representation)
 
-An indexed header field representation identifies an entry in either the static table or the dynamic table (see [Section 2.3](https://http2.github.io/http2-spec/compression.html#indexing.tables)).
+索引的头部字段表示标识了静态表或动态表(见 [Section 2.3](https://http2.github.io/http2-spec/compression.html#indexing.tables))中的一个条目。
 
-An indexed header field representation causes a header field to be added to the decoded header list, as described in [Section 3.2](https://http2.github.io/http2-spec/compression.html#header.representation.processing).
+索引的头部字段表示使得头部字段被添加到头部列表中，如 [Section 3.2](https://http2.github.io/http2-spec/compression.html#header.representation.processing) 所述。
 
 ```
   0   1   2   3   4   5   6   7
@@ -526,19 +521,19 @@ An indexed header field representation causes a header field to be added to the 
 | 1 |        Index (7+)         |
 +---+---------------------------+
 ```
-Figure 5: Indexed Header Field
+图 5: 索引的头部字段
 
-An indexed header field starts with the '1' 1-bit pattern, followed by the index of the matching header field, represented as an integer with a 7-bit prefix (see [Section 5.1](https://http2.github.io/http2-spec/compression.html#integer.representation)).
+索引的头部字段以'1' 1位模式开始，后面是匹配的头部字段的索引，由一个7位前缀的整数(见 [Section 5.1](https://http2.github.io/http2-spec/compression.html#integer.representation))表示。
 
-The index value of 0 is not used. It MUST be treated as a decoding error if found in an indexed header field representation.
+不使用索引值0。如果在一个索引头部字段表示中发现则 **必须(MUST)** 将它当作一个解码错误。
 
-## [6.2 字面量头部字段表示](https://http2.github.io/http2-spec/compression.html#literal.header.representation)
+/## [6.2 字面量头部字段表示](https://http2.github.io/http2-spec/compression.html#literal.header.representation)
 
-A literal header field representation contains a literal header field value. Header field names are provided either as a literal or by reference to an existing table entry, either from the static table or the dynamic table (see [Section 2.3](https://http2.github.io/http2-spec/compression.html#indexing.tables)).
+字面量头部字段表示包含一个字面量头部字段值。头部字段名由一个字面量或对一个已有表条目，静态表中的或动态表中的 (见 [Section 2.3](https://http2.github.io/http2-spec/compression.html#indexing.tables))，的引用表示。
 
-This specification defines three forms of literal header field representations: with indexing, without indexing, and never indexed.
+本规范定义了三种字面量头部字段表示格式：索引的，无索引的，和从不索引的。
 
-### [6.2.1 增量索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.with.incremental.indexing)
+/### [6.2.1 增量索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.with.incremental.indexing)
 
 A literal header field with incremental indexing representation results in appending a header field to the decoded header list and inserting it as a new entry into the dynamic table.
 
@@ -579,7 +574,7 @@ Otherwise, the header field name is represented as a string literal (see [Secti
 
 Either form of header field name representation is followed by the header field value represented as a string literal (see [Section 5.2](https://http2.github.io/http2-spec/compression.html#string.literal.representation)).
 
-### [6.2.2 无索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.without.indexing)
+/### [6.2.2 无索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.without.indexing)
 
 A literal header field without indexing representation results in appending a header field to the decoded header list without altering the dynamic table.
 
@@ -619,7 +614,7 @@ Otherwise, the header field name is represented as a string literal (see [Secti
 
 Either form of header field name representation is followed by the header field value represented as a string literal (see [Section 5.2](https://http2.github.io/http2-spec/compression.html#string.literal.representation)).
 
-### [6.2.3 从不索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.never.indexed)
+/### [6.2.3 从不索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.never.indexed)
 
 A literal header field never-indexed representation results in appending a header field to the decoded header list without altering the dynamic table. Intermediaries MUST use the same representation for encoding this header field.
 
@@ -659,7 +654,7 @@ This representation is intended for protecting header field values that are not 
 
 The encoding of the representation is identical to the literal header field without indexing (see[Section 6.2.2](https://http2.github.io/http2-spec/compression.html#literal.header.without.indexing)).
 
-## [6.3 动态表 大小更新](https://http2.github.io/http2-spec/compression.html#encoding.context.update)
+/## [6.3 动态表 大小更新](https://http2.github.io/http2-spec/compression.html#encoding.context.update)
 
 A dynamic table size update signals a change to the size of the dynamic table.
 
