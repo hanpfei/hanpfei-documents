@@ -216,104 +216,97 @@ This document is subject to BCP 78 and the IETF Trust's Legal Provisions Relatin
 
 # [1. 简介](https://http2.github.io/http2-spec/compression.html#rfc.section.1)
 
-In HTTP/1.1 (see [[RFC7230]
-](https://http2.github.io/http2-spec/compression.html#RFC7230)), header fields are not compressed. As web pages have grown to require dozens to hundreds of requests, the redundant header fields in these requests unnecessarily consume bandwidth, measurably increasing latency.
+在 HTTTP/1.1中 (见 [[RFC7230]](https://http2.github.io/http2-spec/compression.html#RFC7230))，头部字段是不压缩的。随着web页面逐步成长到需要发出几十甚至几百个请求，这些请求中冗余的头部字段不必要地消耗了带宽，及可测量的延迟增加。
 
-[SPDY](https://http2.github.io/http2-spec/compression.html#SPDY) [SPDY] initially addressed this redundancy by compressing header fields using the [DEFLATE](https://http2.github.io/http2-spec/compression.html#DEFLATE)[DEFLATE] format, which proved very effective at efficiently representing the redundant header fields. However, that approach exposed a security risk as demonstrated by the CRIME (Compression Ratio Info-leak Made Easy) attack (see [[CRIME]](https://http2.github.io/http2-spec/compression.html#CRIME)).
+[SPDY](https://http2.github.io/http2-spec/compression.html#SPDY) [SPDY] 最初是通过使用 [DEFLATE](https://http2.github.io/http2-spec/compression.html#DEFLATE) [DEFLATE] 格式压缩头部字段来解决这种冗余的，这种方法被证明在有效地表示冗余的头部字段方面是非常高效的。然而，那种方法暴露了一个安全隐患，如在 CRIME (Compression Ratio Info-leak Made Easy) 攻击 (见 [[CRIME]](https://http2.github.io/http2-spec/compression.html#CRIME)) 中所演示的那样。
 
-This specification defines HPACK, a new compressor that eliminates redundant header fields, limits vulnerability to known security attacks, and has a bounded memory requirement for use in constrained environments. Potential security concerns for HPACK are described in [Section 7](https://http2.github.io/http2-spec/compression.html#Security).
+本规范定义了HPACK，一个新的压缩器，它减少冗余的头部字段，限制了已知攻击的危害性，对于在受限的环境中使用而有着有限的内存需求。HPACK潜在的安全性问题在 [Section 7](https://http2.github.io/http2-spec/compression.html#Security) 描述。
 
-The HPACK format is intentionally simple and inflexible. Both characteristics reduce the risk of interoperability or security issues due to implementation error. No extensibility mechanisms are defined; changes to the format are only possible by defining a complete replacement.
+HPACK格式有意被设计的简单而不那么灵活。这两个特性降低了由于实现错误而导致的互操作性和安全性问题的风险。没有定义可扩展性机制；只有通过定义一个完整的替代品才能改变格式。
 
 ## [1.1 概述](https://http2.github.io/http2-spec/compression.html#rfc.section.1.1)
 
-The format defined in this specification treats a list of header fields as an ordered collection of name-value pairs that can include duplicate pairs. Names and values are considered to be opaque sequences of octets, and the order of header fields is preserved after being compressed and decompressed.
+本规范中定义的格式将头部字段列表看作一个有序的且可包含重复项的名-值对的集合。名字和值被认为是不透明的字节序列，头部字段的顺序在压缩和解压后被保留。
 
-Encoding is informed by header field tables that map header fields to indexed values. These header field tables can be incrementally updated as new header fields are encoded or decoded.
+编码通过将头部字段映射到索引值的头部字段表来获知。这些头部字段表可以随着新头部字段的编码和解码而增量地更新。
 
-In the encoded form, a header field is represented either literally or as a reference to a header field in one of the header field tables. Therefore, a list of header fields can be encoded using a mixture of references and literal values.
+在编码后的形式中，头部字段由字面量或到一个头部字段表的一个头部字段的引用来表示。然而，头部字段列表可以使用引用和字面量值的混合来编码。
 
-Literal values are either encoded directly or use a static Huffman code.
+字面量值直接编码或使用一个静态Huffman码。
 
-The encoder is responsible for deciding which header fields to insert as new entries in the header field tables. The decoder executes the modifications to the header field tables prescribed by the encoder, reconstructing the list of header fields in the process. This enables decoders to remain simple and interoperate with a wide variety of encoders.
+编码器负责决定将哪个头部字段作为新条目插入头部字段表。解码器执行由编码器规定的对头部字段表的修改，及重建头部字段列表的过程。这使解码器保持简单，并与各种编码器的互操作。
 
-Examples illustrating the use of these different mechanisms to represent header fields are available in [Appendix C](https://http2.github.io/http2-spec/compression.html#examples).
+[附录 C](https://http2.github.io/http2-spec/compression.html#examples) 中提供了说明了使用这些不同机制表示头字段的示例。
 
 ## [1.2 约定](https://http2.github.io/http2-spec/compression.html#conventions)
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://http2.github.io/http2-spec/compression.html#RFC2119) [RFC2119] .
+本文档中的关键词 "MUST"，"MUST NOT"，"REQUIRED"，"SHALL"，"SHALL NOT"，"SHOULD"，"SHOULD NOT"，"RECOMMENDED"，"MAY"，和 "OPTIONAL"的解释如[[RFC2119](https://tools.ietf.org/html/rfc2119)]所述。
 
-All numeric values are in network byte order. Values are unsigned unless otherwise indicated. Literal values are provided in decimal or hexadecimal as appropriate.
+所有的数值以网络字节序。除非另有说明，否则值为无符号的。字面值以十进制或十六进制的形式提供。
 
 ## [1.3 术语](https://http2.github.io/http2-spec/compression.html#encoding.concepts)
 
-This specification uses the following terms:
+本规范使用了如下的术语：
 
-Header Field:
-A name-value pair. Both the name and value are treated as opaque sequences of octets.
+头部字段：一个名-值对。名字和值都被视为不透明的字节序列。
 
-Dynamic Table:
-The dynamic table (see [Section 2.3.2](https://http2.github.io/http2-spec/compression.html#dynamic.table)) is a table that associates stored header fields with index values. This table is dynamic and specific to an encoding or decoding context.
+动态表：动态表 (见 [Section 2.3.2](https://http2.github.io/http2-spec/compression.html#dynamic.table)) 是将存储的头部字段和索引值关联起来的表。这个表是动态的，且特定于编码和解码上下文。
 
-Static Table:
-The static table (see [Section 2.3.1](https://http2.github.io/http2-spec/compression.html#static.table)) is a table that statically associates header fields that occur frequently with index values. This table is ordered, read-only, always accessible, and it may be shared amongst all encoding or decoding contexts.
+静态表：静态表是 (见 [Section 2.3.1](https://http2.github.io/http2-spec/compression.html#static.table)) 是静态地将频繁出现的头部字段与索引值关联起来的表。这个表是有序的，只读的，总是可访问的，且可以在所有的编码和解码上下文间共享的。
 
-Header List:
-A header list is an ordered collection of header fields that are encoded jointly and can contain duplicate header fields. A complete list of header fields contained in an HTTP/2 header block is a header list.
+头部列表：头部列表是一个有序的联合编码的且可出现重复的头部字段的头部字段集合。一个HTTP/2头部块中包含的完整的头部字段列表是一个头部列表。
 
-Header Field Representation:
-A header field can be represented in encoded form either as a literal or as an index (see [Section 2.4](https://http2.github.io/http2-spec/compression.html#header.representation)).
+头部字段表示：头部字段可以字面量或索引的编码形式表示( 见 [Section 2.4](https://http2.github.io/http2-spec/compression.html#header.representation))。
 
-Header Block:
-An ordered list of header field representations, which, when decoded, yields a complete header list.
+头部块：头部字段表示的有序列表，当解码时，产生完整的报头列表。
 
 # [2. 压缩过程概述](https://http2.github.io/http2-spec/compression.html#header.encoding)
 
-This specification does not describe a specific algorithm for an encoder. Instead, it defines precisely how a decoder is expected to operate, allowing encoders to produce any encoding that this definition permits.
+本规范没有描述用于编码器的特定算法。相反，它精确地定义了解码器如何操作，以允许编码器产生本定义允许的任何编码。
 
 ## [2.1 头部列表排序](https://http2.github.io/http2-spec/compression.html#header.list.ordering)
 
-HPACK preserves the ordering of header fields inside the header list. An encoder MUST order header field representations in the header block according to their ordering in the original header list. A decoder MUST order header fields in the decoded header list according to their ordering in the header block.
+HPACK在头部列表中保留了头部字段的顺序。编码器 **必须(MUST)** 以与头部字段在原始的头部列表中相同的顺序排列头部块中的头部字段表示。解码器在解码的头部列表中 **必须(MUST)** 以它们在头部块中的顺序排列头部字段。
 
 ## [2.2 编码和解码上下文](https://http2.github.io/http2-spec/compression.html#encoding.context)
 
-To decompress header blocks, a decoder only needs to maintain a dynamic table (see [Section 2.3.2](https://http2.github.io/http2-spec/compression.html#dynamic.table)) as a decoding context. No other dynamic state is needed.
+要解压缩头部块，解码器只需要维护一个动态表 (见 [Section 2.3.2](https://http2.github.io/http2-spec/compression.html#dynamic.table)) 作为解码上下文。不需要其它的动态状态。
 
-When used for bidirectional communication, such as in HTTP, the encoding and decoding dynamic tables maintained by an endpoint are completely independent, i.e., the request and response dynamic tables are separate.
+当用在双向通信中时，比如HTTP，编码和解码的动态表完全独立地由一个端点维护，比如，请求和响应动态表是分开的。
 
 ## [2.3 索引表](https://http2.github.io/http2-spec/compression.html#indexing.tables)
 
-HPACK uses two tables for associating header fields to indexes. The static table (see [Section 2.3.1](https://http2.github.io/http2-spec/compression.html#static.table)) is predefined and contains common header fields (most of them with an empty value). The dynamic table (see [Section 2.3.2](https://http2.github.io/http2-spec/compression.html#dynamic.table)) is dynamic and can be used by the encoder to index header fields repeated in the encoded header lists.
+HPACK使用了两个表来将头部字段与索引关联起来。静态表 (见 [Section 2.3.1](https://http2.github.io/http2-spec/compression.html#static.table)) 是预定义的，它包含了常见的头部字段（它们中的大多数具有一个空值）。动态表 (见 [Section 2.3.2](https://http2.github.io/http2-spec/compression.html#dynamic.table)) 是动态的，它可被编码器在编码的头部列表中用于索引头部字段。
 
-These two tables are combined into a single address space for defining index values (see[Section 2.3.3](https://http2.github.io/http2-spec/compression.html#index.address.space)).
+这两个表被组合成用于定义索引值的单个地址空间(见 [Section 2.3.3](https://http2.github.io/http2-spec/compression.html#index.address.space))。
 
 ### [2.3.1 静态表](https://http2.github.io/http2-spec/compression.html#static.table)
 
-The static table consists of a predefined static list of header fields. Its entries are defined in[Appendix A](https://http2.github.io/http2-spec/compression.html#static.table.definition).
+静态表由一个预定义的头部字段的静态列表组成。它的条目在 [附录 A](https://http2.github.io/http2-spec/compression.html#static.table.definition) 中定义。
 
 ### [2.3.2 动态表](https://http2.github.io/http2-spec/compression.html#dynamic.table)
 
-The dynamic table consists of a list of header fields maintained in first-in, first-out order. The first and newest entry in a dynamic table is at the lowest index, and the oldest entry of a dynamic table is at the highest index.
+动态表由一个以先进先出的顺序维护的头部字段列表组成。动态表中第一个且最新的条目的索引值最低，动态表的最老的条目的索引值最高。
 
-The dynamic table is initially empty. Entries are added as each header block is decompressed.
+动态表最初是空的。条目是随着每个头部块的解压缩而添加的。
 
-The dynamic table can contain duplicate entries (i.e., entries with the same name and same value). Therefore, duplicate entries MUST NOT be treated as an error by a decoder.
+动态表可以包含重复的条目 (比如，具有完全相同的名字和值的条目)。然而，重复的条目 **一定不能(MUST NOT)** 被解码器当作是错误。
 
-The encoder decides how to update the dynamic table and as such can control how much memory is used by the dynamic table. To limit the memory requirements of the decoder, the dynamic table size is strictly bounded (see [Section 4.2](https://http2.github.io/http2-spec/compression.html#maximum.table.size)).
+编码器决定如何更新动态表，并以此控制动态表使用多少内存。为了限制解码器的内存需求，动态表的大小被严格限制(见 [Section 4.2](https://http2.github.io/http2-spec/compression.html#maximum.table.size))。
 
-The decoder updates the dynamic table during the processing of a list of header field representations (see [Section 3.2](https://http2.github.io/http2-spec/compression.html#header.representation.processing)).
+解码器在处理头部字段表示(见 [Section 3.2](https://http2.github.io/http2-spec/compression.html#header.representation.processing))列表的过程中更新动态表
 
 ### [2.3.3 索引地址空间](https://http2.github.io/http2-spec/compression.html#index.address.space)
 
-The static table and the dynamic table are combined into a single index address space.
+静态表和动态表被组合为单独的索引地址空间。
 
-Indices between 1 and the length of the static table (inclusive) refer to elements in the static table (see [Section 2.3.1](https://http2.github.io/http2-spec/compression.html#static.table)).
+在1到静态表的长度(包含)之间的索引值指向静态表 (见 [Section 2.3.1](https://http2.github.io/http2-spec/compression.html#static.table)) 中的元素。
 
-Indices strictly greater than the length of the static table refer to elements in the dynamic table (see[Section 2.3.2](https://http2.github.io/http2-spec/compression.html#dynamic.table)). The length of the static table is subtracted to find the index into the dynamic table.
+严格地大于静态表的长度的索引值指向动态表 (见 [Section 2.3.2](https://http2.github.io/http2-spec/compression.html#dynamic.table)) 中的元素。通过减去静态表的长度来查找指向动态表的索引。
 
-Indices strictly greater than the sum of the lengths of both tables MUST be treated as a decoding error.
+严格地大于两表长度之和的索引 **必须(MUST)** 被当作一个解码错误。
 
-For a static table size of s and a dynamic table size of k, the following diagram shows the entire valid index address space.
+对于静态表大小为s，动态表大小为k的情况，下图展示了完整的有效的索引地址空间。
 
 ```
         <----------  Index Address Space ---------->
@@ -325,26 +318,25 @@ For a static table size of s and a dynamic table size of k, the following diagra
                                |                   V
                         Insertion Point      Dropping Point
 ```
-Figure 1: Index Address Space
+图 1: 索引地址空间
 
 ## [2.4 头部字段表示](https://http2.github.io/http2-spec/compression.html#header.representation)
 
-An encoded header field can be represented either as an index or as a literal.
+一个编码的头部字段可由一个索引或一个字面量表示。
 
-An indexed representation defines a header field as a reference to an entry in either the static table or the dynamic table (see [Section 6.1](https://http2.github.io/http2-spec/compression.html#indexed.header.representation)).
+索引的表示法将头部字段定义为对静态表或动态表中的条目的引用(见 [Section 6.1](https://http2.github.io/http2-spec/compression.html#indexed.header.representation))。
 
-A literal representation defines a header field by specifying its name and value. The header field name can be represented literally or as a reference to an entry in either the static table or the dynamic table. The header field value is represented literally.
+字面量表示通过指定头部字段的名称和值来定义头部字段。头部字段名可由字面量或对静态表或动态表中的条目的引用来表示。头部字段值由字面量表示。
 
-Three different literal representations are defined:
-* A literal representation that adds the header field as a new entry at the beginning of the dynamic table (see [Section 6.2.1](https://http2.github.io/http2-spec/compression.html#literal.header.with.incremental.indexing)).
+定义三种不同的字面量表示：
 
-* A literal representation that does not add the header field to the dynamic table (see[Section 6.2.2](https://http2.github.io/http2-spec/compression.html#literal.header.without.indexing)).
+* 将头部字段作为新条目添加在动态表的起始位置的字面量表 示(见 [Section 6.2.1](https://http2.github.io/http2-spec/compression.html#literal.header.with.incremental.indexing))。
+* 不向动态表添加头部字段的字面量表示(见 [Section 6.2.2](https://http2.github.io/http2-spec/compression.html#literal.header.without.indexing))。
+* 不向动态表添加头部字段的字面量表示，此外还规定这个头部字段总是使用字面量表示，特别是由一个中继重编码时 (见 [Section 6.2.3](https://http2.github.io/http2-spec/compression.html#literal.header.never.indexed))。这种表示的目的是保护那些在压缩时有一定风险的头部字段值 (见 [Section 7.1.3](https://http2.github.io/http2-spec/compression.html#never.indexed.literals) 来获取更多详细信息)。
 
-* A literal representation that does not add the header field to the dynamic table, with the additional stipulation that this header field always use a literal representation, in particular when re-encoded by an intermediary (see [Section 6.2.3](https://http2.github.io/http2-spec/compression.html#literal.header.never.indexed)). This representation is intended for protecting header field values that are not to be put at risk by compressing them (see[Section 7.1.3](https://http2.github.io/http2-spec/compression.html#never.indexed.literals) for more details).
+可按照 安全注意事项 的指导来选择这三种字面量表示中的一个，以保护敏感的头部字段值 (见 [Section 7.1](https://http2.github.io/http2-spec/compression.html#compression.based.attacks))。
 
-The selection of one of these literal representations can be guided by security considerations, in order to protect sensitive header field values (see [Section 7.1](https://http2.github.io/http2-spec/compression.html#compression.based.attacks)).
-
-The literal representation of a header field name or of a header field value can encode the sequence of octets either directly or using a static Huffman code (see [Section 5.2](https://http2.github.io/http2-spec/compression.html#string.literal.representation)).
+头部字段的名字或值的字面量表示可以直接编码字节序列或使用一个静态Huffman码 (见 [Section 5.2](https://http2.github.io/http2-spec/compression.html#string.literal.representation))。
 
 # [3. 头部块解码](https://http2.github.io/http2-spec/compression.html#header.block.decoding)
 
