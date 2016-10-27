@@ -1363,4 +1363,4 @@ TLS扩展相关方法的OptionalMethod创建过程也在AndroidPlatform中：
 
 总结一下，OkHttp中，IO相关的组件的其关系大体如下图所示：
 
-![okhttp_flow03.png](http://upload-images.jianshu.io/upload_images/1315506-91e587416a510dc7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![okhttp_flow03.png](http://upload-images.jianshu.io/upload_images/1315506-338a7a0b0a39a278.png?imageMogr2/auto-orient/strip%7CimageView2/2)
