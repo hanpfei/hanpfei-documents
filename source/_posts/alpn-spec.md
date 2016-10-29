@@ -1,24 +1,14 @@
-```          
-                    PROPOSED STANDARD
-                                                                        
-Internet Engineering Task Force (IETF)                         S. Friedl
-Request for Comments: 7301                           Cisco Systems, Inc.
-Category: Standards Track                                       A. Popov
-ISSN: 2070-1721                                          Microsoft Corp.
-                                                              A. Langley
-                                                             Google Inc.
-                                                              E. Stephan
-                                                                  Orange
-                                                               July 2014
-
-
-                     Transport Layer Security (TLS)
-            Application-Layer Protocol Negotiation Extension
-```
+---
+title: 应用层协议协商（ALPN）规范（RFC7301）
+date: 2016-10-29 13:44:49
+categories: HTTP2相关规范
+---
 
 # 摘要
 
 这份文档描述了一种传输层安全(TLS)扩展，即TLS握手消息里的应用层协议协商。比如在一些在相同的TCP或UDP端口上支持多种应用层协议的应用中，这个扩展允许应用层协商将在TLS连接内使用的协议。
+
+<!--more-->
 
 # Status of This Memo
 

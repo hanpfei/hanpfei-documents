@@ -1,26 +1,16 @@
-HTTPbis Working Group
-R. Peon
-
-Internet-Draft
-Google, Inc
-
-Intended status: Standards Track
-H. Ruellan
-
-Expires: December 1, 2015
-Canon CRF
-
-May 30, 2015
-
-
-HPACK：HTTP/2的头部压缩
-
+---
+title: HPACK：HTTP/2的头部压缩 (RFC7541)
+date: 2016-10-29 13:46:49
+categories: HTTP2相关规范
+---
 
 draft-ietf-httpbis-header-compression-latest
 
 # [摘要](https://http2.github.io/http2-spec/compression.html#rfc.abstract)
 
 这份规范定义了HPACK，它是用在HTTP/2中，为有效地表示HTTP头部字段而设计的压缩格式。
+
+<!--more-->
 
 # [Editorial Note (To be removed by RFC Editor)](https://http2.github.io/http2-spec/compression.html#rfc.note.1)
 

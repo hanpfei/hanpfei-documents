@@ -1,18 +1,15 @@
+---
+title: 传输层安全(TLS)下一个协议协商(NPN)扩展
+date: 2016-10-29 13:48:49
+categories: HTTP2相关规范
+---
 
-```
-Versions: 00 01 02 03 04                                                
-
-Network Working Group                                         A. Langley
-Internet-Draft                                                Google Inc
-Expires: October 31, 2012                                       May 2012
-
-   Transport Layer Security (TLS) Next Protocol Negotiation Extension
-                     draft-agl-tls-nextprotoneg-04
-```
 
 # 摘要
 
 本文档描述了一种用于应用层协议协商的 传输层安全 (TLS) 扩展。这允许应用层协商在安全连接上应该执行的协议。
+
+<!--more-->
 
 # Status of this Memo
 
