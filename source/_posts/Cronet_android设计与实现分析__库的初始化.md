@@ -1,7 +1,8 @@
 ---
 title: Cronet android设计与实现分析--库的初始化﻿
+date: 2016-10-29 14:05:49
+tags: Cronet
 ---
-
 # Cronet的基本用法
 
 我们从一段代码来开始我们对Cronet android设计与实现的探索，这段代码向我们展示要如何使用Cronet为android提供的Java接口来做HTTP请求。
