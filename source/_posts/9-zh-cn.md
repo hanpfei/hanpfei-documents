@@ -1,7 +1,12 @@
-
-# [9. 额外的HTTP要求/注意事项](https://http2.github.io/http2-spec/#HttpExtra)
+---
+title: HTTP/2规范：9. 额外的HTTP要求/注意事项
+date: 2016-10-29 12:34:49
+categories: HTTP2相关规范
+---
 
 这一节概括了提升互操作性，降低暴露给已知的安全脆弱性，或降低潜在的实现变异的HTTP协议属性。
+
+<!--more-->
 
 ## [9.1 连接管理](https://http2.github.io/http2-spec/#rfc.section.9.1)
 

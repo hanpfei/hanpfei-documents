@@ -1,6 +1,8 @@
 ---
 title: Cronet android设计与实现分析--HTTP请求启动
-﻿---
+date: 2016-10-29 14:06:49
+tags: cronet
+---
 
 在简单地分析了cronet的初始化过程之后，我们来看HTTP请求的提交和执行。
 

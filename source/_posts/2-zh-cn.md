@@ -1,8 +1,14 @@
-# [2. HTTP/2 协议总览](http://httpwg.org/specs/rfc7540.html#Overview)
+---
+title: HTTP/2规范：2. HTTP/2 协议总览
+date: 2016-10-29 12:27:49
+categories: HTTP2相关规范
+---
 
 HTTP/2为HTTP语义提供了一个优化的传输方式。HTTP/2支持HTTP/1.1所有的核心功能，但在一些方面又更加高效。
 
 HTTP/2中基本的协议单元是一个帧([Section4.1](http://httpwg.org/specs/rfc7540.html#FrameHeader))。每一个帧类型服务于一个不通的目的。比如，[HEADERS](http://httpwg.org/specs/rfc7540.html#HEADERS)和[DATA](http://httpwg.org/specs/rfc7540.html#DATA)帧构成了HTTP请求和响应的基础([Section8.1](http://httpwg.org/specs/rfc7540.html#HttpSequence))；其它的帧类型，比如[SETTINGS](http://httpwg.org/specs/rfc7540.html#SETTINGS)，[WINDOW_UPDATE](http://httpwg.org/specs/rfc7540.html#WINDOW_UPDATE)，和[PUSH_PROMISE](http://httpwg.org/specs/rfc7540.html#PUSH_PROMISE)被用于支持其它的HTTP/2功能。
+
+<!--more-->
 
 请求的多路复用通过使得每个HTTP请求/响应交换关联它自己的流([Section5](http://httpwg.org/specs/rfc7540.html#StreamsLayer))来实现。流在很大程度上是相互独立的，因而一个阻塞或止步不前的请求或响应不会阻止其它流的进程。
 

@@ -1,5 +1,10 @@
+---
+title: HTTP/2规范：12. 参考文献
+date: 2016-10-29 12:37:49
+categories: HTTP2相关规范
+---
 
-# [12. 参考文献](https://http2.github.io/http2-spec/#rfc.section.12)
+<!--more-->
 
 ## [12.1 引用的标准](https://http2.github.io/http2-spec/#rfc.section.12.1)
 

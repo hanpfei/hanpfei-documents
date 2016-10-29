@@ -1,9 +1,14 @@
-# [7. 错误码](https://http2.github.io/http2-spec/#ErrorCodes)
+---
+title: HTTP/2规范：7. 错误码
+date: 2016-10-29 12:32:49
+categories: HTTP2相关规范
+---
 
 错误码是用在[RST_STREAM](https://http2.github.io/http2-spec/#RST_STREAM)和[GOAWAY](https://http2.github.io/http2-spec/#GOAWAY)帧中的32位字段，来携带流或连接错误的原因的。
 
 错误码共享一个共同的码空间。一些错误码只应用于流或整个连接，而在其它上下文中没有定义语义。
 
+<!--more-->
 
 当前定义了如下错误码：
 

@@ -1,5 +1,12 @@
-# [4. HTTP帧](http://httpwg.org/specs/rfc7540.html#FramingLayer)
+---
+title: HTTP/2规范：4. HTTP帧
+date: 2016-10-29 12:29:49
+categories: HTTP2相关规范
+---
+
 建立了HTTP/2连接之后，端点间就可以开始进行帧的交换了。
+
+<!--more-->
 
 ## [4.1 帧格式](http://httpwg.org/specs/rfc7540.html#FrameHeader)
 所有的帧都以一个固定的9字节首部开始，其后紧跟一个可变长度的载荷。

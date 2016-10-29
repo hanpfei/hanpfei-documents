@@ -1,4 +1,8 @@
-# [8. HTTP消息交换](https://http2.github.io/http2-spec/#HTTPLayer)
+---
+title: HTTP/2规范：8. HTTP消息交换
+date: 2016-10-29 12:33:49
+categories: HTTP2相关规范
+---
 
 HTTP/2被期待着尽可能与当前使用的HTTP兼容。这意味着，从应用程序的视角来看，大部分的协议的功能不能变。为了实现这一点，而保留了所有的请求和响应的语义，尽管携带这些语义的语法已经变了。
 
@@ -10,6 +14,7 @@ HTTP/2被期待着尽可能与当前使用的HTTP兼容。这意味着，从应�
 ](https://http2.github.io/http2-spec/#RFC7235)依然适用于HTTP/2。选中的HTTP/1.1 Message Syntax and Routing [[RFC7230]
 ](https://http2.github.io/http2-spec/#RFC7230)的部分，比如HTTP和HTTPS URI schemes，也适用于HTTP/2，但是对于这个协议，那些语义的表达则在下面的小节定义。
 
+<!--more-->
 
 ## [8.1 HTTP 请求/响应 交换](https://http2.github.io/http2-spec/#HttpSequence)
 

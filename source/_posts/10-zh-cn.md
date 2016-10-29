@@ -1,8 +1,14 @@
-# [10. 安全注意事项](https://http2.github.io/http2-spec/#security)
+---
+title: HTTP/2规范：10. 安全注意事项
+date: 2016-10-29 12:35:49
+categories: HTTP2相关规范
+---
 
 ## [10.1 服务器认证](https://http2.github.io/http2-spec/#authority)
 
 HTTP/2依赖于HTTP/1.1定义的认证方式来确定提供给定响应的服务器(参见 [[RFC7230]](https://http2.github.io/http2-spec/#RFC7230)，[Section 9.1](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#establishing.authority)) 是否是可信的。这依赖于为"http" URI scheme做的本地域名解析，及"https" scheme的身份认证服务器 [[RFC2818]](https://http2.github.io/http2-spec/#RFC2818)，[Section 3](https://tools.ietf.org/html/rfc2818#section-3))。
+
+<!--more-->
 
 ## [10.2 跨协议攻击](https://http2.github.io/http2-spec/#rfc.section.10.2)
 

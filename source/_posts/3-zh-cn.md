@@ -1,8 +1,15 @@
-# [3. 启动 HTTP/2](http://httpwg.org/specs/rfc7540.html#starting)
+---
+title: HTTP/2规范：3. 启动 HTTP/2
+date: 2016-10-29 12:28:49
+categories: HTTP2相关规范
+---
+
 一个HTTP/2连接是一个运行于一个TCP连接([[TCP]
 ](http://httpwg.org/specs/rfc7540.html#TCP))之上的应用层协议。客户端是TCP连接的发起者。
 
 HTTP/2使用了与HTTP/1.1所使用的相同的"http"和"https" URI schemes。HTTP/2共享了相同的默认端口号："http" URIs的是80，"https" URIs的是443。作为结果，HTTP/2的实现在为处理诸如 http://example.org/foo 或 https://example.com/bar 这样的URIs的目标资源的请求时，需要首先发现upstream server(客户端希望建立连接的中间对端)是支持HTTP/2的。
+
+<!--more-->
 
 对于"http"和"https" URIs，确定是否支持HTTP/2的方法是不同的。确定"http" URIs是否支持HTTP/2的方法在[Section3.2](http://httpwg.org/specs/rfc7540.html#discover-http)中描述。确定"https" URIs是否支持HTTP/2的方法在[Section3.3](http://httpwg.org/specs/rfc7540.html#discover-https)中描述。
 

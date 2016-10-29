@@ -1,9 +1,15 @@
-# [11. IANA 注意事项](https://http2.github.io/http2-spec/#iana)
+---
+title: HTTP/2规范：11. IANA 注意事项
+date: 2016-10-29 12:36:49
+categories: HTTP2相关规范
+---
 
 一个用于识别HTTP/2的字符串进入了由 [[TLS-ALPN]
 ](https://http2.github.io/http2-spec/#TLS-ALPN) 建立的 "应用层协议协商 (ALPN) 协议IDs" 注册表
 
 本文档为帧类型，设置项，和错误码建立了一个注册表。这些新的注册表项出现在新的"Hypertext Transfer Protocol version 2 (HTTP/2) Parameters"一节。
+
+<!--more-->
 
 为了在HTTP中使用，本文档注册了HTTP2-Settings首部字段；它还注册了421 (Misdirected Request) 状态码。
 
