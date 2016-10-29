@@ -5,6 +5,9 @@ tags: Cronet
 ---
 
 前面我们分析到，在`URLRequestHttpJob::StartTransactionInternal()`中，会通过`URLRequestContext`的`HttpTransactionFactory`创建`HttpTransaction`，在`URLRequestContextBuilder::Build()`中创建`HttpTransactionFactory`的过程如下：
+
+<!--more-->
+
 ```
   storage->set_http_network_session(
       base::WrapUnique(new HttpNetworkSession(network_session_params)));
