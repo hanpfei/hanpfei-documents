@@ -4,9 +4,9 @@ date: 2016-10-29 12:37:49
 categories: HTTP2相关规范
 ---
 
-<!--more-->
-
 ## [12.1 引用的标准](https://http2.github.io/http2-spec/#rfc.section.12.1)
+
+<!--more-->
 
 **[COMPRESSION]** 
 Peon, R. and H. Ruellan, “[HPACK: Header Compression for HTTP/2](https://tools.ietf.org/html/rfc7541)”, RFC 7541, [DOI 10.17487/RFC7541](http://dx.doi.org/10.17487/RFC7541), May 2015, <[http://www.rfc-editor.org/info/rfc7541](http://www.rfc-editor.org/info/rfc7541)>.
