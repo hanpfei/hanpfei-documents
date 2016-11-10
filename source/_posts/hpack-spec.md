@@ -1,302 +1,206 @@
 ---
-title: HPACK：HTTP/2的头部压缩 (RFC7541)
+title: HPACK：HTTP/2的首部压缩 (RFC7541)
 date: 2016-10-29 13:46:49
 categories: HTTP2相关规范
 ---
 
-draft-ietf-httpbis-header-compression-latest
+# 摘要
+
+这份规范定义了HPACK，一个用于HTTP/2，为有效地表示HTTP首部字段而设计的压缩格式。
+
+# 此备忘录的状态
+
+这是一份互联网标准跟踪文档。
+
+本文档是互联网工程任务组（IETF）的产品。它代表了IETF社区的共识。它已经接受公众审查，并已获得互联网工程指导小组（IESG）的发布允准。有关互联网标准的更多信息，请参见[RFC 5741的第2节](https://tools.ietf.org/html/rfc5741#section-2)。
+
+有关本文档的当前状态，任何勘误以及如何提供反馈的信息，请访问 http://www.rfc-editor.org/info/rfc7541。
+
+# 版权声明
+
+版权所有©2015 IETF信托和被确定为文档作者的人。版权所有。
+
+本文件受BCP 78和IETF信托有关IETF文件的法律规定（[http://trustee.ietf.org/license-info](http://trustee.ietf.org/license-info)）对本文件出版日期的影响。请仔细阅读这些文档，它们描述了您对本文档的权利和限制。从本文档中提取的代码组件必须包括如信托法律规定第4.e节所述的简化BSD许可文本，并且不提供简化BSD许可中描述的保证。
+
+# 目录
+
+## [1. 引言](https://tools.ietf.org/html/rfc7541#section-1)
+### [1.1 概述](https://tools.ietf.org/html/rfc7541#section-1.1)
+### [1.2 约定](https://tools.ietf.org/html/rfc7541#section-1.2)
+### [1.3 术语](https://tools.ietf.org/html/rfc7541#section-1.3)
+
+## [2. 压缩过程概述](https://tools.ietf.org/html/rfc7541#section-2)
+### [2.1 头部列表排序](https://tools.ietf.org/html/rfc7541#section-2.1)
+### [2.2 编码和解码上下文](https://tools.ietf.org/html/rfc7541#section-2.2)
+### [2.3 索引表](https://tools.ietf.org/html/rfc7541#section-2.3)
+#### [2.3.1 静态表](https://tools.ietf.org/html/rfc7541#section-2.3.1)
+#### [2.3.2 动态表](https://tools.ietf.org/html/rfc7541#section-2.3.2)
+#### [2.3.3 索引地址空间](https://tools.ietf.org/html/rfc7541#section-2.3.3)
+### [2.4 头部字段表示](https://tools.ietf.org/html/rfc7541#section-2.4)
+
+## [3. 头部块解码](https://tools.ietf.org/html/rfc7541#section-3)
+### [3.1 头部块处理](https://tools.ietf.org/html/rfc7541#section-3.1)
+### [3.2 头部字段表示处理](https://tools.ietf.org/html/rfc7541#section-3.2)
+
+## [4. 动态表管理](https://tools.ietf.org/html/rfc7541#section-4)
+### [4.1 计算表大小](https://tools.ietf.org/html/rfc7541#section-4.1)
+### [4.2 最大表大小](https://tools.ietf.org/html/rfc7541#section-4.2)
+### [4.3 动态表大小改变时的条目逐出](https://tools.ietf.org/html/rfc7541#section-4.3)
+### [4.4 添加新条目时的条目逐出](https://tools.ietf.org/html/rfc7541#section-4.4)
+
+## [5. 原始数据类型表示](https://tools.ietf.org/html/rfc7541#section-5)
+### [5.1 整数的表示](https://tools.ietf.org/html/rfc7541#section-5.1)
+### [5.2 字符串字面量的表示](https://tools.ietf.org/html/rfc7541#section-5.2)
+
+## [6. 二进制格式](https://tools.ietf.org/html/rfc7541#section-6)
+### [6.1 索引的头部字段表示](https://tools.ietf.org/html/rfc7541#section-6.1)
+### [6.2 字面量头部字段表示](https://tools.ietf.org/html/rfc7541#section-6.2)
+#### [6.2.1 增量索引的字面量头部字段](https://tools.ietf.org/html/rfc7541#section-6.2.1)
+#### [6.2.2 无索引的字面量头部字段](https://tools.ietf.org/html/rfc7541#section-6.2.2)
+#### [6.2.3 从不索引的字面量头部字段](https://tools.ietf.org/html/rfc7541#section-6.2.3)
+### [6.3 动态表 大小更新](https://tools.ietf.org/html/rfc7541#section-6.3)
+
+## [7. 安全注意事项](https://tools.ietf.org/html/rfc7541#section-7)
+### [7.1 探测动态表状态](https://tools.ietf.org/html/rfc7541#section-7.1)
+#### [7.1.1 HPACK 和 HTTP的适用性](https://tools.ietf.org/html/rfc7541#section-7.1.1)
+#### [7.1.2 缓解](https://tools.ietf.org/html/rfc7541#section-7.1.2)
+#### [7.1.3 从不索引的字面量](https://tools.ietf.org/html/rfc7541#section-7.1.3)
+### [7.2 静态Huffman编码](https://tools.ietf.org/html/rfc7541#section-7.2)
+### [7.3 内存消耗](https://tools.ietf.org/html/rfc7541#section-7.3)
+### [7.4 实现的限制](https://tools.ietf.org/html/rfc7541#section-7.4)
+
+## [8. 参考文献](https://tools.ietf.org/html/rfc7541#section-8)
+### [8.1 规范性参考文献](https://tools.ietf.org/html/rfc7541#section-8.1)
+### [8.2 参考资料](https://tools.ietf.org/html/rfc7541#section-8.2)
+
+## [附录 A. 静态表定义](https://tools.ietf.org/html/rfc7541#appendix-A)
+
+## [附录 B. Huffman 码](https://tools.ietf.org/html/rfc7541#appendix-B)
+
+## [附录 C. 示例](https://tools.ietf.org/html/rfc7541#appendix-C)
+### [C.1 整数表示示例](https://tools.ietf.org/html/rfc7541#appendix-C.1)
+#### [C.1.1 示例 1：使用5位前缀编码10](https://tools.ietf.org/html/rfc7541#appendix-C.1.1)
+#### [C.1.2 示例 2：使用5位前缀编码1337](https://tools.ietf.org/html/rfc7541#appendix-C.1.2)
+#### [C.1.3 示例 3: 以字节边界为起始位置编码42](https://tools.ietf.org/html/rfc7541#appendix-C.1.3)
+### [C.2 头部字段表示示例](https://tools.ietf.org/html/rfc7541#appendix-C.2)
+#### [C.2.1 有索引的字面量头部字段](https://tools.ietf.org/html/rfc7541#appendix-C.2.1)
+#### [C.2.2 无索引的字面量头部字段](https://tools.ietf.org/html/rfc7541#appendix-C.2.2)
+#### [C.2.3 从不索引的字面量头部字段](https://tools.ietf.org/html/rfc7541#appendix-C.2.3)
+#### [C.2.4 索引的头部字段](https://tools.ietf.org/html/rfc7541#appendix-C.2.4)
+### [C.3 不带Huffman编码的请求示例](https://tools.ietf.org/html/rfc7541#appendix-C.3)
+#### [C.3.1 第一个请求](https://tools.ietf.org/html/rfc7541#appendix-C.3.1)
+#### [C.3.2 第二个请求](https://tools.ietf.org/html/rfc7541#appendix-C.3.2)
+#### [C.3.3 第三个请求](https://tools.ietf.org/html/rfc7541#appendix-C.3.3)
+### [C.4 带Huffman编码的请求示例](https://tools.ietf.org/html/rfc7541#appendix-C.4)
+#### [C.4.1 第一个请求](https://tools.ietf.org/html/rfc7541#appendix-C.4.1)
+#### [C.4.2 第二个请求](https://tools.ietf.org/html/rfc7541#appendix-C.4.2)
+#### [C.4.3 第三个请求](https://tools.ietf.org/html/rfc7541#appendix-C.4.3)
+### [C.5 不带Huffman编码的响应示例](https://tools.ietf.org/html/rfc7541#appendix-C.5)
+#### [C.5.1 第一个响应](https://tools.ietf.org/html/rfc7541#appendix-C.5.1)
+#### [C.5.2 第二个响应](https://tools.ietf.org/html/rfc7541#appendix-C.5.2)
+#### [C.5.3 第三个响应](https://tools.ietf.org/html/rfc7541#appendix-C.5.3)
+### [C.6 带Huffman编码的响应示例](https://tools.ietf.org/html/rfc7541#appendix-C.6)
+#### [C.6.1 第一个响应](https://tools.ietf.org/html/rfc7541#appendix-C.6.1)
+#### [C.6.2 第二个响应](https://tools.ietf.org/html/rfc7541#appendix-C.6.2)
+#### [C.6.3 第三个响应](https://tools.ietf.org/html/rfc7541#appendix-C.6.3)
+
+## 致谢
 
-# [摘要](https://http2.github.io/http2-spec/compression.html#rfc.abstract)
+## 作者地址
 
-这份规范定义了HPACK，它是用在HTTP/2中，为有效地表示HTTP头部字段而设计的压缩格式。
+# [1. 简介](https://tools.ietf.org/html/rfc7541#section-1)
 
-<!--more-->
+在 HTTTP/1.1中 (见 [[RFC7230](https://tools.ietf.org/html/rfc7230)])， 首部字段是不压缩的。随着web页面逐步成长到需要发出几十甚至几百个请求，这些请求中冗余的首部字段不必要地消耗了带宽，并导致了可测量的延迟增加。
 
-# [Editorial Note (To be removed by RFC Editor)](https://http2.github.io/http2-spec/compression.html#rfc.note.1)
+[SPDY](https://tools.ietf.org/html/rfc7541#ref-SPDY) [SPDY] 最初通过使用 [DEFLATE](https://tools.ietf.org/html/rfc7541#ref-DEFLATE) [DEFLATE] 格式压缩头部字段来解决这种冗余，这在有效地表示冗余的首部字段方面非常有效。然而，该方法暴露了CRIME (Compression Ratio Info-leak Made Easy) 攻击 (参见 [[CRIME]](https://tools.ietf.org/html/rfc7541#ref-CRIME)) 所示的安全风险。
 
-Discussion of this draft takes place on the HTTPBIS working group mailing list (ietf-http-wg@w3.org), which is archived at <[https://lists.w3.org/Archives/Public/ietf-http-wg/](https://lists.w3.org/Archives/Public/ietf-http-wg/)>.
+本规范定义了HPACK，它是一种新的压缩器，它消除了冗余的首部字段，限制了对已知安全攻击的脆弱性，并却具有在受限环境中使用的有限内存要求。[第 7 节](https://tools.ietf.org/html/rfc7541#section-7)介绍了HPACK的潜在安全问题。
 
-Working Group information can be found at <[http://tools.ietf.org/wg/httpbis/](http://tools.ietf.org/wg/httpbis/)>; that specific to HTTP/2 are at <[http://http2.github.io/](http://http2.github.io/)>.
+HPACK格式有意地被设计的简单而不灵活。这两个特性降低了由于实现错误而导致互操作性和安全性问题的风险。没有定义可扩展性机制；只能通过定义完全的替代品来更改格式。
 
-# [Status of This Memo](https://http2.github.io/http2-spec/compression.html#rfc.status)
+## [1.1 概述](https://tools.ietf.org/html/rfc7541#section-1.1)
 
-This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.
-
-Internet-Drafts are working documents of the Internet Engineering Task Force (IETF). Note that other groups may also distribute working documents as Internet-Drafts. The list of current Internet-Drafts is at [http://datatracker.ietf.org/drafts/current/](http://datatracker.ietf.org/drafts/current/).
-
-Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time. It is inappropriate to use Internet-Drafts as reference material or to cite them other than as “work in progress”.
-
-This Internet-Draft will expire on December 1, 2015.
-
-# [版权声明](https://http2.github.io/http2-spec/compression.html#rfc.copyrightnotice)
-
-Copyright © 2015 IETF Trust and the persons identified as the document authors. All rights reserved.
-
-This document is subject to BCP 78 and the IETF Trust's Legal Provisions Relating to IETF Documents ([http://trustee.ietf.org/license-info](http://trustee.ietf.org/license-info)) in effect on the date of publication of this document. Please review these documents carefully, as they describe your rights and restrictions with respect to this document. Code Components extracted from this document must include Simplified BSD License text as described in Section 4.e of the Trust Legal Provisions and are provided without warranty as described in the Simplified BSD License.
-
-# [目录](https://http2.github.io/http2-spec/compression.html#rfc.toc)
-
-## [1. 简介](https://http2.github.io/http2-spec/compression.html#rfc.section.1)
-
-### [1.1 概述](https://http2.github.io/http2-spec/compression.html#rfc.section.1.1)
-
-### [1.2 约定](https://http2.github.io/http2-spec/compression.html#conventions)
-
-### [1.3 术语](https://http2.github.io/http2-spec/compression.html#encoding.concepts)
-
-## [2. 压缩过程概述](https://http2.github.io/http2-spec/compression.html#header.encoding)
-
-### [2.1 头部列表排序](https://http2.github.io/http2-spec/compression.html#header.list.ordering)
-
-### [2.2 编码和解码上下文](https://http2.github.io/http2-spec/compression.html#encoding.context)
-
-### [2.3 索引表s](https://http2.github.io/http2-spec/compression.html#indexing.tables)
-
-#### [2.3.1 静态表](https://http2.github.io/http2-spec/compression.html#static.table)
-
-#### [2.3.2 动态表](https://http2.github.io/http2-spec/compression.html#dynamic.table)
-
-#### [2.3.3 索引地址空间](https://http2.github.io/http2-spec/compression.html#index.address.space)
-
-### [2.4 头部字段表示](https://http2.github.io/http2-spec/compression.html#header.representation)
-
-## [3. 头部块解码](https://http2.github.io/http2-spec/compression.html#header.block.decoding)
-
-### [3.1 头部块处理](https://http2.github.io/http2-spec/compression.html#header.block.processing)
-
-### [3.2 头部字段表示处理](https://http2.github.io/http2-spec/compression.html#header.representation.processing)
-
-## [4. 动态表管理](https://http2.github.io/http2-spec/compression.html#dynamic.table.management)
-
-### [4.1 计算表大小](https://http2.github.io/http2-spec/compression.html#calculating.table.size)
-
-### [4.2 最大表大小](https://http2.github.io/http2-spec/compression.html#maximum.table.size)
-
-### [4.3 动态表大小改变时的条目逐出](https://http2.github.io/http2-spec/compression.html#entry.eviction)
-
-### [4.4 添加新条目时的条目逐出](https://http2.github.io/http2-spec/compression.html#entry.addition)
-
-## [5. 原始类型表示](https://http2.github.io/http2-spec/compression.html#low-level.representation)
-
-### [5.1 整型表示](https://http2.github.io/http2-spec/compression.html#integer.representation)
-
-### [5.2 字符串字面量表示](https://http2.github.io/http2-spec/compression.html#string.literal.representation)
-
-## [6. 二进制格式](https://http2.github.io/http2-spec/compression.html#detailed.format)
-
-### [6.1 索引头部字段表示](https://http2.github.io/http2-spec/compression.html#indexed.header.representation)
-
-### [6.2 字面量头部字段表示](https://http2.github.io/http2-spec/compression.html#literal.header.representation)
-
-#### [6.2.1 增量索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.with.incremental.indexing)
-
-#### [6.2.2 无索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.without.indexing)
-
-#### [6.2.3 从不索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.never.indexed)
-
-### [6.3 动态表 大小更新](https://http2.github.io/http2-spec/compression.html#encoding.context.update)
-
-## [7. 安全注意事项](https://http2.github.io/http2-spec/compression.html#Security)
-
-### [7.1 探测动态表状态](https://http2.github.io/http2-spec/compression.html#compression.based.attacks)
-
-#### [7.1.1 HPACK 和 HTTP的适用性](https://http2.github.io/http2-spec/compression.html#rfc.section.7.1.1)
-
-#### [7.1.2 减轻](https://http2.github.io/http2-spec/compression.html#rfc.section.7.1.2)
-
-#### [7.1.3 从不索引的字面量](https://http2.github.io/http2-spec/compression.html#never.indexed.literals)
-
-### [7.2 静态Huffman编码](https://http2.github.io/http2-spec/compression.html#rfc.section.7.2)
-
-### [7.3 内存消耗](https://http2.github.io/http2-spec/compression.html#rfc.section.7.3)
-
-### [7.4 实现的限制](https://http2.github.io/http2-spec/compression.html#rfc.section.7.4)
-
-## [8. 参考文献](https://http2.github.io/http2-spec/compression.html#rfc.references)
-
-### [8.1 规范性参考文献](https://http2.github.io/http2-spec/compression.html#rfc.references.1)
-
-### [8.2 参考资料](https://http2.github.io/http2-spec/compression.html#rfc.references.2)
-
-## [A. 静态表定义](https://http2.github.io/http2-spec/compression.html#static.table.definition)
-
-## [B. Huffman 码](https://http2.github.io/http2-spec/compression.html#huffman.code)
-
-## [C. 示例](https://http2.github.io/http2-spec/compression.html#examples)
-
-### [C.1 整数表示示例](https://http2.github.io/http2-spec/compression.html#integer.representation.examples)
-
-#### [C.1.1 示例 1：使用5位前缀编码10](https://http2.github.io/http2-spec/compression.html#integer.representation.example1)
-
-#### [C.1.2 示例 2：使用5位前缀编码1337](https://http2.github.io/http2-spec/compression.html#integer.representation.example2)
-
-#### [C.1.3 示例 3: 以字节边界为起始编码42](https://http2.github.io/http2-spec/compression.html#integer.representation.example3)
-
-### [C.2 头部字段表示示例](https://http2.github.io/http2-spec/compression.html#header.field.representation.examples)
-
-#### [C.2.1 有索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.1)
-
-#### [C.2.2 无索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.2)
-
-#### [C.2.3 从不索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.3)
-
-#### [C.2.4 索引的头部字段](https://http2.github.io/http2-spec/compression.html#rfc.section.C.2.4)
-
-### [C.3 没有Huffman编码的请求的例子](https://http2.github.io/http2-spec/compression.html#request.examples.without.huffman.coding)
-
-#### [C.3.1 第一个请求](https://http2.github.io/http2-spec/compression.html#rfc.section.C.3.1)
-
-#### [C.3.2 第二个请求](https://http2.github.io/http2-spec/compression.html#rfc.section.C.3.2)
-
-#### [C.3.3 第三个请求](https://http2.github.io/http2-spec/compression.html#rfc.section.C.3.3)
-
-### [C.4 Huffman编码的请求示例](https://http2.github.io/http2-spec/compression.html#request.examples.with.huffman.coding)
-
-#### [C.4.1 第一个请求](https://http2.github.io/http2-spec/compression.html#rfc.section.C.4.1)
-
-#### [C.4.2 第二个请求](https://http2.github.io/http2-spec/compression.html#rfc.section.C.4.2)
-
-#### [C.4.3 第三个请求](https://http2.github.io/http2-spec/compression.html#rfc.section.C.4.3)
-
-### [C.5 没有Huffman编码的响应示例](https://http2.github.io/http2-spec/compression.html#response.examples.without.huffman.coding)
-
-#### [C.5.1 第一个响应](https://http2.github.io/http2-spec/compression.html#rfc.section.C.5.1)
-
-#### [C.5.2 第二个响应](https://http2.github.io/http2-spec/compression.html#rfc.section.C.5.2)
-
-#### [C.5.3 第三个响应](https://http2.github.io/http2-spec/compression.html#rfc.section.C.5.3)
-
-### [C.6 Huffman编码的响应示例](https://http2.github.io/http2-spec/compression.html#response.examples.with.huffman.coding)
-
-#### [C.6.1 第一个响应](https://http2.github.io/http2-spec/compression.html#rfc.section.C.6.1)
-
-#### [C.6.2 第二个响应](https://http2.github.io/http2-spec/compression.html#rfc.section.C.6.2)
-
-#### [C.6.3 第三个响应](https://http2.github.io/http2-spec/compression.html#rfc.section.C.6.3)
-
-## [鸣谢](https://http2.github.io/http2-spec/compression.html#rfc.section.unnumbered-1)
-
-## [作者地址](https://http2.github.io/http2-spec/compression.html#rfc.authors)
-
-## Figures
-
-[Figure 1: Index Address Space](https://http2.github.io/http2-spec/compression.html#rfc.figure.1)
-
-[Figure 2: Integer Value Encoded within the Prefix (Shown for N = 5)](https://http2.github.io/http2-spec/compression.html#rfc.figure.2)
-
-[Figure 3: Integer Value Encoded after the Prefix (Shown for N = 5)](https://http2.github.io/http2-spec/compression.html#rfc.figure.3)
-
-[Figure 4: String Literal Representation](https://http2.github.io/http2-spec/compression.html#rfc.figure.4)
-
-[Figure 5: Indexed Header Field](https://http2.github.io/http2-spec/compression.html#rfc.figure.5)
-
-[Figure 6: Literal Header Field with Incremental Indexing — Indexed Name](https://http2.github.io/http2-spec/compression.html#rfc.figure.6)
-
-[Figure 7: Literal Header Field with Incremental Indexing — New Name](https://http2.github.io/http2-spec/compression.html#rfc.figure.7)
-
-[Figure 8: Literal Header Field without Indexing — Indexed Name](https://http2.github.io/http2-spec/compression.html#rfc.figure.8)
-
-[Figure 9: Literal Header Field without Indexing — New Name](https://http2.github.io/http2-spec/compression.html#rfc.figure.9)
-
-[Figure 10: Literal Header Field Never Indexed — Indexed Name](https://http2.github.io/http2-spec/compression.html#rfc.figure.10)
-
-[Figure 11: Literal Header Field Never Indexed — New Name](https://http2.github.io/http2-spec/compression.html#rfc.figure.11)
-
-[Figure 12: Maximum Dynamic Table Size Change](https://http2.github.io/http2-spec/compression.html#rfc.figure.12)
-
-# [1. 简介](https://http2.github.io/http2-spec/compression.html#rfc.section.1)
-
-在 HTTTP/1.1中 (见 [[RFC7230]](https://http2.github.io/http2-spec/compression.html#RFC7230))，头部字段是不压缩的。随着web页面逐步成长到需要发出几十甚至几百个请求，这些请求中冗余的头部字段不必要地消耗了带宽，及可测量的延迟增加。
-
-[SPDY](https://http2.github.io/http2-spec/compression.html#SPDY) [SPDY] 最初是通过使用 [DEFLATE](https://http2.github.io/http2-spec/compression.html#DEFLATE) [DEFLATE] 格式压缩头部字段来解决这种冗余的，这种方法被证明在有效地表示冗余的头部字段方面是非常高效的。然而，那种方法暴露了一个安全隐患，如在 CRIME (Compression Ratio Info-leak Made Easy) 攻击 (见 [[CRIME]](https://http2.github.io/http2-spec/compression.html#CRIME)) 中所演示的那样。
-
-本规范定义了HPACK，一个新的压缩器，它减少冗余的头部字段，限制了已知攻击的危害性，对于在受限的环境中使用而有着有限的内存需求。HPACK潜在的安全性问题在 [Section 7](https://http2.github.io/http2-spec/compression.html#Security) 描述。
-
-HPACK格式有意被设计的简单而不那么灵活。这两个特性降低了由于实现错误而导致的互操作性和安全性问题的风险。没有定义可扩展性机制；只有通过定义一个完整的替代品才能改变格式。
-
-## [1.1 概述](https://http2.github.io/http2-spec/compression.html#rfc.section.1.1)
-
-本规范中定义的格式将头部字段列表看作一个有序的且可包含重复项的名-值对的集合。名字和值被认为是不透明的字节序列，头部字段的顺序在压缩和解压后被保留。
+本规范中定义的格式将首部字段列表视为可包含重复对的名-值对的有序集合。名字和值被认为是不透明的字节序列，并且头部字段的顺序在压缩和解压后被保留。
 
 编码通过将头部字段映射到索引值的头部字段表来获知。这些头部字段表可以随着新头部字段的编码和解码而增量地更新。
 
-在编码后的形式中，头部字段由字面量或到一个头部字段表的一个头部字段的引用来表示。然而，头部字段列表可以使用引用和字面量值的混合来编码。
+在编码形式中，头部字段被字面地表示，或者作为对头部字段表之一中的头部字段。因此，可以使用引用和字面量值的混合来编码头部字段列表。
 
 字面量值直接编码或使用一个静态Huffman码。
 
-编码器负责决定将哪个头部字段作为新条目插入头部字段表。解码器执行由编码器规定的对头部字段表的修改，及重建头部字段列表的过程。这使解码器保持简单，并与各种编码器的互操作。
+编码器负责决定将哪些头部字段作为新条目插入头部字段表。解码器执行由编码器规定的对头部字段表的修改，及重建头部字段列表的过程。这使解码器保持简单，并能与各种编码器的互操作。
 
-[附录 C](https://http2.github.io/http2-spec/compression.html#examples) 中提供了说明了使用这些不同机制表示头字段的示例。
+[附录 C](https://tools.ietf.org/html/rfc7541#appendix-C) 中提供了说明使用这些不同机制表示头字段的示例。
 
-## [1.2 约定](https://http2.github.io/http2-spec/compression.html#conventions)
+## [1.2 约定](https://tools.ietf.org/html/rfc7541#section-1.2)
 
-本文档中的关键词 "MUST"，"MUST NOT"，"REQUIRED"，"SHALL"，"SHALL NOT"，"SHOULD"，"SHOULD NOT"，"RECOMMENDED"，"MAY"，和 "OPTIONAL"的解释如[[RFC2119](https://tools.ietf.org/html/rfc2119)]所述。
+本文档中的关键字 "MUST"，"MUST NOT"，"REQUIRED"，"SHALL"，"SHALL NOT"，"SHOULD"，"SHOULD NOT"，"RECOMMENDED"，"MAY"，和 "OPTIONAL"以如[[RFC2119](https://tools.ietf.org/html/rfc2119)]中所描述的来解释。
 
-所有的数值以网络字节序。除非另有说明，否则值为无符号的。字面值以十进制或十六进制的形式提供。
+所有的数值都是网络字节序。除非另有说明，否则值为无符号的。字面值以十进制或十六进制的形式提供。
 
-## [1.3 术语](https://http2.github.io/http2-spec/compression.html#encoding.concepts)
+## [1.3 术语](https://tools.ietf.org/html/rfc7541#section-1.3)
 
 本规范使用了如下的术语：
 
-头部字段：一个名-值对。名字和值都被视为不透明的字节序列。
+**头部字段**：一个名-值对。名字和值都被视为不透明的字节序列。
 
-动态表：动态表 (见 [Section 2.3.2](https://http2.github.io/http2-spec/compression.html#dynamic.table)) 是将存储的头部字段和索引值关联起来的表。这个表是动态的，且特定于编码和解码上下文。
+**动态表**：动态表 (参见 [2.3.2节](https://tools.ietf.org/html/rfc7541#section-2.3.2)) 是将存储的**头部字段**和**索引值**关联起来的表。这个表是动态的，并且特定于编码或解码上下文。
 
-静态表：静态表是 (见 [Section 2.3.1](https://http2.github.io/http2-spec/compression.html#static.table)) 是静态地将频繁出现的头部字段与索引值关联起来的表。这个表是有序的，只读的，总是可访问的，且可以在所有的编码和解码上下文间共享的。
+**静态表**：静态表是 (参见 [2.3.1节](https://tools.ietf.org/html/rfc7541#section-2.3.1)) 是静态地将**频繁出现的头部字段**与**索引值**关联起来的表。这个表是有序的，只读的，总是可访问的，且可以在所有的编码或解码上下文间共享的。
 
-头部列表：头部列表是一个有序的联合编码的且可出现重复的头部字段的头部字段集合。一个HTTP/2头部块中包含的完整的头部字段列表是一个头部列表。
+**头部列表**：头部列表是一个联合编码的头部字段可出现重复的有序头部字段集合。一个HTTP/2 **头部块** 中包含的完整的 **头部字段列表** 是一个 **头部列表**。
 
-头部字段表示：头部字段可以字面量或索引的编码形式表示( 见 [Section 2.4](https://http2.github.io/http2-spec/compression.html#header.representation))。
+**头部字段表示**：头部字段可以以字面量或索引的编码形式表示( 见 [2.4节](https://tools.ietf.org/html/rfc7541#section-2.4))。
 
-头部块：头部字段表示的有序列表，当解码时，产生完整的报头列表。
+**头部块**：头部字段表示的有序列表，当解码时，产生完整的头部列表。
 
-# [2. 压缩过程概述](https://http2.github.io/http2-spec/compression.html#header.encoding)
+# [2. 压缩过程概述](https://tools.ietf.org/html/rfc7541#section-2)
 
 本规范没有描述用于编码器的特定算法。相反，它精确地定义了解码器如何操作，以允许编码器产生本定义允许的任何编码。
 
-## [2.1 头部列表排序](https://http2.github.io/http2-spec/compression.html#header.list.ordering)
+## [2.1 头部列表排序](https://tools.ietf.org/html/rfc7541#section-2.1)
 
-HPACK在头部列表中保留了头部字段的顺序。编码器 **必须(MUST)** 以与头部字段在原始的头部列表中相同的顺序排列头部块中的头部字段表示。解码器在解码的头部列表中 **必须(MUST)** 以它们在头部块中的顺序排列头部字段。
+HPACK保留头部列表中头部字段的顺序。编码器 **必须(MUST)** 根据 **头部字段** 在原始头部列表中的顺序在头部块中对 **头部字段表示** 进行排序。解码器 **必须(MUST)** 根据 **头部字段表示** 在头部块中的顺序在解码的头部列表中对 **头部字段** 进行排序。
 
-## [2.2 编码和解码上下文](https://http2.github.io/http2-spec/compression.html#encoding.context)
+## [2.2 编码和解码上下文](https://tools.ietf.org/html/rfc7541#section-2.2)
 
-要解压缩头部块，解码器只需要维护一个动态表 (见 [Section 2.3.2](https://http2.github.io/http2-spec/compression.html#dynamic.table)) 作为解码上下文。不需要其它的动态状态。
+要解压缩 **头部块**，解码器只需维护 **动态表** (参见 [2.3.2节](https://tools.ietf.org/html/rfc7541#section-2.3.2)) 作为解码上下文。不需要其它的动态状态。
 
-当用在双向通信中时，比如HTTP，编码和解码的动态表完全独立地由一个端点维护，比如，请求和响应动态表是分开的。
+当被用于双向通信时，比如在HTTP中，编码和解码动态表完全独立地由一端维护，比如，请求和响应的动态表是分开的。
 
-## [2.3 索引表](https://http2.github.io/http2-spec/compression.html#indexing.tables)
+## [2.3 索引表](https://tools.ietf.org/html/rfc7541#section-2.3)
 
-HPACK使用了两个表来将头部字段与索引关联起来。静态表 (见 [Section 2.3.1](https://http2.github.io/http2-spec/compression.html#static.table)) 是预定义的，它包含了常见的头部字段（它们中的大多数具有一个空值）。动态表 (见 [Section 2.3.2](https://http2.github.io/http2-spec/compression.html#dynamic.table)) 是动态的，它可被编码器在编码的头部列表中用于索引头部字段。
+HPACK使用两个表将 **头部字段** 与 **索引** 关联起来。 **静态表** (参见 [2.3.1节](https://tools.ietf.org/html/rfc7541#section-2.3.1)) 是预定义的，它包含了常见的头部字段（其中的大多数值为空）。 **动态表** (参见 [2.3.2节](https://tools.ietf.org/html/rfc7541#section-2.3.2)) 是动态的，它可被编码器用于在编码的头部列表中重复地索引头部字段。
 
-这两个表被组合成用于定义索引值的单个地址空间(见 [Section 2.3.3](https://http2.github.io/http2-spec/compression.html#index.address.space))。
+这两个表被组合成用于定义索引值的单个地址空间(参见 [2.3.3节](https://tools.ietf.org/html/rfc7541#section-2.3.3))。
 
-### [2.3.1 静态表](https://http2.github.io/http2-spec/compression.html#static.table)
+### [2.3.1 静态表](https://tools.ietf.org/html/rfc7541#section-2.3.1)
 
-静态表由一个预定义的头部字段的静态列表组成。它的条目在 [附录 A](https://http2.github.io/http2-spec/compression.html#static.table.definition) 中定义。
+静态表由一个预定义的头部字段的静态列表组成。它的条目在 [附录 A](https://tools.ietf.org/html/rfc7541#appendix-A) 中定义。
 
-### [2.3.2 动态表](https://http2.github.io/http2-spec/compression.html#dynamic.table)
+### [2.3.2 动态表](https://tools.ietf.org/html/rfc7541#section-2.3.2)
 
-动态表由一个以先进先出的顺序维护的头部字段列表组成。动态表中第一个且最新的条目的索引值最低，动态表的最老的条目的索引值最高。
+动态表由以先进先出顺序维护的 **头部字段列表** 组成。动态表中第一个且最新的条目索引值最低，动态表最旧的条目索引值最高。
 
-动态表最初是空的。条目是随着每个头部块的解压缩而添加的。
+动态表最初是空的。条目随着每个头部块的解压而添加。
 
-动态表可以包含重复的条目 (比如，具有完全相同的名字和值的条目)。然而，重复的条目 **一定不能(MUST NOT)** 被解码器当作是错误。
+动态表可以包含重复的条目 (比如，具有相同的名字和相同的值的条目)。因而，重复条目 **一定不能(MUST NOT)** 被解码器视为错误。
 
-编码器决定如何更新动态表，并以此控制动态表使用多少内存。为了限制解码器的内存需求，动态表的大小被严格限制(见 [Section 4.2](https://http2.github.io/http2-spec/compression.html#maximum.table.size))。
+编码器决定如何更新动态表，并因此可以控制动态表使用多少内存。为了限制解码器的内存需求，动态表的大小被严格地进行限制(参见 [4.2节](https://tools.ietf.org/html/rfc7541#section-4.2))。
 
-解码器在处理头部字段表示(见 [Section 3.2](https://http2.github.io/http2-spec/compression.html#header.representation.processing))列表的过程中更新动态表
+解码器在处理 **头部字段表示** (参见[3.2节](https://tools.ietf.org/html/rfc7541#section-3.2)) 列表的过程中更新动态表
 
-### [2.3.3 索引地址空间](https://http2.github.io/http2-spec/compression.html#index.address.space)
+### [2.3.3 索引地址空间](https://tools.ietf.org/html/rfc7541#section-2.3.3)
 
 静态表和动态表被组合为单独的索引地址空间。
 
-在1到静态表的长度(包含)之间的索引值指向静态表 (见 [Section 2.3.1](https://http2.github.io/http2-spec/compression.html#static.table)) 中的元素。
+在1和静态表的长度(包含)之间的索引值指向静态表 (见第 [2.3.1节](https://tools.ietf.org/html/rfc7541#section-2.3.1)) 中的元素。
 
-严格地大于静态表的长度的索引值指向动态表 (见 [Section 2.3.2](https://http2.github.io/http2-spec/compression.html#dynamic.table)) 中的元素。通过减去静态表的长度来查找指向动态表的索引。
+严格地大于静态表长度的索引值指向动态表 (见第 [2.3.2节](https://tools.ietf.org/html/rfc7541#section-2.3.2)) 中的元素。通过减去静态表的长度来查找指向动态表的索引。
 
-严格地大于两表长度之和的索引 **必须(MUST)** 被当作一个解码错误。
+严格地大于两表长度之和的索引值 **必须(MUST)** 被视为一个解码错误。
 
-对于静态表大小为s，动态表大小为k的情况，下图展示了完整的有效的索引地址空间。
+对于静态表大小为s，动态表大小为k的情况，下图展示了完整的有效索引地址空间。
 
 ```
         <----------  Index Address Space ---------->
@@ -308,118 +212,115 @@ HPACK使用了两个表来将头部字段与索引关联起来。静态表 (见 
                                |                   V
                         Insertion Point      Dropping Point
 ```
-图 1: 索引地址空间
+图 1：索引地址空间
 
-## [2.4 头部字段表示](https://http2.github.io/http2-spec/compression.html#header.representation)
+## [2.4 头部字段表示](https://tools.ietf.org/html/rfc7541#section-2.4)
 
 一个编码的头部字段可由一个索引或一个字面量表示。
 
-索引的表示法将头部字段定义为对静态表或动态表中的条目的引用(见 [Section 6.1](https://http2.github.io/http2-spec/compression.html#indexed.header.representation))。
+索引的表示法将头部字段定义为对静态表或动态表中条目的引用(见第 [6.1节](https://tools.ietf.org/html/rfc7541#section-6.1))。
 
-字面量表示通过指定头部字段的名称和值来定义头部字段。头部字段名可由字面量或对静态表或动态表中的条目的引用来表示。头部字段值由字面量表示。
+字面量的表示通过描述头部字段的名称和值来定义头部字段。头部字段的名称可被字面地表示，或表示为对静态表或动态表中条目的引用。头部字段的值由字面量表示。
 
-定义三种不同的字面量表示：
+定义了三种不同的字面的表示：
 
-* 将头部字段作为新条目添加在动态表的起始位置的字面量表 示(见 [Section 6.2.1](https://http2.github.io/http2-spec/compression.html#literal.header.with.incremental.indexing))。
-* 不向动态表添加头部字段的字面量表示(见 [Section 6.2.2](https://http2.github.io/http2-spec/compression.html#literal.header.without.indexing))。
-* 不向动态表添加头部字段的字面量表示，此外还规定这个头部字段总是使用字面量表示，特别是由一个中继重编码时 (见 [Section 6.2.3](https://http2.github.io/http2-spec/compression.html#literal.header.never.indexed))。这种表示的目的是保护那些在压缩时有一定风险的头部字段值 (见 [Section 7.1.3](https://http2.github.io/http2-spec/compression.html#never.indexed.literals) 来获取更多详细信息)。
+* 将头部字段作为新条目添加到动态表的起始位置的字面地表示(见第 [6.2.1节](https://tools.ietf.org/html/rfc7541#section-6.2.1))。
+* 不向动态表添加 **头部字段** 的字面量表示(见第 [6.2.2节](https://tools.ietf.org/html/rfc7541#section-6.2.2))。
+* 不向动态表添加头部字段的字面量表示，此外还规定这个头部字段总是使用字面的表示，特别是由一个中介重编码时 (见第 [6.2.3节](https://tools.ietf.org/html/rfc7541#section-6.2.3))。这种表示的目的是保护那些在压缩时有一定风险的头部字段值 (见第 [7.1.3节](https://tools.ietf.org/html/rfc7541#section-7.1.3) 来获取更多详细信息)。
 
-可按照 安全注意事项 的指导来选择这三种字面量表示中的一个，以保护敏感的头部字段值 (见 [Section 7.1](https://http2.github.io/http2-spec/compression.html#compression.based.attacks))。
+可按照 **安全注意事项** 的指导来选择这三种字面的表示中的一个，以保护敏感的头部字段值 (见第 [7.1节](https://tools.ietf.org/html/rfc7541#section-7.1))。
 
-头部字段的名字或值的字面量表示可以直接编码字节序列或使用一个静态Huffman码 (见 [Section 5.2](https://http2.github.io/http2-spec/compression.html#string.literal.representation))。
+头部字段的名字或值的字面表示的字节序列可以是直接地编码，或使用静态Huffman码 (见第 [5.2节](https://tools.ietf.org/html/rfc7541#section-5.2))。
 
-# [3. 头部块解码](https://http2.github.io/http2-spec/compression.html#header.block.decoding)
+# [3. 头部块解码](https://tools.ietf.org/html/rfc7541#section-3)
 
-## [3.1 头部块处理](https://http2.github.io/http2-spec/compression.html#header.block.processing)
+## [3.1 头部块处理](https://tools.ietf.org/html/rfc7541#section-3.1)
 
-解码器顺序地处理首部块来重建原始的头部列表。
+解码器顺序地处理头部块来重建原始的头部列表。
 
-头部块是头部字段表示的级联。不同的可能的头部字段表示在 [Section 6](https://http2.github.io/http2-spec/compression.html#detailed.format) 描述。
+头部块是 **头部字段表示** 的连接。不同的可能的头部字段表示在第 [6节](https://http2.github.io/http2-spec/compression.html#detailed.format) 描述。
 
-头部字段被解码并添加进经过重建的头部列表后，头部字段不能被移除。被添加进头部列表的头部字段可以被安全的传递给应用程序。
+一旦头部字段被解码并加进了重建的头部列表，它就不能被移除了。被加进头部列表的头部字段可以被安全地传给应用程序。
 
-通过将所得到的头部字段传递给应用，除了动态表所需的内存外，可以利用最小的临时存储器承诺来实现解码器。
+通过将得到的头部字段传给应用程序，除了动态表所需的内存外，可以利用最小的临时存储器承诺来实现解码器。
 
-## [3.2 头部字段表示处理](https://http2.github.io/http2-spec/compression.html#header.representation.processing)
+## [3.2 头部字段表示处理](https://tools.ietf.org/html/rfc7541#section-3.2)
 
-在本节中定义了对报头块进行处理以获得报头列表。为了确保解码将成功地产生报头列表，解码器 **必须(MUST)** 遵守以下规则。
+本节定义对头部块进行处理以获得头部列表。为了确保解码将成功地产生 **头部列表**，解码器 **必须(MUST)** 遵守以下规则。
 
-所有的头部字段表示包含在一个头部块中则按照它们出现的顺序处理，如下所述。关于不同的头部字段表示和一些附加处理指令的格式化的细节请参见 [Section 6](https://http2.github.io/http2-spec/compression.html#detailed.format)。
+包含在一个头部块中的所有头部字段表示以它们出现的顺序处理，如下所述。关于不同的头部字段表示的格式的细节和一些额外的处理指令参见 [第6节](https://tools.ietf.org/html/rfc7541#section-6)。
 
+***索引的表示*** 需要执行以下操作：
 
-*索引表示*需要执行以下操作：
+* 静态表或动态表中被引用的条目对应的头部字段被加到解码的头部列表。
 
-* 与静态表或动态表中的被引用条目相对应的头部字段被附加到解码的头部列表。
+***不加进*** 动态表的 ***字面的表示*** 需要执行以下操作：
 
-*不添加*进动态表的*字面量表示*需要以下操作：
+* 头部字段被加到解码的头部列表。
 
-* 头部字段被附加到解码的头部列表。
+***加进*** 动态表的 ***字面的表示*** 需要执行以下操作：
 
-*添加*进动态表的*字面量表示*需要以下操作：
+* 头部字段被加到解码的头部列表。
+* 头部字段被插入动态表的起始位置。这种插入可能导致动态表中之前的条目被逐出 (参见 [第 4.4节](https://tools.ietf.org/html/rfc7541#section-4.4))。
 
-* 头部字段被附加到解码的头部列表。
-* 头部字段被插入动态表的起始位置。这个插入可能导致动态表中之前的条目被逐出 (见 [Section 4.4](https://http2.github.io/http2-spec/compression.html#entry.addition))。
+# [4. 动态表管理](https://tools.ietf.org/html/rfc7541#section-4)
 
-# [4. 动态表管理](https://http2.github.io/http2-spec/compression.html#dynamic.table.management)
+为了限制解码器端的内存需求，动态表大小受到限制。
 
-为了限制解码器侧的存储器要求，动态表在大小上受到约束。
+## [4.1 计算表大小](https://tools.ietf.org/html/rfc7541#section-4.1)
 
-## [4.1 计算表大小](https://http2.github.io/http2-spec/compression.html#calculating.table.size)
+动态表大小是它的条目大小的总和。
 
-动态表的大小是它的条目大小的总和。
+条目大小是它名字的字节长度 ( 如 [第 5.2 节](https://tools.ietf.org/html/rfc7541#section-5.2) 所述) 及它值的字节长度的总和，外加32。
 
-条目的大小是它的名字的字节长度 ( 如 [Section 5.2](https://http2.github.io/http2-spec/compression.html#string.literal.representation) 所述) 及它的值的字节长度的总和，外加32。
+任何条目的大小使用未应用Huffman编码条件下，它的名字和值的长度来计算。
 
-条目的大小使用未应用Huffman编码条件下的它的名字和值的长度来计算。
+**注意**：额外的32字节是考虑到与一个条目关联的预估开销。比如，条目结构使用两个64位的指针引用条目的名字和值，及两个64位整数来计数引用了名字和值的引用数目，这将有32字节的开销。
 
-**注意：**额外的32字节是考虑到与一个条目关联的预估开销。比如，条目结构使用两个64位的指针引用条目的名字和值，及两个64位整数来技术引用了名字和值的引用数目，这将有32字节的开销。
+## [4.2 最大表大小](https://tools.ietf.org/html/rfc7541#section-4.2)
 
-## [4.2 最大表大小](https://http2.github.io/http2-spec/compression.html#maximum.table.size)
+使用HPACK的协议决定允许编码器使用的动态表最大大小。在HTTP/2中，这个值由SETTINGS_HEADER_TABLE_SIZE 设置项决定 (参见 [[HTTP2]](https://tools.ietf.org/html/rfc7541#ref-HTTP2) 的第 6.5.2节)。
 
-使用HPACK的协议决定编码器允许为动态表使用的最大大小。在HTTP/2中，这个值由SETTINGS_HEADER_TABLE_SIZE 设置项决定 (参见 [[HTTP2]](https://http2.github.io/http2-spec/compression.html#HTTP2) 的 [Section 6.5.2](https://tools.ietf.org/html/rfc7540#section-6.5.2))。
+编码器可以选择使用比此最大大小(参见 [第6.3节](https://tools.ietf.org/html/rfc7541#section-6.3))更小的容量，但选择的大小 **必须(MUST)** 小于等于协议设置的最大大小。
 
-编码器可以选择使用比此最大大小(见 [Section 6.3](https://http2.github.io/http2-spec/compression.html#encoding.context.update))更小的容量，但所选择的大小 **必须(MUST)** 小于等于协议设置的最大大小。
+动态表最大大小的修改通过动态表大小更新(见 [第6.3节](https://tools.ietf.org/html/rfc7541#section-6.3))来通知。这种动态表大小更新 **必须(MUST)** 发生在遵循该动态表大小改变的第一个头部块的起始处。在HTTP/2中，这发生在设置项确认(参见 [[HTTP2]](https://tools.ietf.org/html/rfc7541#ref-HTTP2) 的第6.5.3节)之后。
 
-动态表最大大小的修改通过动态表大小更新(见 [Section 6.3](https://http2.github.io/http2-spec/compression.html#encoding.context.update))来通知。这个动态表大小更新 **必须(MUST)** 发生在利用了动态表大小的改变的第一个头部块的起始处。在HTTP/2中，这在一个设置项确认(见 [[HTTP2]
-](https://http2.github.io/http2-spec/compression.html#HTTP2)的 [Section 6.5.3](https://tools.ietf.org/html/rfc7540#section-6.5.3))之后。
+两个头部块的传输之间可能发生多次对最大表大小的更新。对于在这个间隔内该大小改变超过一次的情况，那个间隔内发生的最小最大表大小 **必须(MUST)** 在一个动态表大小更新中通知。最终的最大大小总是用信号通知的，这导致至多两个动态表大小更新。这确保解码器能够基于减小的动态表大小来执行逐出(见 [第 4.3节](https://tools.ietf.org/html/rfc7541#section-4.3))。
 
-对最大表大小的多次更新可能发生两个头部块传输之间。对于在这个间隔内大小改变超过一次的情况，在那个间隔内发生的最小的最大表大小 **必须(MUST)** 在一个动态表大小中通知。最终的最大大小总是用信号通知的，导致至多两个动态表大小更新。这确保解码器能够基于动态表大小的减少来执行逐出(见 [Section 4.3](https://http2.github.io/http2-spec/compression.html#entry.eviction))。
+通过将最大大小设置为0，此机制可被用于完全地清除动态表中的条目，随后可以恢复这些条目。
 
-此机制可用于通过将最大大小设置为0从而完全清除动态表中的条目，随后可以恢复这些条目。
+## [4.3 动态表大小改变时的条目逐出](https://tools.ietf.org/html/rfc7541#section-4.3)
 
-## [4.3 动态表大小改变时的条目逐出](https://http2.github.io/http2-spec/compression.html#entry.eviction)
+无论何时动态表最大大小减小，将条目从动态表的结尾处逐出，直到动态表的大小小于或等于最大大小。
 
-无论何时动态表最大大小被减小，条目被从动态表的结尾处逐出，直到动态表的大小小于或等于最大大小。
+## [4.4 添加新条目时的条目逐出](https://tools.ietf.org/html/rfc7541#section-4.4)
 
-## [4.4 添加新条目时的条目逐出](https://http2.github.io/http2-spec/compression.html#entry.addition)
+在把新条目加到动态表之前，需要先从动态表的结尾处把条目逐出，直到动态表大小小于或等于(最大大小 - 新条目大小)，或直到表为空。
 
-在把新的条目添加到动态表之前，需要先把条目从动态表的结尾处逐出，直到动态表的大小小于或等于(最大大小 - 新的条目大小)，或直到表为空。
-
-如果新的条目小于等于最大大小，则将那个条目加进表里。尝试添加一个大于最大大小的条目不是一个错误；尝试添加一个大于最大大小的条目导致所有已有条目被清空，并产生一个空表。
+如果新条目小于等于最大大小，则将那个条目加进表里。尝试将大于最大大小的条目加进表里不是错误；尝试添加大于最大大小的条目导致所有已有条目被清空，并产生一个空表。
 
 当把新条目加进动态表时，该新条目可以引用动态表中将被逐出的条目的名字。实现要注意，如果引用的条目在新条目插入之前被从动态表逐出了，则要避免删除引用的名字。
 
-# [5. 原始类型表示](https://http2.github.io/http2-spec/compression.html#low-level.representation)
+# [5. 原始数据类型的表示](https://tools.ietf.org/html/rfc7541#section-5)
 
-HPACK编码使用了两种原始数据类型：无符号的变量长度整数和字节串。
+HPACK编码使用两种原始数据类型：无符号的变长整数和字节串。
 
-## [5.1 整型表示](https://http2.github.io/http2-spec/compression.html#integer.representation)
+## [5.1 整数的表示](https://tools.ietf.org/html/rfc7541#section-5.1)
 
-整数用于表示名字索引，头部字段索引或字符串长度。整数的表示可在字节内的任何位置开始。为了允许优化的处理，整数的表示总是在字节的结尾处结束。
+整数用于表示名字索引，头部字段索引或字符串长度。整数的表示可在字节内的任何位置开始。为了处理上的优化，整数的表示总是在字节的结尾处结束。
 
-证书表示为两个部分：填充了当前字节的前缀，及如果整数值不适合在前缀内表示时的一个可选的字节列表。前缀的位数 (称为 N) 是整数表示的一个参数。
+整数由两部分表示：填满当前字节的前缀，及前缀不足以表示整数时的一个可选字节列表。前缀的位数 (称为 N) 是整数的表示的一个参数。
 
-如果整数值足够小，比如，严格小于2^N-1，则把它编码进N位前缀。
-
+如果整数值足够小，比如，严格地小于2^N-1，则把它编码进N位前缀。
 ```
   0   1   2   3   4   5   6   7
 +---+---+---+---+---+---+---+---+
 | ? | ? | ? |       Value       |
 +---+---+---+-------------------+
 ```
-图 2：在前缀内编码整数值 (显示为 N = 5)
+图 2：前缀中编码的整数值 (显示 N = 5)
 
-否则前缀的所有位被设为1，而值被减去2^N-1，然后使用一个或多个字节的列表编码。每个字节的最高有效位被用做继续标志：除了列表的最后一个字节外，它的值都被设置为1。字节剩余的位被用于编码减小过的值。
+否则，前缀的所有位被设置为1，值减去2^N-1，然后使用一个或多个字节的列表编码。每个字节的最高有效位被用作连续标记：除列表的最后一个字节外，该位的值都被设为1。字节中剩余的位被用于编码减小后的值。
 
 ```
   0   1   2   3   4   5   6   7
@@ -433,13 +334,13 @@ HPACK编码使用了两种原始数据类型：无符号的变量长度整数和
 | 0 |    Value-(2^N-1) MSB      |
 +---+---------------------------+
 ```
-图 3：前缀之后的整数值编码 (显示为 N = 5)
+图 3：前缀之后的整数值的编码(显示 N =  5)
 
-要从字节列表中解码整数值，需要先将列表中的字节的顺序反转过来。然后，移除每个字节的最高有效位。连接字节剩余的位，结果值再加2^N-1获得整数值。
+要由字节列表解码整数值，首先需要将列表中的字节顺序反过来。然后，移除每个字节的最高有效位。连接字节的剩余位，再将结果加2^N-1获得整数值。
 
-前缀大小，N，总是在1到8位之间。从字节的边界开始的整数值的前缀是8位的。
+前缀大小，N，总是在1到8位之间。从字节边界开始编码的整数值其前缀为8位。
 
-表示一个整数I的伪代码如下：
+表示整数I的伪代码如下：
 ```
 if I < 2^N - 1, encode I on N bits
 else
@@ -450,7 +351,9 @@ else
          I = I / 128
     encode I on 8 bits
 ```
-解码一个整数I的伪代码如如下：
+<font color=red>注意，在表示大整数时，字节序列中每个字节的最高有效位仅仅被用作了连续标记，它没有被用于表示整数值。(I % 128 + 128) 这个式子只是为了说明，字节的最高有效位要被设置为1。</font>
+
+解码整数I的伪代码如下：
 ```
 decode I from the next N bits
 if I < 2^N - 1, return I
@@ -463,13 +366,18 @@ else
     while B & 128 == 128
     return I
 ```
-说明整数的编码的示例可在[Appendix C.1](https://http2.github.io/http2-spec/compression.html#integer.representation.examples)找到。
 
-这种整数表示允许无限大小的值。编码器发送一个值为0的大数字也是可能的，这可以浪费字节，并且可被用于溢出整数值。超出实现限制的整数编码——值或字节长度—— **必须(MUST)** 被当作解码错误。可以基于实现的限制为每个不同的整数的使用设置不同的限制。
+<font color=red>要如何判断I小于 (2^N - 1) 呢？ 可以根据下一个字节的最高有效位判断么？好像不行吧。</font>
 
-## [5.2 字符串字面量表示](https://http2.github.io/http2-spec/compression.html#string.literal.representation)
+说明了 **整数的编码** 的示例可参见[附录C.1](https://tools.ietf.org/html/rfc7541#appendix-C.1)。
 
-头部字段名和头部字段值可由字符串字面量表示。字符串字面量被编码为字节的序列，通过直接编码字符串字面量的字节或使用Huffman码。(见 [[HUFFMAN]](https://http2.github.io/http2-spec/compression.html#HUFFMAN)).
+这种整数表示法允许无限大的值。编码器还可能发送大量0值，这可以浪费字节，并且可能用于溢出整数值。超出实现限制的整数的编码——值或字节长度—— **必须(MUST)** 被视为解码错误。可以基于实现的限制，为整数的每个不同使用设置不同的限制。
+
+<font color=red>浪费字节 是什么鬼？溢出整数值 又是要干什么？**整数的每个不同使用** 是神马意思？</font>
+
+## [5.2 字符串的字面表示](https://tools.ietf.org/html/rfc7541#section-5.2)
+
+头部字段名和头部字段值可使用字符串字面量表示。字符串字面量可通过直接编码其字节或使用Huffman码 (见 [[HUFFMAN]](https://tools.ietf.org/html/rfc7541#ref-HUFFMAN))编码为字节序列。
 
 ```
   0   1   2   3   4   5   6   7
@@ -481,29 +389,33 @@ else
 ```
 图 4：字符串字面量表示
 
-字符串字面量表示包含了如下的字段：
+字符串字面量表示包含如下的字段：
 
-H: 一位的标记，H，指示字符串的字节是否是Huffman编码的。
+**H：** 一位的标记，H，指示字符串的字节是否为Huffman编码。
 
-字符串长度：用于编码字符串字面量的字节的数目，用一个7位前缀编码的整数(见 [Section 5.1](https://http2.github.io/http2-spec/compression.html#integer.representation)).。
+**字符串长度：** 编码字符串字面量的字节数，用一个7位前缀的整数编码 (参见 [第5.1节](https://tools.ietf.org/html/rfc7541#section-5.1))。
 
-字符串数据：编码的字符串字面量的数据。如果H是'0'，则编码的数据是字符串字面量的原始字节。如果H是'1'，则编码的数据是字符串字面量的Huffman编码。
+**字符串数据：** 字符串字面量的编码数据。如果H是'0'，则编码数据是字符串字面量的原始字节。如果H是'1'，则编码数据是字符串字面量的Huffman编码。
 
-使用Huffman编码的字符串字面量使用 [Appendix B](https://http2.github.io/http2-spec/compression.html#huffman.code) 中定义的Huffman码编码 ( 参见 [Appendix C.4](https://http2.github.io/http2-spec/compression.html#request.examples.with.huffman.coding) 中请求的例子和[Appendix C.6](https://http2.github.io/http2-spec/compression.html#response.examples.with.huffman.coding) 中响应的例子)。编码的数据是字符串字面量每个字节对应的代码的位的连接。
+以Huffman码编码的字符串字面量使用 [附录 B](https://tools.ietf.org/html/rfc7541#appendix-B) 中定义的Huffman码 ( 参见 [附录 C.4](https://tools.ietf.org/html/rfc7541#appendix-C.4) 中请求的例子和 [附录  C.6](https://tools.ietf.org/html/rfc7541#appendix-C.6) 中响应的例子)。编码的数据是字符串字面量每个字节对应的代码的位的连接。
 
-由于Huffman编码的数据不总是在字节边界结束，而在它的后面插入一些填充，直到下个字节的边界。为了防止这种填充被错误地解释为字符串字面量的一部分，而使用了与 EOS (end-of-string) 符号相对应的代码的最高有效位。
+由于Huffman编码数据不总是在字节边界处结束，因而要在它的后面插入一些填充，至下个字节的边界。为了防止这种填充被错误地解释为字符串字面量的一部分，而将代码的最高有效位用作 EOS (end-of-string) 符号。
 
-一旦解码完成，编码数据的结尾处不完整的代码被认为是填充并被丢弃。严格地长于7位的填充 **必须(MUST)** 被当作一个解码错误。包含EOS符号的Huffman编码的字符串字面量 **必须(MUST)** 被当作一个解码错误
+一旦解码完成，编码数据结尾处不完整的代码被视为填充并丢弃。严格地长于7位的填充 **必须(MUST)** 被视为解码错误。包含EOS符号的Huffman编码字符串字面量 **必须(MUST)** 被视为解码错误。
 
-# [6. 二进制格式](https://http2.github.io/http2-spec/compression.html#detailed.format)
+<font color=red>所以EOS符号究竟是如何用的？Hufffman编码字符串字面的填充又是如何识别的？</font>
 
-本节描述了每个不同的头部字段表示和动态表大小更新指令的详细格式。
+# [6. 二进制格式](https://tools.ietf.org/html/rfc7541#section-6)
 
-## [6.1 索引头部字段表示](https://http2.github.io/http2-spec/compression.html#indexed.header.representation)
+本节描述每个不同头部字段表示和动态表大小更新指令的详细格式。
 
-索引的头部字段表示标识了静态表或动态表(见 [Section 2.3](https://http2.github.io/http2-spec/compression.html#indexing.tables))中的一个条目。
+## [6.1 索引的头部字段表示](https://tools.ietf.org/html/rfc7541#section-6.1)
 
-索引的头部字段表示使得头部字段被添加到头部列表中，如 [Section 3.2](https://http2.github.io/http2-spec/compression.html#header.representation.processing) 所述。
+<font color=red>指将头部字段表示为索引值。</font>
+
+索引的头部字段表示标识静态表或动态表 (参见 [第2.3节](https://tools.ietf.org/html/rfc7541#section-2.3)) 中的条目。
+
+索引的头部字段表示使头部字段被加进解码的头部列表，如 [第 3.2节](https://tools.ietf.org/html/rfc7541#section-3.2) 所述。
 
 ```
   0   1   2   3   4   5   6   7
@@ -511,21 +423,25 @@ H: 一位的标记，H，指示字符串的字节是否是Huffman编码的。
 | 1 |        Index (7+)         |
 +---+---------------------------+
 ```
-图 5: 索引的头部字段
+图 5：索引的头部字段
 
-索引的头部字段以'1' 1位模式开始，后面是匹配的头部字段的索引，由一个7位前缀的整数(见 [Section 5.1](https://http2.github.io/http2-spec/compression.html#integer.representation))表示。
+索引的头部字段以'1'的 1位模式开始，后面是匹配的头部字段索引，由一个7位前缀的整数 (参见 [第5.1节](https://tools.ietf.org/html/rfc7541#section-5.1)) 表示。
 
-不使用索引值0。如果在一个索引头部字段表示中发现则 **必须(MUST)** 将它当作一个解码错误。
+不使用索引值0。如果在索引的头部字段表示中发现则 **必须(MUST)** 将其视为解码错误。
 
-## [6.2 字面量头部字段表示](https://http2.github.io/http2-spec/compression.html#literal.header.representation)
+## [6.2 字面的头部字段表示](https://tools.ietf.org/html/rfc7541#section-6.2)
 
-字面量头部字段表示包含一个字面量头部字段值。头部字段名由一个字面量或对一个已有表条目，静态表中的或动态表中的 (见 [Section 2.3](https://http2.github.io/http2-spec/compression.html#indexing.tables))，的引用表示。
+字面的头部字段表示包含一个 **字面的头部字段值**。头部字段名由一个字面量或对静态表或动态表 (参见 [第2.3节](https://tools.ietf.org/html/rfc7541#section-2.3))中一个已有表条目的引用表示。
 
-本规范定义了三种字面量头部字段表示格式：索引的，无索引的，和从不索引的。
+<font color=red>字面的头部字段表示法中，头部字段的名可以用索引或字面量表示，而值则必须以字面量表示。</font>
 
-### [6.2.1 增量索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.with.incremental.indexing)
+本规范定义三种 **字面的头部字段** 表示格式：有索引的，无索引的，和从不索引的。
 
-具有增量索引表示的字面量头部字段导致将头部字段附加到解码的头部列表，并将其作为新条目插入到动态表中。
+### [6.2.1 增量索引表示的字面量头部字段](https://tools.ietf.org/html/rfc7541#section-6.2.1)
+
+**增量索引表示的字面量头部字段** 导致将头部字段加进解码的头部列表，并将其作为新条目插入到动态表中。
+
+<font color=red>通信的双方不会专门发送动态表。编码时动态表被编码进头部列表。解码时解码器从头部列表动态地构建出动态表。</font>
 
 ```
   0   1   2   3   4   5   6   7
@@ -537,7 +453,7 @@ H: 一位的标记，H，指示字符串的字节是否是Huffman编码的。
 | Value String (Length octets)  |
 +-------------------------------+
 ```
-图 6：具有增量索引的字面量头部字段 —— 索引名字
+图 6：增量索引表示的字面量头部字段 - 索引的名字
 ```
   0   1   2   3   4   5   6   7
 +---+---+---+---+---+---+---+---+
@@ -552,19 +468,19 @@ H: 一位的标记，H，指示字符串的字节是否是Huffman编码的。
 | Value String (Length octets)  |
 +-------------------------------+
 ```
-图 7：具有增量索引的字面量头部字段 —— 新名字
+图 7：增量索引表示的字面量头部字段 - 新的名字
 
-具有增量索引的字面量头部字段表示以'01' 2位模式开始。
+增量索引表示的字面量头部字段表示以'01' 2位模式开始。
 
-如果头部字段名匹配在静态表或动态表中存储的条目的头部字段名，则头部字段名可使用那个条目的索引表示。在这种情况下，条目的索引以一个有6位前缀的整数(见 [Section 5.1](https://http2.github.io/http2-spec/compression.html#integer.representation))表示。这个值总是非0值。
+如果头部字段名与静态表或动态表中存储的条目的头部字段名匹配，则头部字段名称可用那个条目的索引表示。在这种情况下，条目的索引以一个具有6位前缀的整数(参见 [第5.1节](https://tools.ietf.org/html/rfc7541#section-5.1))表示。这个值总是非0。
 
-此外，头部字段名由一个字符串字面量 (见 [Section 5.2](https://http2.github.io/http2-spec/compression.html#string.literal.representation)) 表示。使用值0代替6位索引，后跟头字段名称。
+否则，头部字段名由一个字符串字面量 (参见 [第5.2节](https://tools.ietf.org/html/rfc7541#section-5.2)) 表示，使用0值代替6位索引，其后是头字段名。
 
-两种形式的头字段名称表示形式之后是字符串字面值形式表示的头部字段值 (见 [Section 5.2](https://http2.github.io/http2-spec/compression.html#string.literal.representation))。
+两种形式的 **头部字段名表示** 之后是字符串字面量表示的头部字段值 (参见 [第5.2节](https://tools.ietf.org/html/rfc7541#section-5.2))。
 
-### [6.2.2 无索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.without.indexing)
+### [6.2.2 无索引的字面量头部字段](https://tools.ietf.org/html/rfc7541#section-6.2.2)
 
-无索引的字面量头部字段表示导致将头部字段附加到解码的头部列表而不改变动态表。
+无索引的字面量头部字段表示导致将头部字段加进解码的头部列表而 **不改变动态表**。
 
 ```
   0   1   2   3   4   5   6   7
@@ -576,7 +492,7 @@ H: 一位的标记，H，指示字符串的字节是否是Huffman编码的。
 | Value String (Length octets)  |
 +-------------------------------+
 ```
-图 8：无索引的字面量头部字段 —— 索引名字
+图 8：无索引的字面量头部字段 - 索引的名字
 ```
   0   1   2   3   4   5   6   7
 +---+---+---+---+---+---+---+---+
@@ -591,19 +507,19 @@ H: 一位的标记，H，指示字符串的字节是否是Huffman编码的。
 | Value String (Length octets)  |
 +-------------------------------+
 ```
-图 9：无索引的字面量头部字段 —— 新名字
+图 9：无索引的字面量头部字段 - 新的名字
 
 无索引的字面量头部字段表示以'0000' 4位模式开始。
 
-如果头部字段名匹配在静态表或动态表中存储的条目的头部字段名，则头部字段名可使用那个条目的索引表示。在这种情况下，条目的索引以一个有4位前缀的整数(见 [Section 5.1](https://http2.github.io/http2-spec/compression.html#integer.representation))表示。这个值总是非0值。
+如果头部字段名与静态表或动态表中存储的条目的头部字段名匹配，则头部字段名可使用那个条目的索引表示。在这种情况下，条目的索引以一个有着4位前缀的整数 (参见 [第5.1节](https://tools.ietf.org/html/rfc7541#section-5.1))表示。这个值总是非0。
 
-此外，头部字段名由一个字符串字面量 (见 [Section 5.2](https://http2.github.io/http2-spec/compression.html#string.literal.representation)) 表示。使用值0代替4位索引，后跟头字段名称。
+否则，头部字段名由一个字符串字面量 (参见 [第5.2节](https://http2.github.io/http2-spec/compression.html#string.literal.representation)) 表示，使用值0代替4位索引，其后是头部字段名。
 
-两种形式的头字段名称表示形式之后是字符串字面值形式表示的头部字段值 (见 [Section 5.2](https://http2.github.io/http2-spec/compression.html#string.literal.representation))。
+两种形式的 **头部字段名表示** 之后是字符串字面量形式表示的头部字段值 (见 [第5.2节](https://tools.ietf.org/html/rfc7541#section-5.2))。
 
-### [6.2.3 从不索引的字面量头部字段](https://http2.github.io/http2-spec/compression.html#literal.header.never.indexed)
+### [6.2.3 从不索引的字面量头部字段](https://tools.ietf.org/html/rfc7541#section-6.2.3)
 
-从不索引的字面量头部字段表示导致将头部字段附加到解码的头部列表而不改变动态表。中继在编码这个头部字段时 **必须(MUST)** 使用相同的表示。
+从不索引的字面量头部字段表示导致头部字段被加进解码的头部列表而不改变动态表。中介在编码这个头部字段时 **必须(MUST)** 使用相同的表示。
 
 ```
   0   1   2   3   4   5   6   7
@@ -616,7 +532,7 @@ H: 一位的标记，H，指示字符串的字节是否是Huffman编码的。
 +-------------------------------+
 
 ```
-图 10：从不索引的字面量头部字段 —— 索引名字
+图 10：从不索引的字面量头部字段 - 索引的名字
 ```
   0   1   2   3   4   5   6   7
 +---+---+---+---+---+---+---+---+
@@ -631,19 +547,21 @@ H: 一位的标记，H，指示字符串的字节是否是Huffman编码的。
 | Value String (Length octets)  |
 +-------------------------------+
 ```
-图 10：从不索引的字面量头部字段 —— 新名字
+图 11：从不索引的字面量头部字段 - 新的名字
 
 从不索引的字面量头部字段表示以'0001' 4位模式开始。
 
-当头部字段被表示为从不索引的字面量头部字段，它 **必须(MUST)** 总是以特定的字面量表示编码。特别的，当一个端点发送了一个它接收到的以从不索引的字面量头部字段表示的头部字段，它 **必须(MUST)** 以相同的表示转发该头部字段。
+当头部字段被表示为从 **不索引的字面量头部字段** 时，它 **必须(MUST)** 总是以该特定的 **字面量表示** 编码。尤其是当一个端点发送它接收的以 **从不索引的字面量头部字段** 表示的头部字段，它 **必须(MUST)** 以相同的表示转发该头部字段。
 
-这种表示旨在保护头不会由于压缩而遭受风险的部字段值(参见 [Section 7.1](https://http2.github.io/http2-spec/compression.html#compression.based.attacks) 获得更多细节)。
+这种表示旨在保护不会由于压缩而带来风险的头部字段值 (参见 [第 7.1 节](https://tools.ietf.org/html/rfc7541#section-7.1) 获得更多细节)。
 
-此表示的编码与无索引的字面量头部字段(见 [Section 6.2.2](https://http2.github.io/http2-spec/compression.html#literal.header.without.indexing))一致。
+<font color=red>这是啥意思呢？</font>
 
-## [6.3 动态表 大小更新](https://http2.github.io/http2-spec/compression.html#encoding.context.update)
+此表示的编码与无索引的字面量头部字段(参见 [第 6.2.2节](https://tools.ietf.org/html/rfc7541#section-6.2.2))一致。
 
-动态表大小更新通知动态表大小的一个改变。
+## [6.3 动态表 大小更新](https://tools.ietf.org/html/rfc7541#section-6.3)
+
+**动态表大小更新** 通知一个对动态表大小的改变。
 ```
   0   1   2   3   4   5   6   7
 +---+---+---+---+---+---+---+---+
@@ -652,76 +570,76 @@ H: 一位的标记，H，指示字符串的字节是否是Huffman编码的。
 ```
 图 12：最大动态表大小更改
 
-动态表大小更新以'001' 3位模式开始，后面跟着新的最大大小，以一个具有5位前缀的整数(见 [Section 5.1](https://http2.github.io/http2-spec/compression.html#integer.representation))表示。
+动态表大小更新以 '001' 的 3位模式开始，后面是新的最大大小，以一个具有5位前缀的整数 (参见 [第5.1节](https://tools.ietf.org/html/rfc7541#section-5.1)) 表示。
 
-新的最大大小 **必须(MUST)** 小于等于由使用HPACK的协议决定的限制。超出限制的值 **必须(MUST)** 被当作解码错误。在HTTP/2中，这个限制是从解码器接收而由编码确认的(见 [[HTTP2]](https://http2.github.io/http2-spec/compression.html#HTTP2) 的 [Section 6.5.3](https://tools.ietf.org/html/rfc7540#section-6.5.3)) 最后的SETTINGS_HEADER_TABLE_SIZE 参数值 (见 [[HTTP2]](https://http2.github.io/http2-spec/compression.html#HTTP2) 的 [Section 6.5.2](https://tools.ietf.org/html/rfc7540#section-6.5.2))，
+新的最大大小 **必须(MUST)** 小于等于使用HPACK的协议决定的限制。超出该限制的值 **必须(MUST)** 被视为解码错误。在HTTP/2中，这个限制是从解码器接收而由编码器确认 (参见 [[HTTP2](https://tools.ietf.org/html/rfc7541#ref-HTTP2)] 的 第6.5.3节) 的最后的SETTINGS_HEADER_TABLE_SIZE 参数值 (参见 [[HTTP2](https://tools.ietf.org/html/rfc7541#ref-HTTP2)] 的第 6.5.2节)，
 
-减小动态表的最大大小可能导致条目被逐出 (见 [Section 4.3](https://http2.github.io/http2-spec/compression.html#entry.eviction))。
+减小动态表的最大大小可能导致条目被逐出 (参见 [第4.3节](https://tools.ietf.org/html/rfc7541#section-4.3)) 。
 
-# [7. 安全注意事项](https://http2.github.io/http2-spec/compression.html#Security)
+# [7. 安全注意事项](https://tools.ietf.org/html/rfc7541#section-7)
 
-本节介绍与HPACK有关的安全问题的潜在区域：
+本节介绍与HPACK有关可能发生安全问题的潜在区域：
 
 * 使用压缩作为基于长度的预示来验证关于压缩到共享的压缩上下文的机密的猜测。
-* 由于解码器耗尽计算能力或存储容量而导致的拒绝服务。
+* 由于解码器耗尽处理或存储能力而导致的拒绝服务。
 
-## [7.1 探测动态表状态](https://http2.github.io/http2-spec/compression.html#compression.based.attacks)
+## [7.1 探测动态表状态](https://tools.ietf.org/html/rfc7541#section-7.1)
 
-HPACK通过利用诸如HTTP之类的协议中固有的冗余来减少报头字段编码的长度。HPACK最终的目标是减少发送HTTP请求或响应所需的数据量。
+HPACK通过利用诸如HTTP之类的协议中固有的冗余来减少头部字段编码的长度。最终的目标是减少发送HTTP请求或响应所需的数据量。
 
-可以同时定义编码和传输的头部字段，且可以在它们被编码之后立即观察到那些字段的长度的攻击者可以探测到用于编码头部字段的上下文。当一个攻击者可以做到这两者，它们可以自适应地修改请求以便确认关于动态表状态的猜测。如果猜测被压缩到更短的长度，则攻击者可以观察编码长度并推断猜测是正确的。
+可以同时定义编码并传输的头部字段，且在它们被编码之后可以立即观察那些字段的长度的攻击者，可以探测到用于编码头部字段的上下文。当一个攻击者可以做到这两点，他们可以自适应地修改请求以确认关于动态表状态的猜测。如果猜测被压缩到更短的长度，攻击者可以观察编码长度并推断猜测是正确的。
 
-即使是基于 传输层安全 (TLS) 协议 (见 [[TLS12]](https://http2.github.io/http2-spec/compression.html#TLS12)这也是可能的，因为尽管TLS为内容提供了机密的保护，但只为内容的长度提供了有限数量的保护。
+即使是基于 传输层安全 (TLS) 协议 (参见 [[TLS12](https://tools.ietf.org/html/rfc7541#ref-TLS12)]这也是可能的，因为尽管TLS为内容提供了机密的保护，但只为内容的长度提供了有限数量的保护。
 
 **注意：**填充方案只提供了针对具有这些能力的攻击者的有限的保护，潜在地仅仅迫使增加猜测的数量来了解与给定猜测相关联的长度。填充方案也通过增加发送的比特数而直接对抗压缩。
 
-类似 [CRIME](https://http2.github.io/http2-spec/compression.html#CRIME) [CRIME] 的攻击证明了这些一般攻击者能力的存在。特定攻击利用了 [DEFLATE](https://http2.github.io/http2-spec/compression.html#DEFLATE) [DEFLATE] 基于前缀匹配删除冗余的事实。这允许攻击者一次确认一个字符的猜测，将指数时间的攻击减少为线性时间的攻击。
+类似 CRIME [[CRIME](https://tools.ietf.org/html/rfc7541#ref-CRIME)] 的攻击证明了这些一般攻击者能力的存在。特定攻击利用了 DEFLATE [[DEFLATE](https://tools.ietf.org/html/rfc7541#ref-DEFLATE)]  基于前缀匹配删除冗余的事实。这允许攻击者一次确认一个字符的猜测，将指数时间的攻击减少为线性时间的攻击。
 
-### [7.1.1 HPACK 和 HTTP的适用性](https://http2.github.io/http2-spec/compression.html#rfc.section.7.1.1)
+### [7.1.1 HPACK 和 HTTP的适用性](https://tools.ietf.org/html/rfc7541#section-7.1.1)
 
-HPACK通过强制一个猜测匹配整个头部字段值而不是单独的字符，而缓解但没有完全消除基于模型 [CRIME](https://http2.github.io/http2-spec/compression.html#CRIME) [CRIME]的攻击。攻击者只能知道一个猜测是对的还是错的，因此他们被降低为粗略的猜测头部字段值。
+HPACK通过强制一个猜测匹配整个头部字段值而不是单独的字符，而缓解但没有完全消除基于模型 CRIME [[CRIME](https://http2.github.io/http2-spec/compression.html#CRIME)]的攻击。攻击者只能知道一个猜测是对的还是错的，因此他们被降低为粗略的猜测头部字段值。
 
 然而恢复特定的头部字段值依赖于值的熵。结果是，具有高熵的值不可能成功地恢复，低熵的值仍然脆弱。
 
-这种属性的攻击在两个互不信任的实体控制放在单独的HTTP/2连接上的请求或响应的任何时候都是可能的。
+这种属性的攻击在两个互不信任的实体控制放在单独的HTTP/2连接上的请求或响应的任何时候都是可能的。如果共享的HPACK压缩器允许一个实体向动态表中添加条目另一个访问那些条目，则表的状态可以被获取。
 
-Attacks of this nature are possible any time that two mutually distrustful entities control requests or responses that are placed onto a single HTTP/2 connection. If the shared HPACK compressor permits one entity to add entries to the dynamic table and the other to access those entries, then the state of the table can be learned.
+具有来自相互不信任实体的请求或响应的情况发生在中间方：在单个连接上向原始服务器发送来自于多个客户端的请求，或者从多个源服务器获得响应并将它们放置在朝向客户端的共享连接上。
 
-Having requests or responses from mutually distrustful entities occurs when an intermediary either: sends requests from multiple clients on a single connection toward an origin server, or takes responses from multiple origin servers and places them on a shared connection toward a client.
+Web浏览器还需要假设由不同的web源 [[ORIGIN](https://tools.ietf.org/html/rfc7541#ref-ORIGIN)] 在同一连接上发出的请求由相互不可信的实体创建。
 
-Web browsers also need to assume that requests made on the same connection by different [web origins](https://http2.github.io/http2-spec/compression.html#ORIGIN) [ORIGIN] are made by mutually distrustful entities.
+### [7.1.2 减轻](https://tools.ietf.org/html/rfc7541#section-7.1.2)
 
-### [7.1.2 减轻](https://http2.github.io/http2-spec/compression.html#rfc.section.7.1.2)
+需要对头部字段保密的HTTP用户可以使用具有足以使猜测不可行的熵的值。然而，作为一般解决方案这是不切实际的，因为它迫使所有的HTTP用户采取措施以减轻攻击。它将在如何使用HTTP方面引入新的限制。它将对如何使用HTTP施加新的约束。
 
-Users of HTTP that require confidentiality for header fields can use values with entropy sufficient to make guessing infeasible. However, this is impractical as a general solution because it forces all users of HTTP to take steps to mitigate attacks. It would impose new constraints on how HTTP is used.
+不是对HTTP的用户施加约束，HPACK的实现可以通过限制应用压缩的顺序来限制潜在的对动态表的探测。
 
-Rather than impose constraints on users of HTTP, an implementation of HPACK can instead constrain how compression is applied in order to limit the potential for dynamic table probing.
+不是对HTTP的用户施加约束，HPACK的实现可以替代地限制如何应用压缩以便限制动态表探测的可能性。
 
-An ideal solution segregates access to the dynamic table based on the entity that is constructing header fields. Header field values that are added to the table are attributed to an entity, and only the entity that created a particular value can extract that value.
+理想的方案是基于构建头部字段的实体隔离对动态表的访问。添加到表里的头部字段值归属于实体，只有创建了特定值的实体可以提取那个值。
 
-To improve compression performance of this option, certain entries might be tagged as being public. For example, a web browser might make the values of the Accept-Encoding header field available in all requests.
+要提升这个选项的压缩性能，某些条目可以被标记为public。比如，浏览器可以使所有的请求都能访问Accept-Encoding头部字段的值。
 
-An encoder without good knowledge of the provenance of header fields might instead introduce a penalty for a header field with many different values, such that a large number of attempts to guess a header field value results in the header field no longer being compared to the dynamic table entries in future messages, effectively preventing further guesses.
+不知道头部字段的来源的编码器可以替代地对具有许多不同值的头部字段引入惩罚机制，以此大量地尝试猜测头部字段值，使得在未来的消息中，头部字段不再与动态表的条目比较，从而有效地避免进一步的猜测。
 
-**Note:** Simply removing entries corresponding to the header field from the dynamic table can be ineffectual if the attacker has a reliable way of causing values to be reinstalled. For example, a request to load an image in a web browser typically includes the Cookie header field (a potentially highly valued target for this sort of attack), and web sites can easily force an image to be loaded, thereby refreshing the entry in the dynamic table.
+**注意：**简单地移除对应于来自动态表的头部字段的条目可能是无效的，如果攻击者具有可靠的使值被重新安装的方法的话。例如，在网络浏览器中加载图像的请求通常包括Cookie头部字段 (对于这种攻击而言潜在地高价值目标)，并且网站可以简单地强制加载图像，从而刷新动态表。
 
-This response might be made inversely proportional to the length of the header field value. Marking a header field as not using the dynamic table anymore might occur for shorter values more quickly or with higher probability than for longer values.
+该响应可以与头部字段值的长度成反比。将头部字段标记为不再使用动态表可以对于更短的值更快地或以比更长的值更高的概率发生。
 
-### [7.1.3 从不索引的字面量](https://http2.github.io/http2-spec/compression.html#never.indexed.literals)
+### [7.1.3 从不索引的字面量](https://tools.ietf.org/html/rfc7541#section-7.1.3)
 
-Implementations can also choose to protect sensitive header fields by not compressing them and instead encoding their value as literals.
+实现也可以通过选择不压缩敏感头部字段而以字面值编码来保护它们。
 
-Refusing to generate an indexed representation for a header field is only effective if compression is avoided on all hops. The never-indexed literal (see [Section 6.2.3](https://http2.github.io/http2-spec/compression.html#literal.header.never.indexed)) can be used to signal to intermediaries that a particular value was intentionally sent as a literal.
+拒绝为头部字段产生索引的表示只有在所有跳段上都避免压缩时才有效。从不索引字面量(参见[第6.2.3节](https://tools.ietf.org/html/rfc7541#section-6.2.3))可被用于通知中介，一个特定的值有意以字面的形式发送。
 
-An intermediary MUST NOT re-encode a value that uses the never-indexed literal representation with another representation that would index it. If HPACK is used for re-encoding, the never-indexed literal representation MUST be used.
+中介 **一定不能(MUST NOT)** 以将索引面量表示的另一种表示重编码使用从不索引字面量表示的值。如果HPACK被用于重编码，则 **必须(MUST)** 使用从不索引字面量表示。
 
-The choice to use a never-indexed literal representation for a header field depends on several factors. Since HPACK doesn't protect against guessing an entire header field value, short or low-entropy values are more readily recovered by an adversary. Therefore, an encoder might choose not to index values with low entropy.
+选择为头部字段使用从不索引字面量表示依赖于几个因素。由于HPACK不保护对完整的头部字段值的猜测，短的或低熵的值更容易被对手恢复。因而编码器可以选择不索引低熵的值
 
-An encoder might also choose not to index values for header fields that are considered to be highly valuable or sensitive to recovery, such as the Cookie or Authorization header fields.
+编码器也可以选择不索引被认为具有很高价值或敏感的头部字段值，比如Cookie或Authorization头部字段。
 
-On the contrary, an encoder might prefer indexing values for header fields that have little or no value if they were exposed. For instance, a User-Agent header field does not commonly vary between requests and is sent to any server. In that case, confirmation that a particular User-Agent value has been used provides little value.
+相反地，编码器可以优先索引那些如果暴露，价值比较小或无价值的头部字段。比如，在发送给任何服务器的请求间通常不变的User-Agent头部字段。在这种情况下，确认使用了一个特定的User-Agent值提供很低的价值。
 
-Note that these criteria for deciding to use a never-indexed literal representation will evolve over time as new attacks are discovered.
+注意，决定使用从不索引字面量表示的这些标准将随着时间流逝，新的攻击被发现而发展。
 
 ## [7.2 静态Huffman编码](https://http2.github.io/http2-spec/compression.html#rfc.section.7.2)
 
