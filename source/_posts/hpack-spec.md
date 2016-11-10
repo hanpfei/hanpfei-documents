@@ -12,6 +12,8 @@ categories: HTTP2相关规范
 
 这是一份互联网标准跟踪文档。
 
+<!--more-->
+
 本文档是互联网工程任务组（IETF）的产品。它代表了IETF社区的共识。它已经接受公众审查，并已获得互联网工程指导小组（IESG）的发布允准。有关互联网标准的更多信息，请参见[RFC 5741的第2节](https://tools.ietf.org/html/rfc5741#section-2)。
 
 有关本文档的当前状态，任何勘误以及如何提供反馈的信息，请访问 http://www.rfc-editor.org/info/rfc7541。
