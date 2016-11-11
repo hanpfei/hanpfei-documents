@@ -1,22 +1,32 @@
 ---
 title: 懒人chromium net android移植指南
+date: 2016-11-11 14:07:49
+tags: Cronet
 ---
 
-# 编译chromium net模块
-
-首先要做的事情就是下载完整的chromium代码，这可以参考[Chromium Android编译指南](http://www.jianshu.com/p/5fce18cbe016)来完成。然后执行（假设当前目录是chromium代码库的根目录）命令：
+﻿Chromium浏览器的网络库是一个功能非常强大的网络库，它支持的网络协议非常多，除了常见的HTTP/1.1，它还支持HTTP/2，QUIC等比较新的协议。这里我们尝试将Chromium net网络库移植到Android平台，在我们的Android应用中跑起来。
 
 <!--more-->
 
+移植Chromium net网络库有两种方式，一是将Chromium net网络库及其依赖的所有其它库编译为动态链接库，将这些so导入我们的Android应用，然后提取Chromium net网络库导出的头文件并导入我们的Android应用，我们自己编写JNI代码进而让Chromium net跑起来；二是利用Cronet。Cronet是对Chromium net网络库的封装，它为我们提供方便的Java接口。编译Cronet时，会将Cronet的JNI代码，Chromium net库及其依赖的所有其它库编译为一个单独的so，并将各个库的Java接口编译为jar包，我们可以将这些jar文件和so文件导入我们的Android应用，并调用Java接口。
+
+这里我们会介绍这两种方式。
+
+# 编译Chromium net模块
+
+## 下载Chromium代码
+首先要做的是下载完整的Chromium代码，这可以参考 [Chromium Android编译指南](http://www.jianshu.com/p/5fce18cbe016) 完成。然后执行（假设当前目录是chromium代码库的根目录）命令：
 ```
 $ gclient runhooks
 $ cd src
 $ ./build/install-build-deps.sh
 $ ./build/install-build-deps-android.sh
 ```
-下载构建chromium所需的系统工具。
+这些命令帮我们下载构建Chromium所需的工具链。
 
-之后需要对编译进行配置。编辑`out/Default/args.gn`文件，并参照[Chromium Android编译指南](http://www.jianshu.com/p/5fce18cbe016)中的说明，输入如下内容：
+## 对构建进行配置
+
+构建之前需要对构建进行配置。编辑`out/Default/args.gn`文件，参照 [Chromium Android编译指南](http://www.jianshu.com/p/5fce18cbe016) 的说明，输入如下内容：
 ```
 target_os = "android"
 target_cpu = "arm"  # (default)
@@ -27,11 +37,31 @@ is_component_build = true
 is_clang = false
 symbol_level = 1  # Faster build with fewer symbols. -g1 rather than -g2
 enable_incremental_javac = false  # Much faster; experimental
-android_ndk_root = "/home/hanpfei0306/data/dev_tools/Android/android-ndk-r12b"
+android_ndk_root = "~/dev_tools/Android/android-ndk-r10e"
+android_sdk_root = "~/dev_tools/Android/sdk"
+android_sdk_build_tools_version = "23.0.2"
+
+disable_file_support = true
+disable_ftp_support = true
+enable_websockets = false
+
+use_platform_icu_alternatives = true
 ```
 关键点主要有如下几个：
 
- - is_debug被置为了false，表示编译非Debug版的。在这种情况下，enable_incremental_javac同样要被置为false。否则在执行`gn gen out/Default`时会报出如下的error：
+ - `is_component_build`被置为ture。Chromium文档 (`gn args --list out/Default/`输出) 中对这个配置项的说明如下：
+
+```
+is_component_build  Default = false
+    //build/config/BUILDCONFIG.gn:162
+    Component build. Setting to true compiles targets declared as "components"
+    as shared libraries loaded dynamically. This speeds up development time.
+    When false, components will be linked statically.
+```
+
+将这个配置项置为true，会使以`components`声明的targets被编译为动态链接库，否则它们将会被编译为静态库。这里我们需要将net等模块编译为动态链接库，因而将该配置项置为true。
+
+ - `is_debug`被置为false，表示编译非Debug版。在这种情况下，`enable_incremental_javac`同样要被置为false。否则在执行`gn gen out/Default`生成 .ninja 文件时会报出如下的error：
 ```
 ERROR at //build/config/android/config.gni:136:3: Assertion failed.
   assert(!(enable_incremental_javac && !is_java_debug))
@@ -43,58 +73,74 @@ See //BUILD.gn:11:1: whence it was imported.
 import("//build/config/compiler/compiler.gni")
 ^--------------------------------------------
 ```
- - 配置了android_ndk_root选项，也就是说编译的时候使用我们给的NDK中的工具链，而不是chromium代码库中的工具链。具体的原因，可以参考[chromium net android移植[(http://www.jianshu.com/p/082739b65f03)中的说明。
- - is_clang选项被置为了false。具体的原因可以参考[chromium net android移植[(http://www.jianshu.com/p/082739b65f03)中的说明。
+ - 配置android_ndk_root为标准NDK的路径，即直接从Google开发者站点下载的NDK包。这个配置指示构建系统，在编译时使用标准NDK工具链，而不是Chromium代码库中的NDK工具链。这主要是因为Chromium代码库中的NDK工具链与标准NDK工具链之间的差异，会导致我们在JNI代码中调用Chromium net函数时，出现诡异的链接诶问题。
+NDK版本的选择也要注意。Chromium使用的默认NDK相关信息 (`gn args --list out/Default/`输出) 如下：
 
-保存退出之后，执行：
+```
+android_ndk_major_version  Default = "10"
+    //build/config/android/config.gni:65
+
+android_ndk_root  Default = "//third_party/android_tools/ndk"
+    //build/config/android/config.gni:66
+
+android_ndk_version  Default = "r10e"
+    //build/config/android/config.gni:67
+```
+
+可见默认的NDK版本是`r10e`的。因而我们也选用r10e版的标准NDK。
+
+ - `is_clang`选项被置为了false。Chromium文档 (`gn args --list out/Default/`输出) 中对这个配置项的说明如下：
+
+```
+is_clang  Default = false
+    //build/config/BUILDCONFIG.gn:141
+    Set to true when compiling with the Clang compiler. Typically this is used
+    to configure warnings.
+```
+
+这个配置项用于指定是否要用Clang编译器。
+
+ - `disable_file_support`、`disable_ftp_support`和`enable_websockets`分别被置为true、true和false。这几个设置主要是为裁剪需要。我们要禁掉chromium net对这几种协议的支持，以减小最终编译出来的so文件的大小。
+
+ - `use_platform_icu_alternatives`被置为true。这个配置也是为了减小最终的so文件的总大小。ICU相关的几个so文件总和接近2M，通过将`use_platform_icu_alternatives`置为true，指示不使用Chromium代码库中的ICU。
+
+保存`out/Default/args.gn`文件退出，执行如下命令：
 ```
 $ gn gen out/Default
 ```
-产生ninja构建所需的各个模块的ninja文件。
+产生ninja构建所需的 .ninja 文件。
 
-将**`android-ndk-r12b/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/arm-linux-androideabi/4.9.x`**拷贝到**`android-ndk-r12b/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/arm-linux-androideabi/4.9`**，利用ninja构建chromium的模块时，需要引用到**`android-ndk-r12b/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/arm-linux-androideabi/4.9/libgcc.a`**。
-
-配置base模块。需要修改修改`base/BUILD.gn`，在为android编译时，添加对libunwind的依赖：
-```
-if (is_android) {
-  config("android_system_libs") {
-    libs = [ "log", "unwind" ]  # Used by logging.cc.
-  }
-}
-```
-具体的原因可以参考[chromium net android移植[(http://www.jianshu.com/p/082739b65f03)中的说明。
-
-随后输入如下命令编译net模块：
+## 编译Chromium net
+输入如下命令编译net模块：
 ```
 $ ninja -C out/Default net
 ```
-这个命令会编译net模块，及其依赖的所有模块，包括base，crypto，borringssl，protobuf，icu，url等。可以看一下我们编译的成果：
+这个命令会编译net模块，及其依赖的所有模块，包括base，crypto，boringssl，protobuf，url等。看一下我们编译的成果：
 ```
 $ ls -alh out/Default/ | grep so$
--rwxrwxr-x  1 chrome chrome 1.2M 8月  10 20:55 libbase.cr.so
--rwxrwxr-x  1 chrome chrome  98K 8月  10 20:55 libbase_i18n.cr.so
--rwxrwxr-x  1 chrome chrome 773K 8月  10 20:54 libboringssl.cr.so
--rwxrwxr-x  1 chrome chrome  74K 8月  10 20:55 libcrcrypto.cr.so
--rwxrwxr-x  1 chrome chrome 1.3M 8月  10 20:55 libicui18n.cr.so
--rwxrwxr-x  1 chrome chrome 902K 8月  10 20:55 libicuuc.cr.so
--rwxrwxr-x  1 chrome chrome 4.1M 8月  10 20:59 libnet.cr.so
--rwxrwxr-x  1 chrome chrome 122K 8月  10 20:55 libprefs.cr.so
--rwxrwxr-x  1 chrome chrome 182K 8月  10 20:55 libprotobuf_lite.cr.so
--rwxrwxr-x  1 chrome chrome  90K 8月  10 20:59 liburl.cr.so
+-rwxrwxr-x  1 chrome chrome 967K 11月 11 15:34 libbase.cr.so
+-rwxrwxr-x  1 chrome chrome 785K 11月 11 15:34 libboringssl.cr.so
+-rwxrwxr-x  1 chrome chrome  50K 11月 11 15:34 libcrcrypto.cr.so
+-rwxrwxr-x  1 chrome chrome 3.3M 11月 11 15:36 libnet.cr.so
+-rwxrwxr-x  1 chrome chrome  90K 11月 11 15:34 libprefs.cr.so
+-rwxrwxr-x  1 chrome chrome 154K 11月 11 15:34 libprotobuf_lite.cr.so
+-rwxrwxr-x  1 chrome chrome  70K 11月 11 15:36 liburl.cr.so
 ```
-总共10个共享库文件。
+总共7个共享库文件，总大小5.4M。
 
-在我们的工程的app模块的jni目录下为chromium创建文件夹`app/src/main/jni/third_party/chromium/libs`和`app/src/main/jni/third_party/chromium/include`，分别用于存放我们编译出来的共享库文件和net等模块导出的头文件及这些头文件include的其它头文件。
+# 使用Chromium net
+## 将Chromium net导入Android应用
+在我们工程的app模块的jni目录下为chromium创建文件夹`app/src/main/jni/third_party/chromium/libs`和`app/src/main/jni/third_party/chromium/include`，分别用于存放我们编译出来的共享库和net等模块导出的头文件及这些头文件include的其它头文件。
 
 这里我们将编译出来的所有so文件拷贝到`app/src/main/jni/third_party/chromium/libs/armeabi`和`app/src/main/jni/third_party/chromium/libs/armeabi-v7a`目录下：
 ```
-cp out/Default/*.so /media/data/MyProjects/MyApplication/app/src/main/jni/third_party/chromium/libs/armeabi/
-cp out/Default/*.so /media/data/MyProjects/MyApplication/app/src/main/jni/third_party/chromium/libs/armeabi-v7a/
+cp out/Default/*.so ~/MyApplication/app/src/main/jni/third_party/chromium/libs/armeabi/
+cp out/Default/*.so ~/MyApplication/app/src/main/jni/third_party/chromium/libs/armeabi-v7a/
 ```
-# 提取导出头文件
-为了使用net模块提供的API，我们不可避免地要将net导出的头文件引入我们的项目。要做到这些，我们首先就需要从chromium工程中提取net导出的头文件。不像许多其它的C++项目，源代码文件、私有头文件及导出头文件存放的位置被很好地做了区隔，chromium各个模块的所有头文件和源代码文件都是放在一起的。这还是给我们提取导出头文件的工作带来了一点麻烦。
+## 提取导出头文件
+为了使用net模块提供的API，不可避免地要将net导出的头文件引入我们的项目。要做到这些，需要从chromium工程提取net导出的头文件。不像许多其它的C/C++项目，源代码文件、私有头文件及导出头文件存放的位置被很好地做了区隔，chromium各个模块的头文件和源代码文件都是放在一起的。这给我们提取导出头文件的工作带来了一点麻烦。
 
-这里我们借助于gn工具提供的desc功能（关于gn工具的用法，可以参考[GN的使用 - GN工具](http://my.oschina.net/wolfcs/blog/726696)一文），输出中如下的这两段：
+好在有gn工具。gn工具提供的desc命令（参考 [GN的使用 - GN工具](http://my.oschina.net/wolfcs/blog/726696) 一文）的输出有如下这样两段：
 ```
 $ gn desc out/Default/ net
 Target //net:net
@@ -109,18 +155,18 @@ sources
 public
   [All headers listed in the sources are public.]
 ```
-编写脚本来实现。
+我们可以据此编写脚本提取net模块的头文件。
 
-我们可以传入***[chromium代码库的src目录路径]***，***[输出目录的路径]***，***[模块名]***，及***[保存头文件的目标目录路径]***作为参数，来提取模块的所有导出头文件，***[保存头文件的目标目录路径]***参数缺失时默认使用当前目录，如：
+我们可以为脚本传入***[chromium代码库的src目录路径]***，***[输出目录的路径]***，***[模块名]***，及***[保存头文件的目标目录路径]***作为参数，以提取头文件，***[保存头文件的目标目录路径]***参数缺失时默认使用当前目录，如：
 ```
 $ cd /media/data/MyProjects/MyApplication/app/src/main/jni/third_party/chromium/include
 $ chromium_mod_headers_extracter.py ~/data/chromium_android/src  out/Default net
 $ chromium_mod_headers_extracter.py ~/data/chromium_android/src  out/Default base
-$ chromium_mod_headers_extracter.py ~/data/chromium_android/src  out/Default base
+$ chromium_mod_headers_extracter.py ~/data/chromium_android/src  out/Default url
 ```
-我们利用我们的脚本，提取出net、base和url这三个模块导出的头文件。
+利用我们的脚本，提取net、base和url这三个模块导出的头文件。
 
-这里一并将该脚本的完整内容贴出来：
+这里一并将该脚本的完整内容贴出来供大家参考：
 ```
 #!/usr/bin/env python
 
@@ -195,7 +241,8 @@ if __name__ == "__main__":
     if len(public_headers) > 1:
         copy_all_files(chromium_src_root, public_headers, target_dir=target_root_path)
 ```
-此外，利用脚本提取头文件的方法，会遗漏一些必须的头文件。主要是如下的这几个：
+
+此外，前面的提取过程会遗漏一些必须的头文件。主要是如下几个：
 ```
 base/callback_forward.h
 base/message_loop/timer_slack.h
@@ -206,11 +253,11 @@ net/base/privacy_mode.h
 net/websockets/websocket_event_interface.h
 net/quic/quic_alarm_factory.h
 ```
-对于这些文件，我们直接把它们从chromium的代码库拷贝到我们的工程中的对应位置即可。
+对于这些文件，我们直接从chromium的代码库拷贝到我们的工程中对应的位置即可。
 
-我们还需要引入chromium的build配置头文件"build/build_config.h"。直接将chromium代码库中的对应文件拷贝过来，放到对应的位置。
+我们还需要引入chromium的build配置头文件`build/build_config.h`。直接将chromium代码库中的对应文件拷贝过来，放到对应的位置。
 
-将MyApplication/app/src/main/jni/third_party/chromium/include/base/gtest_prod_util.h文件中对"testing/gtest/include/gtest/gtest_prod.h"的include注释掉，同时修改FRIEND_TEST_ALL_PREFIXES宏的定义：
+将`app/src/main/jni/third_party/chromium/include/base/gtest_prod_util.h`文件中对`testing/gtest/include/gtest/gtest_prod.h`的include注释掉，同时修改FRIEND_TEST_ALL_PREFIXES宏的定义为：
 ```
 #if 0
 #define FRIEND_TEST_ALL_PREFIXES(test_case_name, test_name) \
@@ -221,10 +268,12 @@ net/quic/quic_alarm_factory.h
 #define FRIEND_TEST_ALL_PREFIXES(test_case_name, test_name)
 #endif
 ```
-这样就可以注释掉类定义中专门为gtest插入的那些代码了。
+这样就可以注释掉类定义中专门为gtest插入的代码。
 
-# Chromium net的简单使用
-参照`chromium/src/net/tools/get_server_time/get_server_time.cc`的代码，来编写简单的示例程序。首先是JNI（JNI的用法，可以参考[android app中使用JNI](http://my.oschina.net/wolfcs/blog/111309)）的Java层代码：
+## Chromium net的简单使用
+参照`chromium/src/net/tools/get_server_time/get_server_time.cc`的代码，来编写简单的demo程序。
+
+首先是JNI的Java层代码：
 ```
 package com.example.hanpfei0306.myapplication;
 
@@ -239,7 +288,7 @@ public class NetUtils {
     }
 }
 ```
-然后是native层的JNI代码，`MyApplication/app/src/main/jni/src/NetJni.cpp`：
+然后是JNI的native实现，`app/src/main/jni/src/NetJni.cpp`：
 ```
 //
 // Created by hanpfei0306 on 16-8-4.
@@ -454,33 +503,9 @@ jint JNI_OnLoad(JavaVM* vm, void*) {
     return JNI_VERSION_1_6;
 }
 ```
-这个文件里，在nativeSendRequest()函数中调用chromium net做了网络请求，获取响应，并打印出响应的headers及响应的content。
-
-`MyApplication/app/src/main/jni/src/JNIHelper.h`中定义了一些宏，以方便native methods的注册，其具体内容则为：
-```
-#ifndef CANDYWEBCACHE_JNIHELPER_H
-#define CANDYWEBCACHE_JNIHELPER_H
-
-#include <android/log.h>
-
-#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG,TAG ,__VA_ARGS__)
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO,TAG ,__VA_ARGS__)
-#define LOGW(...) __android_log_print(ANDROID_LOG_WARN,TAG ,__VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,TAG ,__VA_ARGS__)
-#define LOGF(...) __android_log_print(ANDROID_LOG_FATAL,TAG ,__VA_ARGS__)
-
-#ifndef NELEM
-# define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
-#endif
-
-#define NATIVE_METHOD(className, functionName, signature) \
-    { #functionName, signature, reinterpret_cast<void*>(className ## _ ## functionName) }
-
-
-#endif //CANDYWEBCACHE_JNIHELPER_H
-```
-# 配置Gradle
-要在Android Studio中使用JNI，还需要对Gralde做一些特别的配置，具体可以参考[在Android Studio中使用NDK/JNI - 实验版插件用户指南](http://my.oschina.net/wolfcs/blog/550677)一文。这里需要对***`MyApplication/build.gradle`***、***`MyApplication/gradle/wrapper/gradle-wrapper.properties`***，和***`MyApplication/app/build.gradle`***这几个文件做修改。
+这个文件里，在nativeSendRequest()函数中调用chromium net执行网络请求，获取响应，并打印出响应的headers及content。
+## 配置Gradle
+要在Android Studio中使用JNI，还需要对Gralde做一些配置文。这里需要对***`MyApplication/build.gradle`***、***`MyApplication/gradle/wrapper/gradle-wrapper.properties`***，和***`MyApplication/app/build.gradle`***这几个文件做修改。
 
 修改***`MyApplication/build.gradle`***文件，最终的内容为：
 ```
@@ -664,7 +689,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.4.0'
 }
 ```
-关键点主要有如下的这些：
+关键点主要有如下这些：
 
  - 为net、base和url这几个模块创建PrebuiltLibraries libs元素，并正确的设置对这些模块的依赖。
  - 配置stl为"c++_shared"。
@@ -677,9 +702,7 @@ $ gn desc out/Default/ net
 Target //net:net
 Type: shared_library
 Toolchain: //build/toolchain/android:arm
-
 ......
-
 cflags
   -fno-strict-aliasing
   --param=ssp-buffer-size=4
@@ -711,7 +734,7 @@ cflags
   -fdata-sections
   -ffunction-sections
   -g1
-  --sysroot=../../../../../../../home/hanpfei0306/data/dev_tools/Android/android-ndk-r12b/platforms/android-16/arch-arm
+  --sysroot=../../../../../../../~/dev_tools/Android/android-ndk-r12b/platforms/android-16/arch-arm
   -fvisibility=hidden
 
 cflags_cc
@@ -720,9 +743,9 @@ cflags_cc
   -std=gnu++11
   -Wno-narrowing
   -fno-rtti
-  -isystem../../../../../../../home/hanpfei0306/data/dev_tools/Android/android-ndk-r12b/sources/cxx-stl/llvm-libc++/libcxx/include
-  -isystem../../../../../../../home/hanpfei0306/data/dev_tools/Android/android-ndk-r12b/sources/cxx-stl/llvm-libc++abi/libcxxabi/include
-  -isystem../../../../../../../home/hanpfei0306/data/dev_tools/Android/android-ndk-r12b/sources/android/support/include
+  -isystem../../../../../../../~/dev_tools/Android/android-ndk-r12b/sources/cxx-stl/llvm-libc++/libcxx/include
+  -isystem../../../../../../../~/dev_tools/Android/android-ndk-r12b/sources/cxx-stl/llvm-libc++abi/libcxxabi/include
+  -isystem../../../../../../../~/dev_tools/Android/android-ndk-r12b/sources/android/support/include
   -fno-exceptions
 
 ......
@@ -774,12 +797,10 @@ defines
   U_ENABLE_DYLOAD=0
   U_NOEXCEPT=
   ICU_UTIL_DATA_IMPL=ICU_UTIL_DATA_FILE
-
 ......
-
 libs
   c++_shared
-  /home/hanpfei0306/data/dev_tools/Android/android-ndk-r12b/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/arm-linux-androideabi/4.9/libgcc.a
+  ~/dev_tools/Android/android-ndk-r12b/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/arm-linux-androideabi/4.9/libgcc.a
   c
   atomic
   dl
@@ -788,8 +809,159 @@ libs
   unwind
 
 lib_dirs
-  /home/hanpfei0306/data/dev_tools/Android/android-ndk-r12b/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a/
+  ~/dev_tools/Android/android-ndk-r12b/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a/
 ```
-
 主要是build.gradle的cppFlags添加的那些宏定义，它们来自defines。如果这些配置，在编译chromium net so的环境，和构建我们的工程的环境之间存在差异，则很可能会导致运行期一些莫名奇妙的问题，比如意外的缓冲区溢出之类的。
+
+# Cronet移植
+如我们前面提到的，Chromium已经有提供一个称为cronet的模块，封装chromium net，提供Java接口。使用这个模块将大大简化我们的移植工作。构建cronet所需步骤主要有：
+
+ - 基于前面看到的配置文件`out/Default/args.gn`，编辑该文件将`is_component_build`配置选项置为false。
+ - 执行如下命令：
+```
+$ gn gen out/Default
+```
+产生ninja构建所需的 .ninja 文件。
+
+ - 执行如下命令生成cronet so文件：
+```
+$ ninja -C out/Default/ cronet
+```
+并将产生的libcronet.so文件导入我们的应用中。我们的应用的build.gradle将如下面这样：
+
+```
+apply plugin: 'com.android.model.library'
+
+model {
+    android {
+        compileSdkVersion 16
+        buildToolsVersion "21.1.2"
+
+        defaultConfig {
+            minSdkVersion.apiLevel 15
+            targetSdkVersion.apiLevel 19
+            versionCode 1
+            versionName "1.0"
+        }
+
+        sources {
+            main {
+                jniLibs {
+                    source {
+                        srcDirs =["src/main/jni/jniLibs/",]
+                    }
+                }
+            }
+        }
+
+        buildTypes {
+            debug {
+                ndk {
+                    abiFilters.add("armeabi")
+                    abiFilters.add("armeabi-v7a")
+                }
+            }
+            release {
+                minifyEnabled false
+                proguardFiles.add(file("proguard-rules.pro"))
+                ndk {
+                    abiFilters.add("armeabi")
+                    abiFilters.add("armeabi-v7a")
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:support-annotations:20.0.0'
+
+    testCompile 'junit:junit:4.12'
+}
+
+```
+ - 执行如下命令生成cronet Java层代码的jar包：
+```
+$ ninja -C out/Default/ cronet_java
+```
+这将在out/Default/lib.java/的子目录下产生出多个jar文件，cronet_java.jar，cronet_api.jar，url_java.jar，base_java.jar，net_java.jar。将这些jar文件全部导入我们的应用中。
+
+ - 调用cronet提供的Java接口执行网络请求：
+
+```
+package com.netease.netlib;
+
+import android.content.Context;
+
+import org.chromium.net.CronetEngine;
+import org.chromium.net.UploadDataProviders;
+import org.chromium.net.UrlRequest;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
+/**
+ * Created by hanpfei0306 on 16-8-15.
+ */
+public class CronetUtils {
+    private static final String TAG = "CronetUtils";
+
+    private static CronetUtils sInstance;
+
+    private CronetEngine mCronetEngine;
+    private Executor mExecutor = Executors.newCachedThreadPool();
+
+    private CronetUtils() {
+    }
+
+    public static synchronized CronetUtils getsInstance() {
+        if (sInstance == null) {
+            sInstance = new CronetUtils();
+        }
+        return sInstance;
+    }
+
+    public synchronized void init(Context context) {
+        if (mCronetEngine == null) {
+            CronetEngine.Builder builder = new CronetEngine.Builder(context);
+            builder.
+                    enableHttpCache(CronetEngine.Builder.HTTP_CACHE_IN_MEMORY,
+                    100 * 1024)
+                    .enableHttp2(true)
+                    .enableQuic(true)
+                    .enableSDCH(true)
+                    .setLibraryName("cronet");
+            mCronetEngine = builder.build();
+        }
+    }
+
+    public void getHtml(String url, UrlRequest.Callback callback) {
+        startWithURL(url, callback);
+    }
+
+
+    private void startWithURL(String url, UrlRequest.Callback callback) {
+        startWithURL(url, callback, null);
+    }
+
+    private void startWithURL(String url, UrlRequest.Callback callback, String postData) {
+        UrlRequest.Builder builder = new UrlRequest.Builder(url, callback, mExecutor, mCronetEngine);
+        applyPostDataToUrlRequestBuilder(builder, mExecutor, postData);
+        builder.build().start();
+    }
+
+    private void applyPostDataToUrlRequestBuilder(
+            UrlRequest.Builder builder, Executor executor, String postData) {
+        if (postData != null && postData.length() > 0) {
+            builder.setHttpMethod("POST");
+            builder.addHeader("Content-Type", "application/x-www-form-urlencoded");
+            builder.setUploadDataProvider(
+                    UploadDataProviders.create(postData.getBytes()), executor);
+        }
+    }
+}
+```
 Done。
