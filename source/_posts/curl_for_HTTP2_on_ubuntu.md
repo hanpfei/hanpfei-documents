@@ -1,7 +1,7 @@
 ---
 title: 为curl命令启用HTTP2支持
 date: 2016-11-14 16:05:49
-tags: HTTP2
+categories: HTTP2
 ---
 
 ## 检查curl版本
@@ -19,7 +19,9 @@ Features: AsynchDNS IDN IPv6 Largefile GSS-API Kerberos SPNEGO NTLM NTLM_WB SSL 
 
 ## 编译安装nghttp2
 
-curl依赖于nghttp2提供对HTTP2的支持，因而首先需要安装nghttp2。下载并安装nghttp2：
+curl依赖nghttp2提供对HTTP2的支持，因而首先需要安装nghttp2。
+
+下载并安装nghttp2：
 ```
 $ git clone git@github.com:nghttp2/nghttp2.git
 $ cd nghttp2
@@ -28,7 +30,7 @@ $ sudo make & make install
 ```
 
 ## 编译安装curl
-下载配置并安装curl
+下载、配置并安装curl
 ```
 $ git clone git@github.com:curl/curl.git
 $ cd curl
@@ -223,9 +225,4 @@ $ curl --http2 -v https://www.wolfcstech.com/2016/11/14/nginx_uWSGI_deply_django
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 ```
-
-在此输入正文
-
-
-
-
+Done。
