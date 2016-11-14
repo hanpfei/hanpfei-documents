@@ -1,5 +1,7 @@
-﻿# 为curl命令启用HTTP2支持
-
+---
+title: 为curl命令启用HTTP2支持
+date: 2016-11-14 16:05:49
+tags: HTTP2
 ---
 
 ## 检查curl版本
@@ -12,6 +14,8 @@ Protocols: dict file ftp ftps gopher http https imap imaps ldap ldaps pop3 pop3s
 Features: AsynchDNS IDN IPv6 Largefile GSS-API Kerberos SPNEGO NTLM NTLM_WB SSL libz TLS-SRP UnixSockets
 ```
 可以看到当前安装的curl支持的http、https等协议，及其它功能，但其中并没有包含HTTP2。
+
+<!--more-->
 
 ## 编译安装nghttp2
 
