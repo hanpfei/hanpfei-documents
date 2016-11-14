@@ -17,6 +17,12 @@ Features: AsynchDNS IDN IPv6 Largefile GSS-API Kerberos SPNEGO NTLM NTLM_WB SSL 
 
 <!--more-->
 
+此时我们强制curl以HTTP2向请求服务器请求服务，会看到如下的报错信息：
+```
+$ curl --http2 -v https://www.wolfcstech.com/2016/11/14/nginx_uWSGI_deply_django_on_ubuntu/
+curl: (1) Unsupported protocol
+```
+
 ## 编译安装nghttp2
 
 curl依赖nghttp2提供对HTTP2的支持，因而首先需要安装nghttp2。
@@ -225,4 +231,7 @@ $ curl --http2 -v https://www.wolfcstech.com/2016/11/14/nginx_uWSGI_deply_django
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 ```
+
+## 参考文档
+[如何启用curl命令HTTP2支持](https://www.sysgeek.cn/curl-with-http2-support/)
 Done。
