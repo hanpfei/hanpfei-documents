@@ -5,7 +5,9 @@ tags:
 - 网络
 ---
 
-**Protocol Buffers** 是一个序列化结构数据的灵活、高效且自动化的机制——类似于XML，但更小，更快，更简单。定义一次结构化数据的方式，然后就可以使用专门生成的代码简单地写入，或用不同的语言从大量的数据流读出结构化数据。甚至可以更新数据结构而不破坏已部署的基于 **老** 格式编译的程序。这里我们看一下要如何将 **Protocol Buffers** 用到我们的Android项目中。
+网络性能优化的终极手法就是不通过网络传输，但这常常是不可能的。但我们还是可以通过对网络传输的数据本身做优化，来获得更好的性能，性能就应该从每一个可能的地方榨取。这里来看一下 **Protocol Buffers** 。
+
+**Protocol Buffers** 是一个序列化结构数据的灵活、高效且自动化的机制——类似于XML，但***更小***，***更快***，***更简单***。定义一次结构化数据的方式，然后就可以使用专门生成的代码简单地写入，或用不同的语言从大量的数据流读出结构化数据。甚至可以更新数据结构而不破坏已部署的基于 **老** 格式编译的程序。我们看一下要如何将 **Protocol Buffers** 用到我们的Android项目中。
 
 <!--more-->
 
@@ -255,13 +257,13 @@ package com.netease.volleydemo;
 import com.example.tutorial.AddressBookProtos.Person;
 
 public class AddPerson {
-    static Person PromptForAddress() {
+    static Person createPerson(String personName) {
         Person.Builder person = Person.newBuilder();
 
         int id = 13958235;
         person.setId(id);
 
-        String name = "zhangsan";
+        String name = personName;
         person.setName(name);
 
         String email = "zhangsan@gmail.com";
@@ -284,7 +286,7 @@ public class AddPerson {
 }
 ```
 
-AddressBookWriter类则用于构造AddressBook对象：
+AddressBookProtobuf类则用于编码/解码AddressBook对象：
 ```
 package com.netease.volleydemo;
 
@@ -292,17 +294,50 @@ import com.example.tutorial.AddressBookProtos;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
-public class AddressBookWriter {
-    public static String writer_main() {
+public class AddressBookProtobuf {
+    public static byte[] encodeTest(String[] names) {
+
         AddressBookProtos.AddressBook.Builder addressBook = AddressBookProtos.AddressBook.newBuilder();
-        addressBook.addPerson(AddPerson.PromptForAddress());
+
+        for(int i = 0; i < names.length; ++ i) {
+            addressBook.addPerson(AddPerson.createPerson(names[i]));
+        }
+        AddressBookProtos.AddressBook book = addressBook.build();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
-            addressBook.build().writeTo(baos);
+            book.writeTo(baos);
         } catch (IOException e) {
         }
-        return addressBook.build().toString();
+
+        return baos.toByteArray();
+    }
+
+
+    public static byte[] encodeTest(String[] names, int times) {
+        for (int i = 0; i < times - 1; ++ i) {
+            encodeTest(names);
+        }
+        return encodeTest(names);
+    }
+
+    public static AddressBookProtos.AddressBook decodeTest(InputStream is) {
+        AddressBookProtos.AddressBook addressBook = null;
+        try {
+            addressBook = AddressBookProtos.AddressBook.parseFrom(is);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return addressBook;
+    }
+
+    public static AddressBookProtos.AddressBook decodeTest(InputStream is, int times) {
+        AddressBookProtos.AddressBook addressBook = null;
+        for (int i = 0; i < times; ++ i) {
+            addressBook = decodeTest(is);
+        }
+        return addressBook;
     }
 }
 ```
@@ -459,5 +494,306 @@ protobuf {
 }
 ```
 关于 .proto 文件的编写方法，Protocol Buffers API等更多内容，可以参考 [Protobuf开发者指南](http://www.jianshu.com/p/3ab14a2cb477)、[在Java中使用Protocol Buffers](http://www.jianshu.com/p/1bf426a9f8f4)及其它相关官方文档。
+
+# Protobuf 与 JSON 对比测试
+说了半天，Protobuf的表现究竟如何呢？这里我们就对比一下我们最常用到的JSON格式与Protobuf的表现。测试基于在开发者中一向有着良好口碑的fastjson进行。
+
+测试用的数据结构如我们前面看到的AddressBook。我们通过构造包含不同个数Person的AddressBook数据，并对这些数据执行多次编码解码操作，来测试Protobuf 与 JSON的表现。Protobuf的编码/解码测试代码如前面看到的AddressBookProtobuf。JSON的测试代码则如下面这样：
+```
+package com.netease.volleydemo;
+
+import com.alibaba.fastjson.JSON;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class AddressBookJson {
+    private enum PhoneType {
+        MOBILE,
+        HOME,
+        WORK
+    }
+
+    private static final class Phone {
+        private String number;
+        private PhoneType type;
+
+        public Phone() {
+
+        }
+
+        public void setNumber(String number) {
+            this.number = number;
+        }
+
+        public String getNumber() {
+            return number;
+        }
+
+        public void setType(PhoneType phoneType) {
+            this.type = phoneType;
+        }
+
+        public PhoneType getType() {
+            return type;
+        }
+    }
+    private static final class Person {
+        private String name;
+        private int id;
+        private String email;
+
+        private List<Phone> phones;
+
+        public Person() {
+            phones = new ArrayList<>();
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void addPhone(Phone phone) {
+            phones.add(phone);
+        }
+
+        public List<Phone> getPhones() {
+            return phones;
+        }
+    }
+
+    private static final class AddressBook {
+        private List<Person> persons;
+
+        public AddressBook() {
+            persons = new ArrayList<>();
+        }
+
+        public void addPerson(Person person) {
+            persons.add(person);
+        }
+
+        public List<Person> getPersons() {
+            return persons;
+        }
+    }
+
+    public static String encodeTest(String[] names) {
+        AddressBook addressBook = new AddressBook();
+        for (int i = 0; i < names.length; ++ i) {
+            Person person = new Person();
+            person.setName(names[i]);
+            person.setEmail("zhangsan@gmail.com");
+            person.setId(13958235);
+
+            Phone phone = new Phone();
+            phone.setNumber("0157-23443276");
+            phone.setType(PhoneType.HOME);
+            person.addPhone(phone);
+
+            phone = new Phone();
+            phone.setNumber("136183667387");
+            phone.setType(PhoneType.MOBILE);
+            person.addPhone(phone);
+
+            addressBook.addPerson(person);
+        }
+        String jsonString = JSON.toJSONString(addressBook);
+        return jsonString;
+    }
+
+    public static String encodeTest(String[] names, int times) {
+        for (int i = 0; i < times - 1; ++ i) {
+            encodeTest(names);
+        }
+        return encodeTest(names);
+    }
+
+    public static AddressBook decodeTest(String jsonStr, int times) {
+        AddressBook addressBook = null;
+        for (int i = 0; i < times; ++ i) {
+            addressBook = JSON.parseObject(jsonStr, AddressBook.class);
+        }
+        return addressBook;
+    }
+}
+```
+
+通过如下的这段代码来执行测试：
+```
+    private class ProtobufTestTask extends AsyncTask<Void, Void, Void> {
+        private static final int BUFFER_LEN = 8192;
+
+        private void doEncodeTest(String[] names, int times) {
+            long startTime = System.nanoTime();
+            AddressBookProtobuf.encodeTest(names, times);
+            long protobufTime = System.nanoTime();
+            protobufTime = protobufTime - startTime;
+
+            startTime = System.nanoTime();
+            AddressBookJson.encodeTest(names, times);
+            long jsonTime = System.nanoTime();
+            jsonTime = jsonTime - startTime;
+            Log.i(TAG, String.format("%-20s%-20s%-20s%-20s", "ProtobufTime", String.valueOf(protobufTime),
+                    "JsonTime", String.valueOf(jsonTime)));
+        }
+
+        private void doEncodeTest10(int times) {
+            doEncodeTest(TestUtils.sTestNames10, times);
+        }
+
+        private void doEncodeTest50(int times) {
+            doEncodeTest(TestUtils.sTestNames50, times);
+        }
+
+        private void doEncodeTest100(int times) {
+            doEncodeTest(TestUtils.sTestNames100, times);
+        }
+
+        private void doEncodeTest(int times) {
+            doEncodeTest10(times);
+            doEncodeTest50(times);
+            doEncodeTest100(times);
+        }
+
+        private void compress(InputStream is, OutputStream os)
+                throws Exception {
+
+            GZIPOutputStream gos = new GZIPOutputStream(os);
+
+            int count;
+            byte data[] = new byte[BUFFER_LEN];
+            while ((count = is.read(data, 0, BUFFER_LEN)) != -1) {
+                gos.write(data, 0, count);
+            }
+
+            gos.finish();
+            gos.close();
+        }
+
+        private void doDecodeTest(String[] names, int times) {
+            byte[] protobufBytes = AddressBookProtobuf.encodeTest(names);
+            ByteArrayInputStream bais = new ByteArrayInputStream(protobufBytes);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try {
+                compress(bais, baos);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            Log.i(TAG, String.format("%-20s%-20s%-20s%-20s", "Protobuf Length", String.valueOf(protobufBytes.length),
+                    "Protobuf(GZIP) Length", String.valueOf(baos.toByteArray().length)));
+
+            bais = new ByteArrayInputStream(protobufBytes);
+            long startTime = System.nanoTime();
+            AddressBookProtobuf.decodeTest(bais, times);
+            long protobufTime = System.nanoTime();
+            protobufTime = protobufTime - startTime;
+
+            String jsonStr = AddressBookJson.encodeTest(names);
+            ByteArrayInputStream jsonBais = new ByteArrayInputStream(jsonStr.getBytes());
+            ByteArrayOutputStream jsonBaos = new ByteArrayOutputStream();
+            try {
+                compress(jsonBais, jsonBaos);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            Log.i(TAG, String.format("%-20s%-20s%-20s%-20s", "Json Length", String.valueOf(jsonStr.getBytes().length),
+                    "Json(GZIP) Length", String.valueOf(jsonBaos.toByteArray().length)));
+
+            startTime = System.nanoTime();
+            AddressBookJson.decodeTest(jsonStr, times);
+            long jsonTime = System.nanoTime();
+            jsonTime = jsonTime - startTime;
+
+            Log.i(TAG, String.format("%-20s%-20s%-20s%-20s", "ProtobufTime", String.valueOf(protobufTime),
+                    "JsonTime", String.valueOf(jsonTime)));
+        }
+
+        private void doDecodeTest10(int times) {
+            doDecodeTest(TestUtils.sTestNames10, times);
+        }
+
+        private void doDecodeTest50(int times) {
+            doDecodeTest(TestUtils.sTestNames50, times);
+        }
+
+        private void doDecodeTest100(int times) {
+            doDecodeTest(TestUtils.sTestNames100, times);
+        }
+
+        private void doDecodeTest(int times) {
+            doDecodeTest10(times);
+            doDecodeTest50(times);
+            doDecodeTest100(times);
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            TestUtils.initTest();
+            doEncodeTest(5000);
+
+            doDecodeTest(5000);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+        }
+    }
+```
+这里我们执行3组编码测试及3组解码测试。对于编码测试，第一组的单个数据中包含10个Person，第二组的包含50个，第三组的包含100个，然后对每个数据分别执行5000次的编码操作。
+
+对于解码测试，三组中单个数据同样包含10个Person、50个及100个，然后对每个数据分别执行5000次的解码码操作。
+
+在Galaxy Nexus的Android 4.4.4 CM平台上执行上述测试，最终得到如下结果：
+
+#### 编码后数据长度对比 (Bytes)
+
+| Person个数  | Protobuf      | Protobuf（GZIP）  | JSON  | JSON（GZIP） |
+| -----------------|:----------------:|--------------------------:|---------:|----------------------:|
+|10                 |860               |291                           |1703    |344                     |
+|50                 |4300             |984                           |8463    |1047                   |
+|100               |8600             |1840                         |16913  |1913                   |
+
+相同的数据，经过Protobuf编码的数据长度，大概只有JSON编码的数据长度的一半。但对编码后的数据再进行压缩，两者则差别比较小。
+
+#### 编码性能对比 (S)
+|Person个数|Protobuf   |JSON   |
+|----      |-----------|-------|
+|10        |4.687      |6.558  |
+|50        |23.728     |41.315 |
+|100       |45.604     |81.667 |
+编码性能最少提高了 28.5%，最多则提高了44.2%。Protobuf在编码性能上，相对于JSON还是有较大幅度的提升的。
+
+#### 解码性能对比 (S)
+|Person个数|Protobuf   |JSON   |
+|----      |-----------|-------|
+|10        |0.226      |8.839  |
+|50        |0.291      |43.869 |
+|100       |0.220      |85.444 |
+
+解码性能方面，Protobuf相对于JSON，则更是有惊人的提升。Protobuf的解码时间几乎不随着数据长度的增长而有太大的增长，而JSON则随着数据长度的增加，解码所需要的时间也越来越长。
 
 Done。
