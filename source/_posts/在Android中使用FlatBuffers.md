@@ -213,7 +213,7 @@ import java.nio.ByteBuffer;
  */
 
 public class AddressBookFlatBuffers {
-    public static ByteBuffer encodeTest(String[] names) {
+    public static byte[] encodeTest(String[] names) {
         FlatBufferBuilder builder = new FlatBufferBuilder(0);
 
         int[] personOffsets = new int[names.length];
@@ -246,28 +246,28 @@ public class AddressBookFlatBuffers {
         AddressBook.addPerson(builder, persons);
         int eab = AddressBook.endAddressBook(builder);
         builder.finish(eab);
-        ByteBuffer buf = builder.dataBuffer();
-
-        return buf;
+        byte[] data = builder.sizedByteArray();
+        return data;
     }
 
-    public static ByteBuffer encodeTest(String[] names, int times) {
+    public static byte[] encodeTest(String[] names, int times) {
         for (int i = 0; i < times - 1; ++ i) {
             encodeTest(names);
         }
         return encodeTest(names);
     }
 
-    public static AddressBook decodeTest(ByteBuffer byteBuffer) {
+    public static AddressBook decodeTest(byte[] data) {
         AddressBook addressBook = null;
+        ByteBuffer byteBuffer = ByteBuffer.wrap(data);
         addressBook = AddressBook.getRootAsAddressBook(byteBuffer);
         return addressBook;
     }
 
-    public static AddressBook decodeTest(ByteBuffer byteBuffer, int times) {
+    public static AddressBook decodeTest(byte[] data, int times) {
         AddressBook addressBook = null;
         for (int i = 0; i < times; ++ i) {
-            addressBook = decodeTest(byteBuffer);
+            addressBook = decodeTest(data);
         }
         return addressBook;
     }
@@ -368,82 +368,8 @@ flatbuf {
 
 FlatBuffers相对于Protobuf的表现又如何呢？这里我们用数据说话，对比一下FlatBuffers格式、JSON格式与Protobuf的表现。测试同样用fastjson作为JSON的编码解码工具。
 
-测试用的数据结构所有的数据结构，Protobuf相关的测试代码，及JSON的测试代码同 [在Android中使用Protocol Buffers](http://www.jianshu.com/p/e8712962f0e9) 一文所述，FlatBuffers的测试代码如下：
-```
-package hearttouch.netease.com.myapplication;
+测试用的数据结构所有的数据结构，Protobuf相关的测试代码，及JSON的测试代码同 [在Android中使用Protocol Buffers](http://www.jianshu.com/p/e8712962f0e9) 一文所述，FlatBuffers的测试代码如上面看到的 **AddressBookFlatBuffers**。
 
-import com.example.tutorial.AddressBook;
-import com.example.tutorial.Person;
-import com.example.tutorial._Person.PhoneNumber;
-import com.google.flatbuffers.FlatBufferBuilder;
-
-import java.nio.ByteBuffer;
-
-/**
- * Created by hanpfei0306 on 16-12-5.
- */
-
-public class AddressBookFlatBuffers {
-    public static ByteBuffer encodeTest(String[] names) {
-        FlatBufferBuilder builder = new FlatBufferBuilder(0);
-
-        int[] personOffsets = new int[names.length];
-
-        for (int i = 0; i < names.length; ++ i) {
-            int name = builder.createString(names[i]);
-            int email = builder.createString("zhangsan@gmail.com");
-
-            int number1 = builder.createString("0157-23443276");
-            int type1 = 1;
-            int phoneNumber1 = PhoneNumber.createPhoneNumber(builder, number1, type1);
-
-            int number2 = builder.createString("136183667387");
-            int type2 = 0;
-            int phoneNumber2 = PhoneNumber.createPhoneNumber(builder, number2, type2);
-
-            int[] phoneNubers = new int[2];
-            phoneNubers[0] = phoneNumber1;
-            phoneNubers[1] = phoneNumber2;
-
-            int phoneNumbersPos = Person.createPhoneVector(builder, phoneNubers);
-
-            int person = Person.createPerson(builder, name, 13958235, email, phoneNumbersPos);
-
-            personOffsets[i] = person;
-        }
-        int persons = AddressBook.createPersonVector(builder, personOffsets);
-
-        AddressBook.startAddressBook(builder);
-        AddressBook.addPerson(builder, persons);
-        int eab = AddressBook.endAddressBook(builder);
-        builder.finish(eab);
-        ByteBuffer buf = builder.dataBuffer();
-
-        return buf;
-    }
-
-    public static ByteBuffer encodeTest(String[] names, int times) {
-        for (int i = 0; i < times - 1; ++ i) {
-            encodeTest(names);
-        }
-        return encodeTest(names);
-    }
-
-    public static AddressBook decodeTest(ByteBuffer byteBuffer) {
-        AddressBook addressBook = null;
-        addressBook = AddressBook.getRootAsAddressBook(byteBuffer);
-        return addressBook;
-    }
-
-    public static AddressBook decodeTest(ByteBuffer byteBuffer, int times) {
-        AddressBook addressBook = null;
-        for (int i = 0; i < times; ++ i) {
-            addressBook = decodeTest(byteBuffer);
-        }
-        return addressBook;
-    }
-}
-```
 通过如下的这段代码来执行测试：
 ```
     private class ProtoTestTask extends AsyncTask<Void, Void, Void> {
@@ -476,17 +402,17 @@ public class AddressBookFlatBuffers {
             return baos.toByteArray().length;
         }
 
-        private void dumpDataLengthInfo(byte[] protobufData, String jsonData, ByteBuffer flatbufData) {
+        private void dumpDataLengthInfo(byte[] protobufData, String jsonData, byte[] flatbufData) {
             int compressedProtobufLength = getCompressedDataLength(protobufData);
             int compressedJSONLength = getCompressedDataLength(jsonData.getBytes());
-            int compressedFlatbufLength = getCompressedDataLength(flatbufData.array());
+            int compressedFlatbufLength = getCompressedDataLength(flatbufData);
             Log.i(TAG, String.format("%-120s", "Data length"));
             Log.i(TAG, String.format("%-20s%-20s%-20s%-20s%-20s%-20s", "Protobuf", "Protobuf (GZIP)",
                     "JSON", "JSON (GZIP)", "Flatbuf", "Flatbuf (GZIP)"));
             Log.i(TAG, String.format("%-20s%-20s%-20s%-20s%-20s%-20s",
                     String.valueOf(protobufData.length), compressedProtobufLength,
                     String.valueOf(jsonData.getBytes().length), compressedJSONLength,
-                    String.valueOf(flatbufData.array().length), compressedFlatbufLength));
+                    String.valueOf(flatbufData.length), compressedFlatbufLength));
         }
 
         private void doEncodeTest(String[] names, int times) {
@@ -501,7 +427,7 @@ public class AddressBookFlatBuffers {
             jsonTime = jsonTime - startTime;
 
             startTime = System.nanoTime();
-            ByteBuffer flatbufData = AddressBookFlatBuffers.encodeTest(names, times);
+            byte[] flatbufData = AddressBookFlatBuffers.encodeTest(names, times);
             long flatbufTime = System.nanoTime();
             flatbufTime = flatbufTime - startTime;
 
@@ -548,7 +474,7 @@ public class AddressBookFlatBuffers {
             long jsonTime = System.nanoTime();
             jsonTime = jsonTime - startTime;
 
-            ByteBuffer flatbufData = AddressBookFlatBuffers.encodeTest(names);
+            byte[] flatbufData = AddressBookFlatBuffers.encodeTest(names);
             startTime = System.nanoTime();
             AddressBookFlatBuffers.decodeTest(flatbufData, times);
             long flatbufTime = System.nanoTime();
@@ -606,11 +532,11 @@ public class AddressBookFlatBuffers {
 
 | Person个数  | Protobuf      | Protobuf（GZIP）  |JSON       | JSON（GZIP）|Flatbuf  | Flatbuf（GZIP)  | 
 | --------------|:--------------:|-------------------- --:|-----------:|------------------:|--------:|-------------------:|
-|10                 |860               |290                           |1703        |343                     |2048     |521                     |
-|50                 |4300             |978                           |8463        |1043                   |8192     |1822                   |
-|100               |8600             |1825                         |16913      |1902                   |16384   |3417                   |
+|10                 |860               |288                           |1703        |343                     |1532     |513                     |
+|50                 |4300             |986                           |8463        |1048                   |7452     |1814                   |
+|100               |8600             |1841                         |16913      |1918                   |14852   |3416                   |
 
-相同的数据，经过编码，在压缩前FlatBuffers的数据长度和JSON的数据长度接近，而Protobuf的数据长度则只有前两者的大概一半。而在用GZIP压缩后，Protobuf的数据长度与JSON的接近，而FlatBuffers的数据长度则接近两者的两倍。
+相同的数据，经过编码，在压缩前JSON的数据最长，FlatBuffers的数据长度与JSON的短大概10 ％，而Protobuf的数据长度则大概只有JSON的一半。而在用GZIP压缩后，Protobuf的数据长度与JSON的接近，FlatBuffers的数据长度则接近两者的两倍。
 
 #### 编码性能对比 (S)
 |Person个数|Protobuf   |JSON   |FlatBuffers  |
