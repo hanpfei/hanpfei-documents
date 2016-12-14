@@ -1,18 +1,22 @@
 ---
 title: OkHttp3连接建立过程分析
+date: 2016-10-27 11:43:49
+tags:
+- Android
+- 网络
 ---
 
-如我们前面在[OkHttp3 HTTP请求执行流程分析](https://www.wolfcstech.com/2016/10/14/OkHttp3-HTTP%E8%AF%B7%E6%B1%82%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90/)中的分析，OkHttp3通过Interceptor链来执行HTTP请求，整体的执行过程大体如下：
+如我们前面在 [OkHttp3 HTTP请求执行流程分析](https://www.wolfcstech.com/2016/10/14/OkHttp3-HTTP%E8%AF%B7%E6%B1%82%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90/) 中的分析，OkHttp3通过Interceptor链来执行HTTP请求，整体的执行过程大体如下：
 
 <!--more-->
 
-![okhttp_flow.png](http://upload-images.jianshu.io/upload_images/1315506-8492fecef4238d86.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![OkHttp Flow](http://upload-images.jianshu.io/upload_images/1315506-8492fecef4238d86.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 这些Interceptor中每一个的职责，这里不再赘述。
 
-在OkHttp3中，`StreamAllocation`是用来建立执行HTTP请求所需网络设施的组件，如其名字所显示的那样，分配Stream，但它具体做的事情根据是否设置了代理，以及请求的类型，如HTTP、HTTPS或HTTP/2的不同而有所不同。
+在OkHttp3中，`StreamAllocation`是用来建立执行HTTP请求所需网络设施的组件，如其名字所显示的那样，分配Stream。但它具体做的事情根据是否设置了代理，以及请求的类型，如HTTP、HTTPS或HTTP/2的不同而有所不同。代理相关的处理，包括TCP连接的建立，在 [OkHttp3中的代理与路由](https://www.wolfcstech.cn/2016/10/14/OkHttp3%E4%B8%AD%E7%9A%84%E4%BB%A3%E7%90%86%E4%B8%8E%E8%B7%AF%E7%94%B1/) 一文中有详细的说明。
 
-在整个HTTP请求的执行过程中，这个class的对象分配的还是比较早的，在RetryAndFollowUpInterceptor.intercept(Chain chain)中就完成了分配 (okhttp/okhttp/src/main/java/okhttp3/internal/http/RetryAndFollowUpInterceptor.java)：
+在整个HTTP请求的执行过程中，**`StreamAllocation`** 对象分配的比较早，在RetryAndFollowUpInterceptor.intercept(Chain chain)中就完成了：
 ```
   @Override public Response intercept(Chain chain) throws IOException {
     Request request = chain.request();
@@ -21,7 +25,7 @@ title: OkHttp3连接建立过程分析
         client.connectionPool(), createAddress(request.url()), callStackTrace);
 ```
 
-`StreamAllocation `的对象构造过程也并没有做太多的事情：
+`StreamAllocation `的对象构造过程没有什么特别的：
 ```
   public StreamAllocation(ConnectionPool connectionPool, Address address, Object callStackTrace) {
     this.connectionPool = connectionPool;
@@ -37,14 +41,19 @@ title: OkHttp3连接建立过程分析
 
 `CallServerInterceptor`负责将HTTP请求写入网络IO流，并从网络IO流中读取服务器返回的数据。而`ConnectInterceptor`则负责为`CallServerInterceptor`建立可用的连接。此处 **可用的** 含义主要为，可以直接写入HTTP请求的数据：
 
-* 对于设置了HTTP代理的HTTP请求，要与代理建立好连接；
-* 对于设置了HTTP代理的HTTPS请求，需要让代理建立到服务器的隧道连接，并完成与服务器的TLS握手；
-* 对于设置了HTTP代理的HTTP/2请求，需要让代理建立到服务器的隧道连接，完成与服务器的TLS握手及协议协商；
-* 对于无代理的HTTP请求，要与服务器建立好连接；
-* 对于无代理的HTTPS请求，要与服务器建立连接，并完成TLS握手；
-* 对于无代理的HTTP/2请求，要与服务器建立好连接，完成TLS握手及协议协商。
+* 设置了HTTP代理的HTTP请求，与代理建立好TCP连接；
+* 设置了HTTP代理的HTTPS请求，与HTTP服务器建立通过HTTP代理的隧道连接，并完成TLS握手；
+* 设置了HTTP代理的HTTP/2请求，与HTTP服务器建立通过HTTP代理的隧道连接，并完成与服务器的TLS握手及协议协商；
+* 设置了SOCKS代理的HTTP请求，通过代理与HTTP服务器建立好连接；
+* 设置了SOCKS代理的HTTPS请求，通过代理与HTTP服务器建立好连接，并完成TLS握手；
+* 设置了SOCKS代理的HTTP/2请求，通过代理与HTTP服务器建立好连接，并完成与服务器的TLS握手及协议协商；
+* 无代理的HTTP请求，与服务器建立好TCP连接；
+* 无代理的HTTPS请求，与服务器建立TCP连接，并完成TLS握手；
+* 无代理的HTTP/2请求，与服务器建立好TCP连接，完成TLS握手及协议协商。
 
-后面我们更详细地来看一下这个过程。`ConnectInterceptor`的代码看上去比较简单：
+后面我们更详细地来看一下这个过程。
+
+`ConnectInterceptor`的代码看上去比较简单：
 ```
 public final class ConnectInterceptor implements Interceptor {
   public final OkHttpClient client;
@@ -67,16 +76,16 @@ public final class ConnectInterceptor implements Interceptor {
   }
 }
 ```
-`ConnectInterceptor`从`RealInterceptorChain`获取前面的Interceptor传过来的`StreamAllocation`对象，执行 `streamAllocation.newStream()` 完成前述所有的连接准备工作，并将这个过程中创建的用于网络IO的RealConnection对象，以及对于与服务器交互最为关键的HttpCodec等对象传递给后面的Interceptor，也就是`CallServerInterceptor`。
+`ConnectInterceptor`从`RealInterceptorChain`获取前面的Interceptor传过来的`StreamAllocation`对象，执行 `streamAllocation.newStream()` 完成前述所有的连接建立工作，并将这个过程中创建的用于网络IO的RealConnection对象，以及对于与服务器交互最为关键的HttpCodec等对象传递给后面的Interceptor，也就是`CallServerInterceptor`。
 
 # OkHttp3的连接池
 
 在具体地分析 `streamAllocation.newStream()` 的执行过程之前，我们先来看一下OkHttp3的连接池的设计实现。
 
-OkHttp3将客户端与服务器之间的连接抽象为Connection/RealConnection，为了管理这些连接的复用而设计ConnectionPool。共享相同`Address`的请求可以共享连接，ConnectionPool实现了哪些连接保持打开状态以备后用的策略。
+OkHttp3将客户端与服务器之间的连接抽象为Connection/RealConnection，为了管理这些连接的复用而设计了ConnectionPool。共享相同`Address`的请求可以复用连接，ConnectionPool实现了哪些连接保持打开状态以备后用的策略。
 
 ## ConnectionPool是什么？
-借助于ConnectionPool的成员变量声明来一窥ConnectionPool究竟是什么(定义于okhttp/okhttp/src/main/java/okhttp3/ConnectionPool.java)：
+借助于ConnectionPool的成员变量声明来一窥ConnectionPool究竟是什么：
 ```
 /**
  * Manages reuse of HTTP and HTTP/2 connections for reduced network latency. HTTP requests that
@@ -121,11 +130,11 @@ public final class ConnectionPool {
 ```
 `ConnectionPool`的核心是`RealConnection`的容器，且是顺序容器，而不是关联容器。`ConnectionPool`用双端队列`Deque<RealConnection>`来保存它所管理的所有`RealConnection`。
 
-`ConnectionPool`还会对连接池中最大的空闲连接数量及连接的保活时间进行控制，`maxIdleConnections`和`keepAliveDurationNs`成员分别体现对最大的空闲连接数及连接的保活时间的控制。这种控制通过匿名的`Runnable cleanupRunnable`在线程池`executor`中执行，并在向连接池中添加新的`RealConnection`触发。
+`ConnectionPool`还会对连接池中最大的空闲连接数及连接的保活时间进行控制，`maxIdleConnections`和`keepAliveDurationNs`成员分别体现对最大空闲连接数及连接保活时间的控制。这种控制通过匿名的`Runnable cleanupRunnable`在线程池`executor`中执行，并在向连接池中添加新的`RealConnection`触发。
 
 ## 连接池ConnectionPool的创建
 
-OkHttp3的用户可以自行创建ConnectionPool，对它做适当的配置，并在OkHttpClient的创建期间，将其传给OkHttpClient.Builder，从而在后面创建的OkHttpClient中启用它。而默认情况下，则是在OkHttpClient.Builder的构造函数中以默认参数创建(okhttp/okhttp/src/main/java/okhttp3/OkHttpClient.java)：
+OkHttp3的用户可以自行创建ConnectionPool，对最大空闲连接数及连接的保活时间进行配置，并在OkHttpClient创建期间，将其传给OkHttpClient.Builder，在OkHttpClient中启用它。没有定制连接池的情况下，则在OkHttpClient.Builder构造过程中以默认参数创建：
 
 ```
     public Builder() {
@@ -141,7 +150,7 @@ OkHttp3的用户可以自行创建ConnectionPool，对它做适当的配置，�
       authenticator = Authenticator.NONE;
       connectionPool = new ConnectionPool();
 ```
-ConnectionPool的默认构造过程如下(okhttp/okhttp/src/main/java/okhttp3/ConnectionPool.java)：
+ConnectionPool的默认构造过程如下：
 ```
   /**
    * Create a new connection pool with tuning parameters appropriate for a single-user application.
@@ -162,7 +171,7 @@ ConnectionPool的默认构造过程如下(okhttp/okhttp/src/main/java/okhttp3/Co
     }
   }
 ```
-可见在默认情况下，`ConnectionPool`最多保存5个处于空闲状态的连接，且连接的默认保活时间为5分钟。
+在默认情况下，`ConnectionPool` 最多保存 ***5个*** 处于空闲状态的连接，且连接的默认保活时间为 ***5分钟***。
 
 ## RealConnection的存/取
 
@@ -177,17 +186,19 @@ OkHttp内部的组件可以通过put()方法向`ConnectionPool`中添加`RealCon
     connections.add(connection);
   }
 ```
-在向`ConnectionPool`中添加`RealConnection`时，若发现cleanupRunnable还没有运行的话，则会触发它的运行。cleanupRunnable的职责本就是清理无效的`RealConnection`，只要`ConnectionPool`中存在`RealConnection`，则这种清理的需求总是存在的，因而会去启动cleanupRunnable。
+在向`ConnectionPool`中添加`RealConnection`时，若发现cleanupRunnable还没有运行会触发它的运行。
 
-必要时启动了cleanupRunnable之后，即是将`RealConnection`添加进双端队列connections。
+cleanupRunnable的职责本就是清理无效的`RealConnection`，只要`ConnectionPool`中存在`RealConnection`，则这种清理的需求总是存在的，因而这里会去启动cleanupRunnable。
 
-这里是先启动`cleanupRunnable`，而后向`connections`中添加`RealConnection`的。这样的一种情况：
+根据需要启动了cleanupRunnable之后，将`RealConnection`添加进双端队列connections。
 
-即在启动`cleanupRunnable`之后，向`connections`中添加`RealConnection`之前，线程被抢占，`cleanupRunnable`的线程被执行，它发现`connections`中没有任何`RealConnection`，于是从容地退出而导致后面添加的`RealConnection`永远不会得得清理。
+这里先启动 `cleanupRunnable`，后向 `connections` 中添加`RealConnection`。有没有可能发生：
 
-这样的情况有没有可能发生呢？答案是不会。为什么呢？`put()`执行之前总是会用`ConnectionPool`对象锁来保护，而在`ConnectionPool.cleanup()`中，遍历`connections`也总是会先对`ConnectionPool`对象加锁保护的。
+启动`cleanupRunnable`之后，向`connections`中添加`RealConnection`之前，执行 put() 的线程被抢占，`cleanupRunnable`的线程被执行，它发现`connections`中没有任何`RealConnection`，于是从容地退出而导致后面添加的`RealConnection`永远不会得得清理。
 
-OkHttp内部的组件可以通过`get()`方法从`ConnectionPool`中获取`RealConnection`：
+这样的情况呢？答案是 不会。为什么呢？`put()`执行之前总是会用`ConnectionPool`对象锁来保护，而在`ConnectionPool.cleanup()`中，遍历`connections`也总是会先对`ConnectionPool`对象加锁保护的。即使执行 put() 的线程被抢占，`cleanupRunnable`的线程也会由于拿不到`ConnectionPool`对象锁而等待 put() 执行结束。
+
+OkHttp内部的组件可以通过 `get()` 方法从`ConnectionPool`中获取`RealConnection`：
 ```
   /** Returns a recycled connection to {@code address}, or null if no such connection exists. */
   RealConnection get(Address address, StreamAllocation streamAllocation) {
@@ -203,7 +214,7 @@ OkHttp内部的组件可以通过`get()`方法从`ConnectionPool`中获取`RealC
     return null;
   }
 ```
-`get()`方法遍历`connections`中的所有`RealConnection`寻找同时满足如下三个条件的`RealConnection`：
+`get()` 方法遍历 `connections` 中的所有 `RealConnection` 寻找同时满足如下三个条件的`RealConnection`：
 * `RealConnection`的allocations的数量小于allocationLimit。每个allocation代表在该`RealConnection`上正在执行的一个请求。这个条件用于控制相同连接上，同一时间执行的并发请求的个数。对于HTTP/2连接而言，allocationLimit限制是在连接建立阶段由双方协商的。对于HTTP或HTTPS连接而言，这个值则总是1。从`RealConnection.establishProtocol()`可以清晰地看到这一点：
 ```
     if (protocol == Protocol.HTTP_2) {
@@ -222,7 +233,7 @@ OkHttp内部的组件可以通过`get()`方法从`ConnectionPool`中获取`RealC
       this.allocationLimit = 1;
     }
 ```
-* `RealConnection`的`address`与传入的`Address`参数相等。`RealConnection`的`address`描述了连接对端的地址信息，不难理解只有与所需要的对端相连的`RealConnection`才是真正能复用的。具体看一下`Address`相等性比较的依据(okhttp/okhttp/src/main/java/okhttp3/Address.java)：
+*  `RealConnection` 的 `address` 与传入的 `Address` 参数相等。`RealConnection` 的 `address` 描述建立连接所需的配置信息，包括对端的信息等，不难理解只有所有相关配置相等时 `RealConnection` 才是真正能复用的。具体看一下`Address`相等性比较的依据：
 ```
   @Override public boolean equals(Object other) {
     if (other instanceof Address) {
@@ -242,7 +253,8 @@ OkHttp内部的组件可以通过`get()`方法从`ConnectionPool`中获取`RealC
   }
 ```
 这种相等性的条件给人感觉还是蛮苛刻的，特别是对url的对比。
-这难免会让我们有些担心，对`Address`如此苛刻的相等性比较，又有多大的机会能复用连接呢？我们的担心其实是多余的。只有`StreamAllocation.findConnection()`中，会通过`Internal.instance`调用`ConnectionPool.get()`来获取`RealConnection` (okhttp/okhttp/src/main/java/okhttp3/internal/connection/StreamAllocation.java)：
+这难免会让我们有些担心，对 `Address` 如此苛刻的相等性比较，又有多大的机会能复用连接呢？
+我们的担心其实是多余的。只有在 `StreamAllocation.findConnection()` 中，会通过`Internal.instance` 调用 `ConnectionPool.get()` 来获取 `RealConnection` ：
 
 ```
   private RealConnection findConnection(int connectTimeout, int readTimeout, int writeTimeout,
@@ -286,7 +298,7 @@ OkHttp内部的组件可以通过`get()`方法从`ConnectionPool`中获取`RealC
 
 ```
 
-Internal.instance的实现在OkHttpClient (okhttp/okhttp/src/main/java/okhttp3/OkHttpClient.java)中：
+Internal.instance的实现在OkHttpClient 中：
 ```
   static {
     Internal.instance = new Internal() {
@@ -324,7 +336,7 @@ Internal.instance的实现在OkHttpClient (okhttp/okhttp/src/main/java/okhttp3/O
         return ((RealCall) call).streamAllocation();
       }
 ```
-可见`ConnectionPool.get()`的`Address`参数还是来自于`StreamAllocation`。`StreamAllocation`的`Address`在构造时由外部传入。构造了`StreamAllocation`对象的`RetryAndFollowUpInterceptor`，其构造`Address`的过程是这样的：
+可见 `ConnectionPool.get()` 的 `Address` 参数来自于`StreamAllocation`。`StreamAllocation`的`Address` 在构造时由外部传入。构造了`StreamAllocation`对象的`RetryAndFollowUpInterceptor`，其构造`Address`的过程是这样的：
 ```
   private Address createAddress(HttpUrl url) {
     SSLSocketFactory sslSocketFactory = null;
@@ -341,7 +353,7 @@ Internal.instance的实现在OkHttpClient (okhttp/okhttp/src/main/java/okhttp3/O
         client.proxy(), client.protocols(), client.connectionSpecs(), client.proxySelector());
   }
 ```
-`Address`除了`uriHost`和`uriPort`外的所有构造参数均来自于OkHttpClient，而`Address`的`url`字段正是根据这两个参数构造的 (okhttp/okhttp/src/main/java/okhttp3/Address.java)：
+`Address` 除了 `uriHost` 和 `uriPort` 外的所有构造参数均来自于OkHttpClient，而`Address`的`url` 字段正是根据这两个参数构造的：
 ```
   public Address(String uriHost, int uriPort, Dns dns, SocketFactory socketFactory,
       SSLSocketFactory sslSocketFactory, HostnameVerifier hostnameVerifier,
@@ -353,14 +365,15 @@ Internal.instance的实现在OkHttpClient (okhttp/okhttp/src/main/java/okhttp3/O
         .port(uriPort)
         .build();
 ```
-`Address`的`url`字段仅包含HTTP请求的url的schema + host + port这三部分的信息，而不包含path和query等信息。可见`ConnectionPool`主要是根据服务器的地址来决定复用的，因而我们前面的担心是多余的。
-* `RealConnection`还有可分配的Stream。对于HTTP/2而言，StreamID的空间是有限的，相同连接上的StreamID总有分配完的时候，而在StreamID被分配完了之后，该连接就不能再被使用了。
+可见 `Address` 的 `url` 字段仅包含HTTP请求url的 schema + host + port 这三部分的信息，而不包含 path 和 query 等信息。`ConnectionPool`主要是根据服务器的地址来决定复用的。
+* `RealConnection`还有可分配的Stream。对于HTTP或HTTPS而言，不能同时在相同的连接上执行多个请求。即使对于HTTP/2而言，StreamID的空间也是有限的，同一个连接上的StreamID总有分配完的时候，而在StreamID被分配完了之后，该连接就不能再被使用了。
 
-OkHttp内部对`ConnectionPool`的访问总是通过Internal.instance来实现的。整个OkHttp中也只有`StreamAllocation`存取了`ConnectionPool`，也就是我们前面列出的`StreamAllocation.findConnection()`方法，相关的组件之间的关系大体如下图：
+OkHttp内部对`ConnectionPool`的访问总是通过Internal.instance来进行。整个OkHttp中也只有`StreamAllocation` 存取了 `ConnectionPool`，也就是我们前面列出的`StreamAllocation.findConnection()` 方法，相关的组件之间的关系大体如下图：
 
-![okhttp_flow01.png](http://upload-images.jianshu.io/upload_images/1315506-6a60bf781625e166.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![OkHttp Connection Pool](http://upload-images.jianshu.io/upload_images/1315506-6a60bf781625e166.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 ## RealConnection的清理
-`ConnectionPool`中对于`RealConnection`的清理在put()方法中触发，执行`cleanupRunnable`来完成清理动作：
+`ConnectionPool` 中对于 `RealConnection` 的清理在put()方法中触发，执行 `cleanupRunnable` 来完成清理动作：
 ```
   private final Runnable cleanupRunnable = new Runnable() {
     @Override public void run() {
@@ -477,16 +490,16 @@ OkHttp内部对`ConnectionPool`的访问总是通过Internal.instance来实现�
     return references.size();
   }
 ```
-`cleanup()`方法遍历`connections`，并从中找到处于空闲时间最长的一个`RealConnection`，然后根据查找的不同结果，分为以下的几种情况来处理：
- * 找到了一个处于空闲状态的`RealConnection`，且该`RealConnection`处于空闲状态的时间超出了设置的保活时间，或者当前`ConnectionPool`中处于空闲状态的连接数超出了设置的最大空闲连接数，则将该`RealConnection`从`connections`中移除，并关闭该`RealConnection`关联的底层socket，然后返回0，以此请求`cleanupRunnable`立即再次检查所有的连接。
- * 找到了一个处于空闲状态的`RealConnection`，但该`RealConnection`处于空闲状态的时间尚未超出设置的保活时间，且当前`ConnectionPool`中处于空闲状态的连接数尚未超出设置的最大空闲连接数，则返回保活时间与该`RealConnection`处于空闲状态的时间，请求`cleanupRunnable`等待这么长一段时间之后再次检查所有的连接。
+`cleanup()`方法遍历`connections`，并从中找到处于空闲状态时间最长的一个`RealConnection`，然后根据查找结果的不同，分为以下几种情况处理：
+ * 找到一个处于空闲状态的`RealConnection`，且该`RealConnection`处于空闲状态的时间超出了设置的保活时间，或者当前`ConnectionPool`中处于空闲状态的连接数超出了设置的最大空闲连接数，将该`RealConnection`从`connections`中移除，并关闭该`RealConnection`关联的底层socket，然后返回0，以此请求`cleanupRunnable`立即再次检查所有的连接。
+ * 找到一个处于空闲状态的`RealConnection`，但该`RealConnection`处于空闲状态的时间尚未超出设置的保活时间，且当前`ConnectionPool`中处于空闲状态的连接数尚未超出设置的最大空闲连接数，则返回保活时间与该`RealConnection`处于空闲状态的时间之间的差值，请求`cleanupRunnable`等待这么长一段时间之后再次检查所有的连接。
  * 没有找到处于空闲状态的连接，但找到了使用中的连接，则返回保活时间，请求`cleanupRunnable`等待这么长一段时间之后再次检查所有的连接。
- * 没有找到处于空闲状态的连接，也没有找到使用中的连接，则将`cleanupRunning`置为false，并返回-1，请求`cleanupRunnable`退出。
+ * 没有找到处于空闲状态的连接，也没有找到使用中的连接，也就意味着连接池中尚没有任何连接，则将 `cleanupRunning` 置为false，并返回 -1，请求 `cleanupRunnable` 退出。
 
-`cleanup()`方法通过`pruneAndGetAllocationCount()`方法来检查使用了一个连接的请求的个数，并以此来判断一个连接是否处于空闲状态。后者通遍历`connection.allocations`并检查每个元素的`StreamAllocation`的状态，若`StreamAllocation`为空，则认为是发现了一个leak，它会更新连接的空闲时间为当前时间减去保活时间并返回0，以此请求`cleanup()`立即关闭、清理掉该leak的连接。
+`cleanup()` 通过 `pruneAndGetAllocationCount()` 检查正在使用一个特定连接的请求个数，并以此来判断一个连接是否处于空闲状态。后者通遍历 `connection.allocations` 并检查每个元素的`StreamAllocation` 的状态，若`StreamAllocation` 为空，则认为是发现了一个leak，它会更新连接的空闲时间为当前时间减去保活时间并返回0，以此请求 `cleanup()` 立即关闭、清理掉该 leak 的连接。
 
 ## ConnectionPool的用户接口
-OkHttp的用户可以自己创建`ConnectionPool`对象，这个class也提供了一些用户接口以方便用户获取空闲状态的连接数、总的连接数，以及手动清除空闲状态的连接：
+OkHttp的用户可以自己创建 `ConnectionPool` 对象，这个类也提供了一些用户接口以方便用户获取空闲状态的连接数、总的连接数，以及手动清除空闲状态的连接：
 ```
   /** Returns the number of idle connections in the pool. */
   public synchronized int idleConnectionCount() {
@@ -562,7 +575,7 @@ OkHttp的用户可以自己创建`ConnectionPool`对象，这个class也提供�
     }
   }
 ```
-所谓的流，是封装了底层的IO，可以直接用来执行HTTP请求数据的发送、及响应数据的接收的组件，它会处理将请求的数据序列化之后发送到网络，并将接收到的数据反序列化为应用程序方便操作的格式的工作。在OkHttp3中，这样的组件被抽象为`HttpCodec`。`HttpCodec`的定义如下 (okhttp/okhttp/src/main/java/okhttp3/internal/http/HttpCodec.java)：
+所谓的流，是封装了底层的IO，可以直接用来收发数据的组件，它会将请求的数据序列化之后发送到网络，并将接收的数据反序列化为应用程序方便操作的格式。在 OkHttp3 中，这样的组件被抽象为`HttpCodec`。`HttpCodec`的定义如下 (okhttp/okhttp/src/main/java/okhttp3/internal/http/HttpCodec.java)：
 ```
 /** Encodes HTTP requests and decodes HTTP responses. */
 public interface HttpCodec {
@@ -603,9 +616,9 @@ public interface HttpCodec {
 * 为获得响应而提供的，打开请求体，以用于后续获取请求体数据。
 * 取消请求执行。
 
-`StreamAllocation.newStream()` 主要做的事情正是创建`HttpCodec`。只是在创建`HttpCodec`之前，还需要做一些准备工作，比如建立TCP连接，完成TLS握手，建立HTTP/2连接等。`StreamAllocation.newStream()` 根据 `OkHttpClient`中的一些设置，连接超时、读超时、写超时及连接是否失败重试，利用`findHealthyConnection()`完成创建`HttpCodec`的准备工作，也就是创建`RealConnection`的工作。然后根据HTTP协议的版本创建Http1Codec或Http2Codec。
+`StreamAllocation.newStream()` 主要做的事情正是创建`HttpCodec`。`StreamAllocation.newStream()` 根据 `OkHttpClient`中的设置，连接超时、读超时、写超时及连接失败是否重试，调用 `findHealthyConnection()` 完成 连接，即`RealConnection` 的创建。然后根据HTTP协议的版本创建Http1Codec或Http2Codec。
 
-`findHealthyConnection()`查找一个连接，如果它是可用的就直接返回，如果不可用则会重复查找直到找到一个可用的为止。在连接已被破坏而不可用时，还会释放该连接：
+`findHealthyConnection()` 根据目标服务器地址查找一个连接，如果它是可用的就直接返回，如果不可用则会重复查找直到找到一个可用的为止。在连接已被破坏而不可用时，还会释放连接：
 ```
   /**
    * Finds a connection and returns it if it is healthy. If it is unhealthy the process is repeated
@@ -670,7 +683,7 @@ public interface HttpCodec {
     return true;
   }
 ```
-首先要可以进行IO，此外对于HTTP/2，只要`http2Connection`存在即可。如我们前面在`ConnectInterceptor`中看到的，如果HTTP请求的method不是"GET"，`doExtensiveChecks`为true，需要做额外的检查。
+首先要可以进行IO，此外对于HTTP/2，只要`http2Connection`存在即可。如我们前面在`ConnectInterceptor` 中看到的，如果HTTP请求的method不是 "GET" ，`doExtensiveChecks`为true时，需要做额外的检查。
 
 `findHealthyConnection()` 通过 `findConnection()`查找一个连接：
 ```
@@ -724,15 +737,15 @@ public interface HttpCodec {
     return newConnection;
   }
 ```
-`findConnection()` 返回一个用于为流执行底层IO的连接。这个方法会优先返回已有的连接，也就是`connection`字段保存的连接，如果它存在的话；然后是连接池中的连接；最后是新建一个全新的连接。
+`findConnection()` 返回一个用于流执行底层IO的连接。这个方法优先复用已经创建的连接；在没有可复用连接的情况下新建一个。
 
-在同一次`newStream()`的执行过程中，有没有可能两次执行`findConnection()`，第一次`connection`字段为空，第二次不为空？这个地方对`connection`字段的检查，看起来有点多余。执行`findConnection()`时，`connection`不为空的话，意味着`codec`不为空，而在方法的开始处已经有对`codec`字段的状态做过检查。真的是这样的吗？
+在同一次 `newStream()` 的执行过程中，有没有可能两次执行 `findConnection()` ，第一次`connection` 字段为空，第二次不为空？这个地方对`connection`字段的检查，看起来有点多余。执行 `findConnection()` 时，`connection` 不为空的话，意味着 `codec` 不为空，而在方法的开始处已经有对`codec`字段的状态做过检查。真的是这样的吗？
 
-答案当然是否定的。同一次`newStream()`的执行过程中，没有可能两次执行`findConnection()`，第一次`connection`字段为空，第二次不为空，然而一个HTTP请求的执行过程，又不是一定只调用一次`newStream()`。
+答案当然是否定的。同一次 `newStream()` 的执行过程中，没有可能两次执行`findConnection()`，第一次`connection`字段为空，第二次不为空，然而一个HTTP请求的执行过程，又不是一定只调用一次`newStream()`。
 
-`newStream()`的直接调用者是`ConnectInterceptor`，所有的Interceptor用`RealInterceptorChain`链起来，在Interceptor链中，`ConnectInterceptor`和`RetryAndFollowUpInterceptor`隔着`CacheInterceptor`和`BridgeInterceptor`。然而`newStream()`如果出错的话，则是会通过抛出`Exception`返回到`RetryAndFollowUpInterceptor`来处理错误的。
+`newStream()`的直接调用者是`ConnectInterceptor`，所有的Interceptor用`RealInterceptorChain`链起来，在Interceptor链中，`ConnectInterceptor` 和`RetryAndFollowUpInterceptor` 隔着 `CacheInterceptor` 和 `BridgeInterceptor` 。然而`newStream()` 如果出错的话，则是会通过抛出`Exception`返回到`RetryAndFollowUpInterceptor` 来处理错误的。
 
-`RetryAndFollowUpInterceptor`中会尝试基于相同的`StreamAllocation`对象来恢复对HTTP请求的处理。`RetryAndFollowUpInterceptor`通过`hasMoreRoutes()`等方法，来检查`StreamAllocation`对象的状态，通过`streamFailed(IOException e)`、`release()`、`streamFinished(boolean noNewStreams, HttpCodec codec)`等方法来reset `StreamAllocation`对象的一些状态。
+`RetryAndFollowUpInterceptor` 中会尝试基于相同的 `StreamAllocation` 对象来恢复对HTTP请求的处理。`RetryAndFollowUpInterceptor` 通过 `hasMoreRoutes()` 等方法，来检查`StreamAllocation` 对象的状态，通过 `streamFailed(IOException e)`、`release()`、`streamFinished(boolean noNewStreams, HttpCodec codec)`等方法来reset `StreamAllocation`对象的一些状态。
 
 回到`StreamAllocation`的 `findConnection()`方法。没有连接存在，且连接池中也没有找到所需的连接时，它会新建一个连接。通过如下的步骤新建连接：
 * 为连接选择一个`Route`。
@@ -855,7 +868,7 @@ OkHttp还提供了`ConnectionSpecSelector`，用以从`ConnectionSpec`集合中�
   }
 ```
 这里的执行过程大体如下：
-* 检查连接是否已经建立，若已经建立，则抛出异常，否则继续执行。连接是否建立有`protocol`标识，它表示在整个连接建立，及可能的协议协商过程中选择的所要使用的协议。
+* 检查连接是否已经建立，若已经建立，则抛出异常，否则继续执行。连接是否建立由`protocol` 标识，它表示在整个连接建立，及可能的协议协商过程中选择的所要使用的协议。
 * 根据`ConnectionSpec`集合`connectionSpecs`构造`ConnectionSpecSelector`。
 * 若请求不是安全的请求，会对请求再执行一些额外的限制。这些限制包括：
  - `ConnectionSpec`集合中必须要包含`ConnectionSpec.CLEARTEXT`。这也就是说，OkHttp的用户可以通过为`OkHttpClient`设置不包含`ConnectionSpec.CLEARTEXT`的`ConnectionSpec`集合来禁用所有的明文请求。
@@ -891,147 +904,14 @@ OkHttp还提供了`ConnectionSpecSelector`，用以从`ConnectionSpec`集合中�
 
 ## 建立隧道连接
 建立隧道连接的过程如下：
-```
-  private void buildTunneledConnection(int connectTimeout, int readTimeout, int writeTimeout,
-      ConnectionSpecSelector connectionSpecSelector) throws IOException {
-    Request tunnelRequest = createTunnelRequest();
-    HttpUrl url = tunnelRequest.url();
-    int attemptedConnections = 0;
-    int maxAttempts = 21;
-    while (true) {
-      if (++attemptedConnections > maxAttempts) {
-        throw new ProtocolException("Too many tunnel connections attempted: " + maxAttempts);
-      }
 
-      connectSocket(connectTimeout, readTimeout);
-      tunnelRequest = createTunnel(readTimeout, writeTimeout, tunnelRequest, url);
-
-      if (tunnelRequest == null) break; // Tunnel successfully created.
-
-      // The proxy decided to close the connection after an auth challenge. We need to create a new
-      // connection, but this time with the auth credentials.
-      closeQuietly(rawSocket);
-      rawSocket = null;
-      sink = null;
-      source = null;
-    }
-
-    establishProtocol(readTimeout, writeTimeout, connectionSpecSelector);
-  }
-```
  1. 构造一个 建立隧道连接 请求。
-```
-  /**
-   * Returns a request that creates a TLS tunnel via an HTTP proxy. Everything in the tunnel request
-   * is sent unencrypted to the proxy server, so tunnels include only the minimum set of headers.
-   * This avoids sending potentially sensitive data like HTTP cookies to the proxy unencrypted.
-   */
-  private Request createTunnelRequest() {
-    return new Request.Builder()
-        .url(route.address().url())
-        .header("Host", Util.hostHeader(route.address().url(), true))
-        .header("Proxy-Connection", "Keep-Alive")
-        .header("User-Agent", Version.userAgent()) // For HTTP/1.0 proxies like Squid.
-        .build();
-  }
-```
-这个请求是要发给HTTP代理服务器的，其中包含了要连接的目标HTTP服务器的域名等信息。
  2. 与HTTP代理服务器建立TCP连接。
-```
-  private void connectSocket(int connectTimeout, int readTimeout) throws IOException {
-    Proxy proxy = route.proxy();
-    Address address = route.address();
-
-    rawSocket = proxy.type() == Proxy.Type.DIRECT || proxy.type() == Proxy.Type.HTTP
-        ? address.socketFactory().createSocket()
-        : new Socket(proxy);
-
-    rawSocket.setSoTimeout(readTimeout);
-    try {
-      Platform.get().connectSocket(rawSocket, route.socketAddress(), connectTimeout);
-    } catch (ConnectException e) {
-      throw new ConnectException("Failed to connect to " + route.socketAddress());
-    }
-    source = Okio.buffer(Okio.source(rawSocket));
-    sink = Okio.buffer(Okio.sink(rawSocket));
-  }
-```
-路由选择，也就是HTTP代理服务器地址的选择，可以参考[OkHttp3中的代理与路由](https://www.wolfcstech.com/2016/10/14/OkHttp3%E4%B8%AD%E7%9A%84%E4%BB%A3%E7%90%86%E4%B8%8E%E8%B7%AF%E7%94%B1/)。
-在创建了TCP Socket之后，连接动作的执行与平台有关。对于Android而言，过程如下：
-```
-  @Override public void connectSocket(Socket socket, InetSocketAddress address,
-      int connectTimeout) throws IOException {
-    try {
-      socket.connect(address, connectTimeout);
-    } catch (AssertionError e) {
-      if (Util.isAndroidGetsocknameError(e)) throw new IOException(e);
-      throw e;
-    } catch (SecurityException e) {
-      // Before android 4.3, socket.connect could throw a SecurityException
-      // if opening a socket resulted in an EACCES error.
-      IOException ioException = new IOException("Exception in connect");
-      ioException.initCause(e);
-      throw ioException;
-    }
-  }
-```
  3. 创建隧道。这主要是将 建立隧道连接 请求发送给HTTP代理服务器，并处理它的响应。
-```
-  /**
-   * To make an HTTPS connection over an HTTP proxy, send an unencrypted CONNECT request to create
-   * the proxy connection. This may need to be retried if the proxy requires authorization.
-   */
-  private Request createTunnel(int readTimeout, int writeTimeout, Request tunnelRequest,
-      HttpUrl url) throws IOException {
-    // Make an SSL Tunnel on the first message pair of each SSL + proxy connection.
-    String requestLine = "CONNECT " + Util.hostHeader(url, true) + " HTTP/1.1";
-    while (true) {
-      Http1Codec tunnelConnection = new Http1Codec(null, null, source, sink);
-      source.timeout().timeout(readTimeout, MILLISECONDS);
-      sink.timeout().timeout(writeTimeout, MILLISECONDS);
-      tunnelConnection.writeRequest(tunnelRequest.headers(), requestLine);
-      tunnelConnection.finishRequest();
-      Response response = tunnelConnection.readResponse().request(tunnelRequest).build();
-      // The response body from a CONNECT should be empty, but if it is not then we should consume
-      // it before proceeding.
-      long contentLength = HttpHeaders.contentLength(response);
-      if (contentLength == -1L) {
-        contentLength = 0L;
-      }
-      Source body = tunnelConnection.newFixedLengthSource(contentLength);
-      Util.skipAll(body, Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
-      body.close();
-
-      switch (response.code()) {
-        case HTTP_OK:
-          // Assume the server won't send a TLS ServerHello until we send a TLS ClientHello. If
-          // that happens, then we will have buffered bytes that are needed by the SSLSocket!
-          // This check is imperfect: it doesn't tell us whether a handshake will succeed, just
-          // that it will almost certainly fail because the proxy has sent unexpected data.
-          if (!source.buffer().exhausted() || !sink.buffer().exhausted()) {
-            throw new IOException("TLS tunnel buffered too many bytes!");
-          }
-          return null;
-
-        case HTTP_PROXY_AUTH:
-          tunnelRequest = route.address().proxyAuthenticator().authenticate(route, response);
-          if (tunnelRequest == null) throw new IOException("Failed to authenticate with proxy");
-
-          if ("close".equalsIgnoreCase(response.header("Connection"))) {
-            return tunnelRequest;
-          }
-          break;
-
-        default:
-          throw new IOException(
-              "Unexpected response code for CONNECT: " + response.code());
-      }
-    }
-  }
-```
-这里也可以看到 建立隧道连接 请求是一个method为`CONNECT`的HTTP请求。Http1Codec用于将请求序列化并发送到网络，且从网络接收数据并转换格式。
  4. 重复上面的第2和第3步，知道建立好了隧道连接。至于为什么要重复多次，及关于代理认证的内容，可以参考代理协议相关的内容。
  5. 建立协议。
+
+关于建立隧道连接更详细的过程可参考 [OkHttp3中的代理与路由](https://www.wolfcstech.cn/2016/10/14/OkHttp3%E4%B8%AD%E7%9A%84%E4%BB%A3%E7%90%86%E4%B8%8E%E8%B7%AF%E7%94%B1/) 的相关部分。
 
 ## 建立普通连接
 建立普通连接的过程比较直接：
@@ -1043,12 +923,14 @@ OkHttp还提供了`ConnectionSpecSelector`，用以从`ConnectionSpec`集合中�
     establishProtocol(readTimeout, writeTimeout, connectionSpecSelector);
   }
 ```
- 1. 建立一个TCP连接。如果设置了HTTP代理，是与HTTP代理建立连接，否则是与HTTP服务器直接建立连接。
+ 1. 建立一个TCP连接。
  2. 建立协议。
+
+更详细的过程可参考 [OkHttp3中的代理与路由](https://www.wolfcstech.cn/2016/10/14/OkHttp3%E4%B8%AD%E7%9A%84%E4%BB%A3%E7%90%86%E4%B8%8E%E8%B7%AF%E7%94%B1/) 的相关部分。
 
 ## 建立协议
 
-不管是建立隧道连接，还是建立普通连接，都少不了 建立协议 这一步。这一步是在建立好了TCP连接之后，而在该TCP能被拿来执行HTTP请求/响应的IO之前执行的。它主要为非明文传输做一些初始化，比如TLS握手，HTTP/2的协议协商等。
+不管是建立隧道连接，还是建立普通连接，都少不了 建立协议 这一步。这一步是在建立好了TCP连接之后，而在该TCP能被拿来收发数据之前执行的。它主要为数据的加密传输做一些初始化，比如TLS握手，HTTP/2的协议协商等。
 ```
   private void establishProtocol(int readTimeout, int writeTimeout,
       ConnectionSpecSelector connectionSpecSelector) throws IOException {
@@ -1076,13 +958,18 @@ OkHttp还提供了`ConnectionSpecSelector`，用以从`ConnectionSpec`集合中�
     }
   }
 ```
- 1. 对于非明文传输的请求，创建TLS连接。对于明文传输的请求，则设置`protocol`和`socket`。
-`socket`指向了直接与应用层，如HTTP或HTTP/2交互的Socket。对于明文传输没有设置HTTP代理的HTTP请求而言，它是与HTTP服务器之间的一个TCP socket；对于明文传输设置了HTTP代理的HTTP请求，它是与HTTP代理服务器之间的一个TCP socket；对于加密传输没有设置HTTP代理服务器的HTTP请求，它是与HTTP服务器之间的一个SSLScoket；对于加密传输设置了HTTP代理服务器的HTTP请求，它是与HTTP服务器之间的一个SSLSocket，一个隧道连接；对于加密传输没有设置HTTP代理服务器的HTTP/2请求，它是与HTTP服务器之间的一个SSLScoket；对于加密传输设置了HTTP代理服务器的HTTP/2请求，它是与HTTP服务器之间的一个SSLSocket，一个隧道连接。
+ 1. 对于加密的数据传输，创建TLS连接。对于明文传输，则设置`protocol`和`socket`。
+`socket`指向直接与应用层，如HTTP或HTTP/2，交互的Socket：
+对于明文传输没有设置HTTP代理的HTTP请求，它是与HTTP服务器之间的TCP socket；
+对于明文传输设置了HTTP代理或SOCKS代理的HTTP请求，它是与代理服务器之间的TCP socket；
+对于加密传输没有设置HTTP代理服务器的HTTP或HTTP2请求，它是与HTTP服务器之间的SSLScoket；
+对于加密传输设置了HTTP代理服务器的HTTP或HTTP2请求，它是与HTTP服务器之间经过了代理服务器的SSLSocket，一个隧道连接；
+对于加密传输设置了SOCKS代理的HTTP或HTTP2请求，它是一条经过了代理服务器的SSLSocket连接。
 
- 2. 对于HTTP/2连接，会建立HTTP/2连接，并进一步协商连接参数，如连接上可同时执行的并发请求数等。而对于非HTTP/2连接，则将连接上可同时执行的并发请求数设置为1。
+ 2. 对于HTTP/2，会建立HTTP/2连接，并进一步协商连接参数，如连接上可同时执行的并发请求数等。而对于非HTTP/2，则将连接上可同时执行的并发请求数设置为1。
 
 ## 建立TLS连接
-进一步来看建立协议过程中，为安全请求所做的建立TLS连接：
+进一步来看建立协议过程中，为安全请求所做的建立TLS连接的过程：
 ```
   private void connectTls(int readTimeout, int writeTimeout,
       ConnectionSpecSelector connectionSpecSelector) throws IOException {
@@ -1151,8 +1038,9 @@ TLS连接是对原始的TCP连接的一个封装，以提供TLS握手，及数�
  4. 启动TLS握手。
  5. TLS握手完成之后，获取握手信息。
  6. 对TLS握手过程中传回来的证书进行验证。
- 7. 在前面选择的ConnectionSpec支持TLS扩展参数时，获取TLS握手过程中顺便完成的协议协商过程所选择的协议。这个过程主要用于HTTP/2的ALPN扩展。
- 8. OkHttp主要使用Okio来做IO操作，这里会基于前面获取的SSLSocket创建用于执行IO的BufferedSource和BufferedSink等，并保存握手信息及所选择的协议。
+ 7. 检查证书钉扎。
+ 8. 在前面选择的ConnectionSpec支持TLS扩展参数时，获取TLS握手过程中顺便完成的协议协商过程所选择的协议。这个过程主要用于HTTP/2的ALPN扩展。
+ 9. OkHttp主要使用Okio来做IO操作，这里会基于前面获取的SSLSocket创建用于执行IO的BufferedSource和BufferedSink等，并保存握手信息及所选择的协议。
 
 具体来看`ConnectionSpecSelector`中配置SSLSocket的过程：
 ```
@@ -1190,7 +1078,7 @@ TLS连接是对原始的TCP连接的一个封装，以提供TLS握手，及数�
     return tlsConfiguration;
   }
 ```
-这个过程又分为如下的两个步骤：
+这个过程分为如下的两个步骤：
  1. 从为OkHttp配置的ConnectionSpec集合中选择一个与SSLSocket兼容的一个。SSLSocket与ConnectionSpec兼容的标准如下：
 ```
   public boolean isCompatible(SSLSocket socket) {
@@ -1295,7 +1183,9 @@ TLS连接是对原始的TCP连接的一个封装，以提供TLS握手，及数�
     }
   }
 ```
-TLS扩展相关的方法不是SSLSocket接口的标准方法，不同版本的OpenSSL对这些接口的支持也不一样，因而这里主要是通过反射机制调用TLS扩展相关的方法，如设置ALPN的protocols等。
+TLS扩展相关的方法不是SSLSocket接口的标准方法，不同的SSL/TLS实现库对这些接口的支持程度不一样，因而这里通过反射机制调用TLS扩展相关的方法。
+
+这里主要配置了3个TLS扩展，分别是session tickets，SNI和ALPN。session tickets用于会话回复，SNI用于支持单个主机配置了多个域名的情况，ALPN则用于HTTP/2的协议协商。可以看到为SNI设置的hostname最终来源于Url，也就意味着使用HttpDns时，如果直接将IP地址替换原来Url中的域名来发起HTTPS请求的话，SNI将是IP地址，这有可能使服务器下发不恰当的证书。
 
 TLS扩展相关方法的OptionalMethod创建过程也在AndroidPlatform中：
 ```
@@ -1359,8 +1249,10 @@ TLS扩展相关方法的OptionalMethod创建过程也在AndroidPlatform中：
   }
 ```
 
-至此我们已经分析了OkHttp3中，所有HTTP请求，包括设置了代理的明文HTTP请求，设置了代理的HTTPS请求，设置了代理的HTTP/2请求，无代理的明文HTTP请求，无代理的HTTPS请求，无代理的HTTP/2请求的连接建立过程，其中包括TLS的握手，HTTP/2的协议协商等。
+至此我们分析了OkHttp3中，所有HTTP请求，包括设置了代理的明文HTTP请求，设置了代理的HTTPS请求，设置了代理的HTTP/2请求，无代理的明文HTTP请求，无代理的HTTPS请求，无代理的HTTP/2请求的连接建立过程，其中包括TLS的握手，HTTP/2的协议协商等。
 
 总结一下，OkHttp中，IO相关的组件的其关系大体如下图所示：
 
-![okhttp_flow03.png](http://upload-images.jianshu.io/upload_images/1315506-338a7a0b0a39a278.png?imageMogr2/auto-orient/strip%7CimageView2/2)
+![Connection Component](http://upload-images.jianshu.io/upload_images/1315506-338a7a0b0a39a278.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+Done。
