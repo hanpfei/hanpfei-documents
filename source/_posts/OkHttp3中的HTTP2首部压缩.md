@@ -1,10 +1,14 @@
 ---
-title: HPACK：HTTP/2的首部压缩 (RFC7541)
-date: 2016-10-29 13:46:49
-categories: HTTP2相关规范
+title: OkHttp3中的HTTP2首部压缩
+date: 2016-12-15 17:46:49
+tags:
+- Android
+- 网络
 ---
 
 当前网络环境中，同一个页面发出几十个HTTP请求已经是司空见惯的事情了。在HTTP/1.1中，请求之间完全相互独立，使得请求中冗余的首部字段不必要地浪费了大量的网络带宽，并增加了网络延时。以对某站点的一次页面访问为例，直观地看一下这种状况：
+
+<!--more-->
 
 ![Header 1](http://upload-images.jianshu.io/upload_images/1315506-b172bdb63e325d50.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
