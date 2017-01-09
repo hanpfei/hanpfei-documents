@@ -121,7 +121,8 @@ Chrome 52+ 支持QUIC而无需白名单，但需要确认 **#enable-quic** 标�
 并根据需要启用QUIC。
 
 然后通过Chrome打开你的网站，则它应该是以QUIC提供服务的！可以通过打开inspector 工具并进入Security tab来验证这一点。重新加载页面并点击来查看连接详情：
-![68747470733a2f2f692e696d6775722e636f6d2f306930306230682e706e67.png](http://upload-images.jianshu.io/upload_images/1315506-eb706418c2e20ea8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![caddy005.png](http://upload-images.jianshu.io/upload_images/1315506-b8ea9d1418be9780.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 如果你使用老版的Chrome，则为了省事，可以升级一下。
 
