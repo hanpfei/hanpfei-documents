@@ -1,20 +1,227 @@
 ---
 title: OkHttp3中的代理与路由
+date: 2016-10-14 11:43:49
+tags:
+- Android
+- 网络
 ---
 
-﻿路由是什么呢？路由即是网络数据包在网络中的传输路径，或者说数据包在传输过程中所经过的网络节点，比如路由器，代理服务器之类的。
+HTTP请求的整体处理过程大体可以理解为，
+1. 建立TCP连接。
+2. 如果是HTTPS的话，完成SSL/TLS的协商。
+3. 发送请求。
+4. 获取响应。
+5. 结束请求，关闭连接。
 
 <!--more-->
 
-那像OkHttp3这样的网络库对于数据包的路由需要做些什么事呢？用户可以为终端设置代理服务器，HTTP/HTTPS代理或SOCK代理。OkHttp3中的路由相关逻辑，需要从系统中获取用户设置的代理服务器的地址，将HTTP请求转换为代理协议的数据包，发给代理服务器，然后等待代理服务器帮助完成了网络请求之后，从代理服务器读取响应数据返回给用户。只有这样，用户设置的代理才能生效。如果网络库无视用户设置的代理服务器，直接进行DNS并做网络请求，则用户设置的代理服务器不生效。
+然而，当为系统设置了代理的时候，整个数据流都会经过代理服务器。那么代理设置究竟是如何工作的呢？它是如何影响我们上面看到的HTTP请求的处理过程的呢？是在操作系统内核的TCP实现中的策略呢，还是HTTP stack中的机制？这里我们通过OkHttp3中的实现来一探究竟。
 
-这里就来看一下OkHttp3中路由相关的处理。
+代理分为两种类型，一种是SOCKS代理，另一种是HTTP代理。对于SOCKS代理，在HTTP的场景下，代理服务器完成TCP数据包的转发工作。而HTTP代理服务器，在转发数据之外，还会解析HTTP的请求及响应，并根据请求及响应的内容做一些处理。这里看一下OkHttp中对代理的处理。
 
-# 路由选择
+# 代理服务器的描述
+在Java中，通过 ***java.net.Proxy*** 类描述一个代理服务器：
+```
+public class Proxy {
 
-如同Internet上的其它设备一样，每个路由节点都有自己的IP地址，加上端口号，则可以确定唯一的路由服务。以域名描述的HTTP/HTTPS代理服务器地址，可能对应于多个实际的代理服务器主机，因而一个代理服务器可能包含有多条路由。而SOCK代理服务器，则有着唯一确定的IP地址和端口号。
+    /**
+     * Represents the proxy type.
+     *
+     * @since 1.5
+     */
+    public enum Type {
+        /**
+         * Represents a direct connection, or the absence of a proxy.
+         */
+        DIRECT,
+        /**
+         * Represents proxy for high level protocols such as HTTP or FTP.
+         */
+        HTTP,
+        /**
+         * Represents a SOCKS (V4 or V5) proxy.
+         */
+        SOCKS
+    };
 
-OkHttp3借助于RouteSelector来选择路由节点，并维护路由的信息。
+    private Type type;
+    private SocketAddress sa;
+
+    /**
+     * A proxy setting that represents a {@code DIRECT} connection,
+     * basically telling the protocol handler not to use any proxying.
+     * Used, for instance, to create sockets bypassing any other global
+     * proxy settings (like SOCKS):
+     * <P>
+     * {@code Socket s = new Socket(Proxy.NO_PROXY);}
+     *
+     */
+    public final static Proxy NO_PROXY = new Proxy();
+
+    // Creates the proxy that represents a {@code DIRECT} connection.
+    private Proxy() {
+        type = Type.DIRECT;
+        sa = null;
+    }
+
+    /**
+     * Creates an entry representing a PROXY connection.
+     * Certain combinations are illegal. For instance, for types Http, and
+     * Socks, a SocketAddress <b>must</b> be provided.
+     * <P>
+     * Use the {@code Proxy.NO_PROXY} constant
+     * for representing a direct connection.
+     *
+     * @param type the {@code Type} of the proxy
+     * @param sa the {@code SocketAddress} for that proxy
+     * @throws IllegalArgumentException when the type and the address are
+     * incompatible
+     */
+    public Proxy(Type type, SocketAddress sa) {
+        if ((type == Type.DIRECT) || !(sa instanceof InetSocketAddress))
+            throw new IllegalArgumentException("type " + type + " is not compatible with address " + sa);
+        this.type = type;
+        this.sa = sa;
+    }
+
+    /**
+     * Returns the proxy type.
+     *
+     * @return a Type representing the proxy type
+     */
+    public Type type() {
+        return type;
+    }
+
+    /**
+     * Returns the socket address of the proxy, or
+     * {@code null} if its a direct connection.
+     *
+     * @return a {@code SocketAddress} representing the socket end
+     *         point of the proxy
+     */
+    public SocketAddress address() {
+        return sa;
+    }
+......
+}
+```
+只用代理的类型及代理服务器地址即可描述代理服务器的全部。对于HTTP代理，代理服务器地址可以通过域名和IP地址等方式来描述。
+
+# 代理选择器ProxySelector
+在Java中通过ProxySelector为一个特定的URI选择代理：
+```
+public abstract class ProxySelector {
+......
+    /**
+     * Selects all the applicable proxies based on the protocol to
+     * access the resource with and a destination address to access
+     * the resource at.
+     * The format of the URI is defined as follow:
+     * <UL>
+     * <LI>http URI for http connections</LI>
+     * <LI>https URI for https connections
+     * <LI>{@code socket://host:port}<br>
+     *     for tcp client sockets connections</LI>
+     * </UL>
+     *
+     * @param   uri
+     *          The URI that a connection is required to
+     *
+     * @return  a List of Proxies. Each element in the
+     *          the List is of type
+     *          {@link java.net.Proxy Proxy};
+     *          when no proxy is available, the list will
+     *          contain one element of type
+     *          {@link java.net.Proxy Proxy}
+     *          that represents a direct connection.
+     * @throws IllegalArgumentException if the argument is null
+     */
+    public abstract List<Proxy> select(URI uri);
+
+    /**
+     * Called to indicate that a connection could not be established
+     * to a proxy/socks server. An implementation of this method can
+     * temporarily remove the proxies or reorder the sequence of
+     * proxies returned by {@link #select(URI)}, using the address
+     * and the IOException caught when trying to connect.
+     *
+     * @param   uri
+     *          The URI that the proxy at sa failed to serve.
+     * @param   sa
+     *          The socket address of the proxy/SOCKS server
+     *
+     * @param   ioe
+     *          The I/O exception thrown when the connect failed.
+     * @throws IllegalArgumentException if either argument is null
+     */
+    public abstract void connectFailed(URI uri, SocketAddress sa, IOException ioe);
+}
+```
+这个组件会读区系统中配置的所有代理，并根据调用者传入的URI，返回特定的代理服务器集合。由于不同系统中，配置代理服务器的方法，及相关配置的保存机制不同，该接口在不同的系统中有着不同的实现。
+
+# OkHttp3的路由
+OkHttp3中抽象出Route来描述网络数据包的传输路径，最主要还是要描述直接与其建立TCP连接的目标端点。
+```
+public final class Route {
+  final Address address;
+  final Proxy proxy;
+  final InetSocketAddress inetSocketAddress;
+
+  public Route(Address address, Proxy proxy, InetSocketAddress inetSocketAddress) {
+    if (address == null) {
+      throw new NullPointerException("address == null");
+    }
+    if (proxy == null) {
+      throw new NullPointerException("proxy == null");
+    }
+    if (inetSocketAddress == null) {
+      throw new NullPointerException("inetSocketAddress == null");
+    }
+    this.address = address;
+    this.proxy = proxy;
+    this.inetSocketAddress = inetSocketAddress;
+  }
+
+  public Address address() {
+    return address;
+  }
+
+  /**
+   * Returns the {@link Proxy} of this route.
+   *
+   * <strong>Warning:</strong> This may disagree with {@link Address#proxy} when it is null. When
+   * the address's proxy is null, the proxy selector is used.
+   */
+  public Proxy proxy() {
+    return proxy;
+  }
+
+  public InetSocketAddress socketAddress() {
+    return inetSocketAddress;
+  }
+
+  /**
+   * Returns true if this route tunnels HTTPS through an HTTP proxy. See <a
+   * href="http://www.ietf.org/rfc/rfc2817.txt">RFC 2817, Section 5.2</a>.
+   */
+  public boolean requiresTunnel() {
+    return address.sslSocketFactory != null && proxy.type() == Proxy.Type.HTTP;
+  }
+......
+}
+```
+主要通过 **代理服务器的信息proxy** ，及 **连接的目标地址** 描述路由。 **连接的目标地址inetSocketAddress** 根据代理类型的不同而有着不同的含义，这主要是由不同代理协议的差异而造成的。对于无需代理的情况， **连接的目标地址inetSocketAddress** 中包含HTTP服务器经过了DNS域名解析的IP地址及协议端口号；对于SOCKS代理，其中包含HTTP服务器的域名及协议端口号；对于HTTP代理，其中则包含代理服务器经过域名解析的IP地址及端口号。
+
+# 路由选择器RouteSelector
+HTTP请求处理过程中所需的TCP连接建立过程，主要是找到一个Route，然后依据代理协议的规则与特定目标建立TCP连接。对于无代理的情况，是与HTTP服务器建立TCP连接；对于SOCKS代理及HTTP代理，是与代理服务器建立TCP连接，虽然都是与代理服务器建立TCP连接，而SOCKS代理协议与HTTP代理协议做这个动作的方式又会有一定的区别。
+
+借助于域名解析做负载均衡已经是网络中非常常见的手法了，因而，常常会有相同域名对应不同IP地址的情况。同时相同系统也可以设置多个代理，这使Route的选择变得复杂起来。
+
+在OkHttp中，对Route连接失败有一定的错误处理机制。OkHttp会逐个尝试找到的Route建立TCP连接，直到找到可用的那一个。这同样要求，对Route信息有良好的管理。
+
+OkHttp3借助于 **`RouteSelector`** 类管理所有的路由信息，并帮助选择路由。 **`RouteSelector`** 主要完成3件事：
+1. 收集所有可用的路由。
 ```
 public final class RouteSelector {
   private final Address address;
@@ -41,52 +248,7 @@ public final class RouteSelector {
 
     resetNextProxy(address.url(), address.proxy());
   }
-
-  /**
-   * Returns true if there's another route to attempt. Every address has at least one route.
-   */
-  public boolean hasNext() {
-    return hasNextInetSocketAddress()
-        || hasNextProxy()
-        || hasNextPostponed();
-  }
-
-  public Route next() throws IOException {
-    // Compute the next route to attempt.
-    if (!hasNextInetSocketAddress()) {
-      if (!hasNextProxy()) {
-        if (!hasNextPostponed()) {
-          throw new NoSuchElementException();
-        }
-        return nextPostponed();
-      }
-      lastProxy = nextProxy();
-    }
-    lastInetSocketAddress = nextInetSocketAddress();
-
-    Route route = new Route(address, lastProxy, lastInetSocketAddress);
-    if (routeDatabase.shouldPostpone(route)) {
-      postponedRoutes.add(route);
-      // We will only recurse in order to skip previously failed routes. They will be tried last.
-      return next();
-    }
-
-    return route;
-  }
-
-  /**
-   * Clients should invoke this method when they encounter a connectivity failure on a connection
-   * returned by this route selector.
-   */
-  public void connectFailed(Route failedRoute, IOException failure) {
-    if (failedRoute.proxy().type() != Proxy.Type.DIRECT && address.proxySelector() != null) {
-      // Tell the proxy selector when we fail to connect on a fresh connection.
-      address.proxySelector().connectFailed(
-          address.url().uri(), failedRoute.proxy().address(), failure);
-    }
-
-    routeDatabase.failed(failedRoute);
-  }
+......
 
   /** Prepares the proxy servers to try. */
   private void resetNextProxy(HttpUrl url, Proxy proxy) {
@@ -105,12 +267,14 @@ public final class RouteSelector {
     }
     nextProxyIndex = 0;
   }
-
-  /** Returns true if there's another proxy to try. */
-  private boolean hasNextProxy() {
-    return nextProxyIndex < proxies.size();
-  }
-
+```
+收集路由分为两个步骤：第一步收集所有的代理；第二步则是收集特定代理服务器选择情况下的所有 **连接的目标地址** 。
+收集代理的过程如上面的这段代码所示，有两种方式，一是外部通过address传入了代理，此时代理集合将包含这唯一的代理。address的代理最终来源于OkHttpClient，我们可以在构造OkHttpClient时设置代理，来指定由该client执行的所有请求经过特定的代理。
+另一种方式是，借助于ProxySelector获取多个代理。ProxySelector最终也来源于OkHttpClient，OkHttp的用户当然也可以对此进行配置。但通常情况下，使用系统默认的ProxySelector，来获取系统中配置的代理。
+收集到的所有代理保存在列表 **`proxies`** 中。
+为OkHttpClient配置Proxy或ProxySelector的场景大概是，需要让连接使用代理，但不使用系统的代理配置的情况。
+收集特定代理服务器选择情况下的所有路由，因代理类型的不同而有着不同的过程：
+```
   /** Returns the next proxy to try. May be PROXY.NO_PROXY but never null. */
   private Proxy nextProxy() throws IOException {
     if (!hasNextProxy()) {
@@ -179,6 +343,48 @@ public final class RouteSelector {
     // return the address and ignore any host name that may be available.
     return address.getHostAddress();
   }
+```
+收集一个特定代理服务器选择下的 **连接的目标地址** 因代理类型的不同而不同，这主要分为3种情况。 对于没有配置代理的情况，会对HTTP服务器的域名进行DNS域名解析，并为每个解析到的IP地址创建 **连接的目标地址**；对于SOCKS代理，直接以HTTP服务器的域名及协议端口号创建  **连接的目标地址**；而对于HTTP代理，则会对HTTP代理服务器的域名进行DNS域名解析，并为每个解析到的IP地址创建 **连接的目标地址**。
+这里是OkHttp中发生DNS域名解析唯一的场合。对于使用代理的场景，没有对HTTP服务器的域名做DNS域名解析，也就意味着HTTP服务器的域名解析要由代理服务器完成。
+代理服务器的收集是在创建 **`RouteSelector`** 完成的；而一个特定代理服务器选择下的 **连接的目标地址** 收集则是在选择Route时根据需要完成的。
+2.  **`RouteSelector`** 做的第二件事情是选择可用的路由。
+```
+  /**
+   * Returns true if there's another route to attempt. Every address has at least one route.
+   */
+  public boolean hasNext() {
+    return hasNextInetSocketAddress()
+        || hasNextProxy()
+        || hasNextPostponed();
+  }
+
+  public Route next() throws IOException {
+    // Compute the next route to attempt.
+    if (!hasNextInetSocketAddress()) {
+      if (!hasNextProxy()) {
+        if (!hasNextPostponed()) {
+          throw new NoSuchElementException();
+        }
+        return nextPostponed();
+      }
+      lastProxy = nextProxy();
+    }
+    lastInetSocketAddress = nextInetSocketAddress();
+
+    Route route = new Route(address, lastProxy, lastInetSocketAddress);
+    if (routeDatabase.shouldPostpone(route)) {
+      postponedRoutes.add(route);
+      // We will only recurse in order to skip previously failed routes. They will be tried last.
+      return next();
+    }
+
+    return route;
+  }
+
+  /** Returns true if there's another proxy to try. */
+  private boolean hasNextProxy() {
+    return nextProxyIndex < proxies.size();
+  }
 
   /** Returns true if there's another socket address to try. */
   private boolean hasNextInetSocketAddress() {
@@ -203,27 +409,26 @@ public final class RouteSelector {
   private Route nextPostponed() {
     return postponedRoutes.remove(0);
   }
-}
 ```
-`RouteSelector`主要做了这样一些事情：
-1. 在`RouteSelector`对象创建时，获取并保存用户设置的所有的代理。这里主要通过`ProxySelector`，根据uri来得到系统中的所有代理，并保存在Proxy列表proxies中。
-2. 给调用者提供接口，来选择可用的路由。调用者通过next()可以获取`RouteSelector`中维护的下一个可用路由。调用者在连接失败时，可以再次调用这个接口来获取下一个路由。这个接口会逐个地返回每个代理的每个代理主机服务给调用者。在所有的代理的每个代理主机都被访问过了之后，还会返回曾经连接失败的路由。
-3. 维护路由节点的信息。`RouteDatabase`用于维护连接失败的路由的信息，以避免浪费时间去连接一些不可用的路由。`RouteDatabase`中的路由信息主要由`RouteSelector`来维护。
+ **`RouteSelector`** 实现了两级迭代器来提供选择路由的服务。
+3. 维护接失败的路由的信息，以避免浪费时间去连接一些不可用的路由。 **`RouteSelector`** 借助于**`RouteDatabase`** 维护失败的路由的信息。
+```
+  /**
+   * Clients should invoke this method when they encounter a connectivity failure on a connection
+   * returned by this route selector.
+   */
+  public void connectFailed(Route failedRoute, IOException failure) {
+    if (failedRoute.proxy().type() != Proxy.Type.DIRECT && address.proxySelector() != null) {
+      // Tell the proxy selector when we fail to connect on a fresh connection.
+      address.proxySelector().connectFailed(
+          address.url().uri(), failedRoute.proxy().address(), failure);
+    }
 
+    routeDatabase.failed(failedRoute);
+  }
+```
 `RouteDatabase`是一个简单的容器：
 ```
-package okhttp3.internal.connection;
-
-import java.util.LinkedHashSet;
-import java.util.Set;
-import okhttp3.Route;
-
-/**
- * A blacklist of failed routes to avoid when creating a new connection to a target address. This is
- * used so that OkHttp can learn from its mistakes: if there was a failure attempting to connect to
- * a specific IP address or proxy server, that failure is remembered and alternate routes are
- * preferred.
- */
 public final class RouteDatabase {
   private final Set<Route> failedRoutes = new LinkedHashSet<>();
 
@@ -243,98 +448,9 @@ public final class RouteDatabase {
   }
 }
 ```
+# 代理选择器ProxySelector的实现
+在OkHttp3中，`ProxySelector`对象由OkHttpClient维护。
 
-OkHttp3主要用(Address, Proxy, InetSocketAddress)的三元组来描述路由信息：
-```
-package okhttp3;
-
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-
-/**
- * The concrete route used by a connection to reach an abstract origin server. When creating a
- * connection the client has many options:
- *
- * <ul>
- *     <li><strong>HTTP proxy:</strong> a proxy server may be explicitly configured for the client.
- *         Otherwise the {@linkplain java.net.ProxySelector proxy selector} is used. It may return
- *         multiple proxies to attempt.
- *     <li><strong>IP address:</strong> whether connecting directly to an origin server or a proxy,
- *         opening a socket requires an IP address. The DNS server may return multiple IP addresses
- *         to attempt.
- * </ul>
- *
- * <p>Each route is a specific selection of these options.
- */
-public final class Route {
-  final Address address;
-  final Proxy proxy;
-  final InetSocketAddress inetSocketAddress;
-
-  public Route(Address address, Proxy proxy, InetSocketAddress inetSocketAddress) {
-    if (address == null) {
-      throw new NullPointerException("address == null");
-    }
-    if (proxy == null) {
-      throw new NullPointerException("proxy == null");
-    }
-    if (inetSocketAddress == null) {
-      throw new NullPointerException("inetSocketAddress == null");
-    }
-    this.address = address;
-    this.proxy = proxy;
-    this.inetSocketAddress = inetSocketAddress;
-  }
-
-  public Address address() {
-    return address;
-  }
-
-  /**
-   * Returns the {@link Proxy} of this route.
-   *
-   * <strong>Warning:</strong> This may disagree with {@link Address#proxy} when it is null. When
-   * the address's proxy is null, the proxy selector is used.
-   */
-  public Proxy proxy() {
-    return proxy;
-  }
-
-  public InetSocketAddress socketAddress() {
-    return inetSocketAddress;
-  }
-
-  /**
-   * Returns true if this route tunnels HTTPS through an HTTP proxy. See <a
-   * href="http://www.ietf.org/rfc/rfc2817.txt">RFC 2817, Section 5.2</a>.
-   */
-  public boolean requiresTunnel() {
-    return address.sslSocketFactory != null && proxy.type() == Proxy.Type.HTTP;
-  }
-
-  @Override public boolean equals(Object obj) {
-    if (obj instanceof Route) {
-      Route other = (Route) obj;
-      return address.equals(other.address)
-          && proxy.equals(other.proxy)
-          && inetSocketAddress.equals(other.inetSocketAddress);
-    }
-    return false;
-  }
-
-  @Override public int hashCode() {
-    int result = 17;
-    result = 31 * result + address.hashCode();
-    result = 31 * result + proxy.hashCode();
-    result = 31 * result + inetSocketAddress.hashCode();
-    return result;
-  }
-}
-```
-
-在StreamAllocation中建立连接时，会通过`RouteSelector`获取可用路由。
-
-在OkHttp3中，`ProxySelector`对象主要由OkHttpClient维护。
 ```
 public class OkHttpClient implements Cloneable, Call.Factory {
 ......
@@ -375,7 +491,7 @@ public class OkHttpClient implements Cloneable, Call.Factory {
       this.proxySelector = okHttpClient.proxySelector;
 ```
 
-在创建OkHttpClient时，可以通过为OkHttpClient.Builder设置`ProxySelector`来定制`ProxySelector`。若没有指定，则所有的为默认`ProxySelector`。OpenJDK 1.8版默认的`ProxySelector`为`sun.net.spi.DefaultProxySelector`：
+在创建OkHttpClient时，可以通过为OkHttpClient.Builder设置`ProxySelector`来定制`ProxySelector`。若没有指定，则使用系统默认的`ProxySelector`。OpenJDK 1.8版默认的`ProxySelector`为`sun.net.spi.DefaultProxySelector`：
 ```
 public abstract class ProxySelector {
     /**
@@ -437,7 +553,7 @@ public abstract class ProxySelector {
         defaultSelector = selector;
     }
 ```
-Android平台下，默认的`ProxySelector` ProxySelectorImpl，其[实现(不同版本的Android，实现不同，这里是android-6.0.1_r61的实现)](https://android.googlesource.com/platform/libcore/+/android-6.0.1_r61/luni/src/main/java/java/net/ProxySelectorImpl.java)如下：
+Android平台下，默认的`ProxySelector` ProxySelectorImpl，其[实现 (不同Android版本实现不同，这里以android-6.0.1_r61为例)](https://android.googlesource.com/platform/libcore/+/android-6.0.1_r61/luni/src/main/java/java/net/ProxySelectorImpl.java) 如下：
 ```
 package java.net;
 import java.io.IOException;
@@ -551,9 +667,130 @@ final class ProxySelectorImpl extends ProxySelector {
     }
 }
 ```
-可以看到，在Android平台上，主要是从System properties中获取的代理服务器的主机及其端口号，会过滤掉不能进行代理的主机的访问。
+在Android平台上，主要是从系统属性System properties中获取代理服务器的配置信息，这里会过滤掉不能进行代理的主机的访问。
 
-回到OkHttp中，在RetryAndFollowUpInterceptor中，创建Address对象时，从OkHttpClient对象获取ProxySelector。Address对象会被用于创建StreamAllocation对象，StreamAllocation在建立连接时，从Address对象中获取ProxySelector以选择路由。
+前面我们看到 **`RouteSelector`** 通过 **`Address`** 提供的Proxy和ProxySelector来收集Proxy信息及连接的目标地址信息。OkHttp3中用 **`Address`** 描述建立连接所需的配置信息，包括HTTP服务器的地址，DNS，SocketFactory，Proxy，ProxySelector及TLS所需的一些设施等等：
+```
+public final class Address {
+  final HttpUrl url;
+  final Dns dns;
+  final SocketFactory socketFactory;
+  final Authenticator proxyAuthenticator;
+  final List<Protocol> protocols;
+  final List<ConnectionSpec> connectionSpecs;
+  final ProxySelector proxySelector;
+  final Proxy proxy;
+  final SSLSocketFactory sslSocketFactory;
+  final HostnameVerifier hostnameVerifier;
+  final CertificatePinner certificatePinner;
+
+  public Address(String uriHost, int uriPort, Dns dns, SocketFactory socketFactory,
+      SSLSocketFactory sslSocketFactory, HostnameVerifier hostnameVerifier,
+      CertificatePinner certificatePinner, Authenticator proxyAuthenticator, Proxy proxy,
+      List<Protocol> protocols, List<ConnectionSpec> connectionSpecs, ProxySelector proxySelector) {
+    this.url = new HttpUrl.Builder()
+        .scheme(sslSocketFactory != null ? "https" : "http")
+        .host(uriHost)
+        .port(uriPort)
+        .build();
+
+    if (dns == null) throw new NullPointerException("dns == null");
+    this.dns = dns;
+
+    if (socketFactory == null) throw new NullPointerException("socketFactory == null");
+    this.socketFactory = socketFactory;
+
+    if (proxyAuthenticator == null) {
+      throw new NullPointerException("proxyAuthenticator == null");
+    }
+    this.proxyAuthenticator = proxyAuthenticator;
+
+    if (protocols == null) throw new NullPointerException("protocols == null");
+    this.protocols = Util.immutableList(protocols);
+
+    if (connectionSpecs == null) throw new NullPointerException("connectionSpecs == null");
+    this.connectionSpecs = Util.immutableList(connectionSpecs);
+
+    if (proxySelector == null) throw new NullPointerException("proxySelector == null");
+    this.proxySelector = proxySelector;
+
+    this.proxy = proxy;
+    this.sslSocketFactory = sslSocketFactory;
+    this.hostnameVerifier = hostnameVerifier;
+    this.certificatePinner = certificatePinner;
+  }
+
+  /**
+   * Returns a URL with the hostname and port of the origin server. The path, query, and fragment of
+   * this URL are always empty, since they are not significant for planning a route.
+   */
+  public HttpUrl url() {
+    return url;
+  }
+
+  /** Returns the service that will be used to resolve IP addresses for hostnames. */
+  public Dns dns() {
+    return dns;
+  }
+
+  /** Returns the socket factory for new connections. */
+  public SocketFactory socketFactory() {
+    return socketFactory;
+  }
+
+  /** Returns the client's proxy authenticator. */
+  public Authenticator proxyAuthenticator() {
+    return proxyAuthenticator;
+  }
+
+  /**
+   * Returns the protocols the client supports. This method always returns a non-null list that
+   * contains minimally {@link Protocol#HTTP_1_1}.
+   */
+  public List<Protocol> protocols() {
+    return protocols;
+  }
+
+  public List<ConnectionSpec> connectionSpecs() {
+    return connectionSpecs;
+  }
+
+  /**
+   * Returns this address's proxy selector. Only used if the proxy is null. If none of this
+   * selector's proxies are reachable, a direct connection will be attempted.
+   */
+  public ProxySelector proxySelector() {
+    return proxySelector;
+  }
+
+  /**
+   * Returns this address's explicitly-specified HTTP proxy, or null to delegate to the {@linkplain
+   * #proxySelector proxy selector}.
+   */
+  public Proxy proxy() {
+    return proxy;
+  }
+
+  /** Returns the SSL socket factory, or null if this is not an HTTPS address. */
+  public SSLSocketFactory sslSocketFactory() {
+    return sslSocketFactory;
+  }
+
+  /** Returns the hostname verifier, or null if this is not an HTTPS address. */
+  public HostnameVerifier hostnameVerifier() {
+    return hostnameVerifier;
+  }
+
+  /** Returns this address's certificate pinner, or null if this is not an HTTPS address. */
+  public CertificatePinner certificatePinner() {
+    return certificatePinner;
+  }
+
+......
+}
+```
+
+OkHttp3中通过职责链执行HTTP请求。在其中的RetryAndFollowUpInterceptor里创建Address对象时，从OkHttpClient对象获取ProxySelector。Address对象会被用于创建StreamAllocation对象。StreamAllocation在建立连接时，从Address对象中获取ProxySelector以选择路由。
 ```
 public final class RetryAndFollowUpInterceptor implements Interceptor {
 ......
@@ -573,162 +810,29 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
   }
 ```
 
-# 代理协议
-OkHttp3发送给HTTP代理服务器的HTTP请求，与直接发送给HTTP服务器的HTTP请求有什么样的区别呢，还是说两者其实毫无差别呢？也就是HTTP代理的协议是什么样的呢？这里我们就通过对代码进行分析来仔细地看一下。
+在StreamAllocation中，Address对象会被用于创建 **`RouteSelector`** 对象：
+```
+public final class StreamAllocation {
+......
 
-如我们在[OkHttp3 HTTP请求执行流程分析](http://www.jianshu.com/p/230e2e2988e0)中看到的，OkHttp3对HTTP请求是通过Interceptor链来处理的。
+  public StreamAllocation(ConnectionPool connectionPool, Address address) {
+    this.connectionPool = connectionPool;
+    this.address = address;
+    this.routeSelector = new RouteSelector(address, routeDatabase());
+  }
+```
+
+# 代理协议
+如我们在 [OkHttp3 HTTP请求执行流程分析](http://www.jianshu.com/p/230e2e2988e0) 中看到的，OkHttp3对HTTP请求是通过Interceptor链来处理的。
 `RetryAndFollowUpInterceptor`创建`StreamAllocation`对象，处理http的重定向及出错重试。对后续Interceptor的执行的影响为修改Request并创建StreamAllocation对象。
 `BridgeInterceptor`补全缺失的一些http header。对后续Interceptor的执行的影响主要为修改了Request。
 `CacheInterceptor`处理http缓存。对后续Interceptor的执行的影响为，若缓存中有所需请求的响应，则后续Interceptor不再执行。
 `ConnectInterceptor`借助于前面分配的`StreamAllocation`对象建立与服务器之间的连接，并选定交互所用的协议是HTTP 1.1还是HTTP 2。对后续Interceptor的执行的影响为，创建了HttpStream和connection。
 `CallServerInterceptor`作为Interceptor链中的最后一个Interceptor，用于处理IO，与服务器进行数据交换。
 
-OkHttp3对代理的处理是在`ConnectInterceptor`和`CallServerInterceptor`中完成的。再来看`ConnectInterceptor`的定义：
-```
-package okhttp3.internal.connection;
+在OkHttp3中，收集的路由信息，是在`ConnectInterceptor`中建立连接时用到的。`ConnectInterceptor` 借助于 **`StreamAllocation`** 完成整个连接的建立，包括TCP连接建立，代理协议所要求的协商，以及SSL/TLS协议的协商，如ALPN等。我们暂时略过整个连接建立的完整过程，主要关注TCP连接建立及代理协议的协商过程的部分。
 
-import java.io.IOException;
-import okhttp3.Interceptor;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.internal.http.HttpCodec;
-import okhttp3.internal.http.RealInterceptorChain;
-
-/** Opens a connection to the target server and proceeds to the next interceptor. */
-public final class ConnectInterceptor implements Interceptor {
-  public final OkHttpClient client;
-
-  public ConnectInterceptor(OkHttpClient client) {
-    this.client = client;
-  }
-
-  @Override public Response intercept(Chain chain) throws IOException {
-    RealInterceptorChain realChain = (RealInterceptorChain) chain;
-    Request request = realChain.request();
-    StreamAllocation streamAllocation = realChain.streamAllocation();
-
-    // We need the network to satisfy this request. Possibly for validating a conditional GET.
-    boolean doExtensiveHealthChecks = !request.method().equals("GET");
-    HttpCodec httpCodec = streamAllocation.newStream(client, doExtensiveHealthChecks);
-    RealConnection connection = streamAllocation.connection();
-
-    return realChain.proceed(request, streamAllocation, httpCodec, connection);
-  }
-}
-```
-
-`ConnectInterceptor`利用前面的Interceptor创建的StreamAllocation对象，创建stream HttpCodec，以及RealConnection connection。然后把这些对象传给链中后继的Interceptor，也就是`CallServerInterceptor`处理。
-
-为了厘清StreamAllocation的两个操作的详细执行过程，这里再回过头来看一下`StreamAllocation`对象的创建。StreamAllocation对象在`RetryAndFollowUpInterceptor`中创建：
-```
-  @Override public Response intercept(Chain chain) throws IOException {
-    Request request = chain.request();
-
-    streamAllocation = new StreamAllocation(
-        client.connectionPool(), createAddress(request.url()), callStackTrace);
-```
-创建`StreamAllocation`对象时，传入的ConnectionPool来自于OkHttpClient，创建的Address主要用于描述HTTP服务的目标地址相关的信息。
-```
-public final class StreamAllocation {
-  public final Address address;
-  private Route route;
-  private final ConnectionPool connectionPool;
-  private final Object callStackTrace;
-
-  // State guarded by connectionPool.
-  private final RouteSelector routeSelector;
-  private int refusedStreamCount;
-  private RealConnection connection;
-  private boolean released;
-  private boolean canceled;
-  private HttpCodec codec;
-
-  public StreamAllocation(ConnectionPool connectionPool, Address address, Object callStackTrace) {
-    this.connectionPool = connectionPool;
-    this.address = address;
-    this.routeSelector = new RouteSelector(address, routeDatabase());
-    this.callStackTrace = callStackTrace;
-  }
-```
-创建`StreamAllocation`对象时，除了创建`RouteSelector`之外，并没有其它特别的地方。
-
-然后来看`ConnectInterceptor`中用来创建HttpCodec的newStream()方法：
-```
-public final class StreamAllocation {
-
-......
-
-  public HttpCodec newStream(OkHttpClient client, boolean doExtensiveHealthChecks) {
-    int connectTimeout = client.connectTimeoutMillis();
-    int readTimeout = client.readTimeoutMillis();
-    int writeTimeout = client.writeTimeoutMillis();
-    boolean connectionRetryEnabled = client.retryOnConnectionFailure();
-
-    try {
-      RealConnection resultConnection = findHealthyConnection(connectTimeout, readTimeout,
-          writeTimeout, connectionRetryEnabled, doExtensiveHealthChecks);
-
-      HttpCodec resultCodec;
-      if (resultConnection.http2Connection != null) {
-        resultCodec = new Http2Codec(client, this, resultConnection.http2Connection);
-      } else {
-        resultConnection.socket().setSoTimeout(readTimeout);
-        resultConnection.source.timeout().timeout(readTimeout, MILLISECONDS);
-        resultConnection.sink.timeout().timeout(writeTimeout, MILLISECONDS);
-        resultCodec = new Http1Codec(
-            client, this, resultConnection.source, resultConnection.sink);
-      }
-
-      synchronized (connectionPool) {
-        codec = resultCodec;
-        return resultCodec;
-      }
-    } catch (IOException e) {
-      throw new RouteException(e);
-    }
-  }
-```
-这个方法的执行流程为：
-1. 建立连接。
-通过调用findHealthyConnection()方法来建立连接，后面我们通过分析这个方法的实现来了解连接的具体含义。
-2. 用前面创建的连接来创建HttpCodec。
-对于HTTP/1.1创建Http1Codec，对于HTTP/2则创建Http2Codec。HttpCodec用于处理与HTTP具体协议相关的部分。比如HTTP/1.1是基于文本的协议，而HTTP/2则是基于二进制格式的协议，HttpCodec用于将请求编码为对应协议要求的传输格式，并在得到响应时，对数据进行解码。
-
-然后来看`findHealthyConnection()`中创建连接的过程：
-```
-  /**
-   * Finds a connection and returns it if it is healthy. If it is unhealthy the process is repeated
-   * until a healthy connection is found.
-   */
-  private RealConnection findHealthyConnection(int connectTimeout, int readTimeout,
-      int writeTimeout, boolean connectionRetryEnabled, boolean doExtensiveHealthChecks)
-      throws IOException {
-    while (true) {
-      RealConnection candidate = findConnection(connectTimeout, readTimeout, writeTimeout,
-          connectionRetryEnabled);
-
-      // If this is a brand new connection, we can skip the extensive health checks.
-      synchronized (connectionPool) {
-        if (candidate.successCount == 0) {
-          return candidate;
-        }
-      }
-
-      // Do a (potentially slow) check to confirm that the pooled connection is still good. If it
-      // isn't, take it out of the pool and start again.
-      if (!candidate.isHealthy(doExtensiveHealthChecks)) {
-        noNewStreams();
-        continue;
-      }
-
-      return candidate;
-    }
-  }
-```
-在这个方法中，是找到一个连接，然后判断其是否可用。如果可用则将找到的连接返回给调用者，否则寻找下一个连接。寻找连接可能是建立一个新的连接，也可能是复用连接池中的一个连接。
-
-接着来看寻找连接的过程`findConnection()`：
+ **`StreamAllocation`** 的findConnection()用来为某次特定的网络请求寻找一个可用的连接。
 ```
   /**
    * Returns a connection to host a new stream. This prefers the existing connection if it exists,
@@ -765,9 +869,9 @@ public final class StreamAllocation {
       }
     }
     RealConnection newConnection = new RealConnection(selectedRoute);
+    acquire(newConnection);
 
     synchronized (connectionPool) {
-      acquire(newConnection);
       Internal.instance.put(connectionPool, newConnection);
       this.connection = newConnection;
       if (canceled) throw new IOException("Canceled");
@@ -780,96 +884,13 @@ public final class StreamAllocation {
     return newConnection;
   }
 ```
-这个过程大体为：
-1. 检查上次分配的连接是否可用，若可用则，则将上次分配的连接返回给调用者。
-2. 上次分配的连接不存在，或不可用，则从连接池中查找一个连接，查找的依据就是Address，也就是连接的对端地址，以及路由等信息。Internal.instance指向OkHttpClient的一个内部类的对象，Internal.instance.get()实际会通过ConnectionPool的`get(Address address, StreamAllocation streamAllocation)`方法来尝试获取RealConnection。
-若能从连接池中找到所需要的连接，则将连接返回给调用者。
-3. 从连接池中没有找到所需要的连接，则会首先选择路由。
-4. 然后创建新的连接RealConnection对象。
-5. acquire新创建的连接RealConnection对象，并将它放进连接池。不太确定这个地方的synchronized是不是太长了。貌似只有Internal.instance.put(connectionPool, newConnection)涉及到了全局对象的访问，而其它操作并没有。
-6. 调用newConnection.connect()建立连接。
+OkHttp3中有一套连接池的机制，这里先尝试从连接池中寻找可用的连接，找不到时才会新建连接。新建连接的过程是：
+1. 选择一个Route；
+2. 创建 **`RealConnection`** 连接对象。
+3. 将连接对象保存进连接池中。
+4. 建立连接。
 
-这里再来看一下在ConnectionPool的get()操作执行的过程：
-```
-  private final Deque<RealConnection> connections = new ArrayDeque<>();
-  final RouteDatabase routeDatabase = new RouteDatabase();
-  boolean cleanupRunning;
-
-  /** Returns a recycled connection to {@code address}, or null if no such connection exists. */
-  RealConnection get(Address address, StreamAllocation streamAllocation) {
-    assert (Thread.holdsLock(this));
-    for (RealConnection connection : connections) {
-      if (connection.allocations.size() < connection.allocationLimit
-          && address.equals(connection.route().address)
-          && !connection.noNewStreams) {
-        streamAllocation.acquire(connection);
-        return connection;
-      }
-    }
-    return null;
-  }
-```
-ConnectionPool连接池是连接的容器，这里用了一个Deque来保存所有的连接RealConnection。而get的过程就是，遍历保存的所有连接来匹配address。同时connection.allocations.size()要满足connection.allocationLimit的限制。
-在找到了所需要的连接之后，会acquire该连接。
-
-acquire连接的过程又是什么样的呢？
-```
-public final class StreamAllocation {
-
-......
-
-  /**
-   * Use this allocation to hold {@code connection}. Each call to this must be paired with a call to
-   * {@link #release} on the same connection.
-   */
-  public void acquire(RealConnection connection) {
-    assert (Thread.holdsLock(connectionPool));
-    connection.allocations.add(new StreamAllocationReference(this, callStackTrace));
-  }
-```
-基本上就是给RealConnection的allocations添加一个到该StreamAllocation的引用。这样看来，同一个连接RealConnection似乎同时可以为多个HTTP请求服务。而我们知道，多个HTTP/1.1请求是不能在同一个连接上交叉处理的。那这又是怎么回事呢？
-
-我们来看connection.allocationLimit的更新设置。RealConnection中如下的两个地方会设置这个值：
-```
-public final class RealConnection extends Http2Connection.Listener implements Connection {
-
-......
-
-  private void establishProtocol(int readTimeout, int writeTimeout,
-      ConnectionSpecSelector connectionSpecSelector) throws IOException {
-    if (route.address().sslSocketFactory() != null) {
-      connectTls(readTimeout, writeTimeout, connectionSpecSelector);
-    } else {
-      protocol = Protocol.HTTP_1_1;
-      socket = rawSocket;
-    }
-
-    if (protocol == Protocol.HTTP_2) {
-      socket.setSoTimeout(0); // Framed connection timeouts are set per-stream.
-
-      Http2Connection http2Connection = new Http2Connection.Builder(true)
-          .socket(socket, route.address().url().host(), source, sink)
-          .listener(this)
-          .build();
-      http2Connection.start();
-
-      // Only assign the framed connection once the preface has been sent successfully.
-      this.allocationLimit = http2Connection.maxConcurrentStreams();
-      this.http2Connection = http2Connection;
-    } else {
-      this.allocationLimit = 1;
-    }
-  }
-  
-  /** When settings are received, adjust the allocation limit. */
-  @Override public void onSettings(Http2Connection connection) {
-    allocationLimit = connection.maxConcurrentStreams();
-  }
-```
-可以看到，若不是HTTP/2的连接，则allocationLimit的值总是1。由此可见，StreamAllocation以及RealConnection的allocations/allocationLimit这样的设计，主要是为了实现HTTP/2 multi stream的特性。否则的话，大概为RealConnection用一个inUse标记就可以了。
-那
-
-回到StreamAllocation的`findConnection()`，来看新创建的RealConnection对象建立连接的过程，即RealConnection的connect()：
+**`RealConnection`** 中建立连接的过程是这样的：
 ```
 public final class RealConnection extends Http2Connection.Listener implements Connection {
   private final Route route;
@@ -947,9 +968,11 @@ public final class RealConnection extends Http2Connection.Listener implements Co
     }
   }
 ```
-根据路由的类型，来执行不同的创建连接的过程。对于需要创建隧道连接的路由，执行buildTunneledConnection()，而对于普通连接，则执行buildConnection()。
+在这个方法中，SSLSocketFactory为空，也就是要求请求/响应明文传输时，先做安全性检查，以确认系统允许明文传输，允许以请求的域名做明文传输。
 
-如何判断是否要建立隧道连接呢？来看
+然后根据路由的具体情况，执行不同的连接建立过程。对于需要创建隧道连接的路由，执行buildTunneledConnection()，对于其它情况，则执行buildConnection()。
+
+判断是否要建立隧道连接的依据是代理的类型，以及连接的类型：
 ```
   /**
    * Returns true if this route tunnels HTTPS through an HTTP proxy. See <a
@@ -959,9 +982,74 @@ public final class RealConnection extends Http2Connection.Listener implements Co
     return address.sslSocketFactory != null && proxy.type() == Proxy.Type.HTTP;
   }
 ```
-可以看到，通过代理服务器，来做https请求的连接(http/1.1的https和http2)需要建立隧道连接，而其它的连接则不需要建立隧道连接。
+如果是HTTP代理，且请求建立SSL/TLS加密通道 (http/1.1的https和http2) ，则需要建立隧道连接。其它情形不需要建立隧道连接。
 
-用于建立隧道连接的buildTunneledConnection()的过程：
+## 非隧道连接的建立
+非隧道连接的建立过程为：
+```
+  /** Does all the work necessary to build a full HTTP or HTTPS connection on a raw socket. */
+  private void buildConnection(int connectTimeout, int readTimeout, int writeTimeout,
+      ConnectionSpecSelector connectionSpecSelector) throws IOException {
+    connectSocket(connectTimeout, readTimeout);
+    establishProtocol(readTimeout, writeTimeout, connectionSpecSelector);
+  }
+
+  private void connectSocket(int connectTimeout, int readTimeout) throws IOException {
+    Proxy proxy = route.proxy();
+    Address address = route.address();
+
+    rawSocket = proxy.type() == Proxy.Type.DIRECT || proxy.type() == Proxy.Type.HTTP
+        ? address.socketFactory().createSocket()
+        : new Socket(proxy);
+
+    rawSocket.setSoTimeout(readTimeout);
+    try {
+      Platform.get().connectSocket(rawSocket, route.socketAddress(), connectTimeout);
+    } catch (ConnectException e) {
+      throw new ConnectException("Failed to connect to " + route.socketAddress());
+    }
+    source = Okio.buffer(Okio.source(rawSocket));
+    sink = Okio.buffer(Okio.sink(rawSocket));
+  }
+```
+有 3 种情况需要建立非隧道连接：
+1. 无代理。
+2. 明文的HTTP代理。
+3. SOCKS代理。
+
+非隧道连接的建立过程为建立TCP连接，然后在需要时完成SSL/TLS的握手及HTTP/2的握手建立Protocol。建立TCP连接的过程为：
+1. 创建Socket。非SOCKS代理的情况下，通过SocketFactory创建；在SOCKS代理则传入proxy手动new一个出来。
+2. 为Socket设置读超时。
+3. 完成特定于平台的连接建立。
+4. 创建用语IO的source和sink。
+
+**`AndroidPlatform`** 的 **`connectSocket()`** 是这样的：
+```
+  @Override public void connectSocket(Socket socket, InetSocketAddress address,
+      int connectTimeout) throws IOException {
+    try {
+      socket.connect(address, connectTimeout);
+    } catch (AssertionError e) {
+      if (Util.isAndroidGetsocknameError(e)) throw new IOException(e);
+      throw e;
+    } catch (SecurityException e) {
+      // Before android 4.3, socket.connect could throw a SecurityException
+      // if opening a socket resulted in an EACCES error.
+      IOException ioException = new IOException("Exception in connect");
+      ioException.initCause(e);
+      throw ioException;
+    }
+  }
+```
+
+设置了SOCKS代理的情况下，仅有的特别之处在于，是通过传入proxy手动创建的Socket。route的socketAddress包含着目标HTTP服务器的域名。由此可见SOCKS协议的处理，主要是在Java标准库的 **`java.net.Socket`** 中处理的。对于外界而言，就好像是于HTTP服务器直接建立连接一样，因为连接时传入的地址都是HTTP服务器的域名。
+
+而对于明文HTTP代理的情况下，这里没有任何特殊的处理。route的socketAddress包含着代理服务器的IP地址。HTTP代理自身会根据请求及响应的实际内容，建立与HTTP服务器的TCP连接，并转发数据。猜测HTTP代理服务器是根据HTTP请求中的"Host"等header内容来确认HTTP服务器地址的。
+
+暂时先略过对建立协议过程的分析。
+
+## HTTP代理的隧道连接
+buildTunneledConnection()用于建立隧道连接：
 ```
   /**
    * Does all the work to build an HTTPS connection over a proxy tunnel. The catch here is that a
@@ -994,17 +1082,17 @@ public final class RealConnection extends Http2Connection.Listener implements Co
     establishProtocol(readTimeout, writeTimeout, connectionSpecSelector);
   }
 ```
-基本上是两个过程：
+这里主要是两个过程：
 1. 建立隧道连接。
 2. 建立Protocol。
 
-建立隧道连接的过程，又分为了几个过程：
+建立隧道连接的过程又分为几个步骤：
 
  - 创建隧道请求
  - 建立Socket连接
  - 发送请求建立隧道
 
-隧道请求是一个常规的HTTP请求，只是请求的内容有点特殊。初始的隧道请求如：
+隧道请求是一个常规的HTTP请求，只是请求的内容有点特殊。最初创建的隧道请求如：
 ```
   /**
    * Returns a request that creates a TLS tunnel via an HTTP proxy. Everything in the tunnel request
@@ -1020,50 +1108,12 @@ public final class RealConnection extends Http2Connection.Listener implements Co
         .build();
   }
 ```
-建立socket连接的过程如下：
-```
-  private void connectSocket(int connectTimeout, int readTimeout) throws IOException {
-    Proxy proxy = route.proxy();
-    Address address = route.address();
+一个隧道请求的例子如下：
 
-    rawSocket = proxy.type() == Proxy.Type.DIRECT || proxy.type() == Proxy.Type.HTTP
-        ? address.socketFactory().createSocket()
-        : new Socket(proxy);
+![Tunnel Request](http://upload-images.jianshu.io/upload_images/1315506-f2b7ee35c56c732b.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-    rawSocket.setSoTimeout(readTimeout);
-    try {
-      Platform.get().connectSocket(rawSocket, route.socketAddress(), connectTimeout);
-    } catch (ConnectException e) {
-      throw new ConnectException("Failed to connect to " + route.socketAddress());
-    }
-    source = Okio.buffer(Okio.source(rawSocket));
-    sink = Okio.buffer(Okio.sink(rawSocket));
-  }
-```
-主要是创建一个到代理服务器或HTTP服务器的Socket连接。socketFactory最终来自于OkHttpClient，对于OpenJDK 8而言，默认为DefaultSocketFactory：
-```
-    /**
-     * Returns a copy of the environment's default socket factory.
-     *
-     * @return the default <code>SocketFactory</code>
-     */
-    public static SocketFactory getDefault()
-    {
-        synchronized (SocketFactory.class) {
-            if (theFactory == null) {
-                //
-                // Different implementations of this method SHOULD
-                // work rather differently.  For example, driving
-                // this from a system property, or using a different
-                // implementation than JavaSoft's.
-                //
-                theFactory = new DefaultSocketFactory();
-            }
-        }
+请求的"Host" header中包含了目标HTTP服务器的域名。建立socket连接的过程这里不再赘述。
 
-        return theFactory;
-    }
-```
 创建隧道的过程是这样子的：
 ```
   /**
@@ -1118,54 +1168,19 @@ public final class RealConnection extends Http2Connection.Listener implements Co
     }
   }
 ```
-主要HTTP 的 CONNECT 方法建立隧道。
-
-而建立常规的连接的过程则为：
+在前面创建的TCP连接之上，完成与代理服务器的HTTP请求/响应交互。请求的内容类似下面这样：
 ```
-  /** Does all the work necessary to build a full HTTP or HTTPS connection on a raw socket. */
-  private void buildConnection(int connectTimeout, int readTimeout, int writeTimeout,
-      ConnectionSpecSelector connectionSpecSelector) throws IOException {
-    connectSocket(connectTimeout, readTimeout);
-    establishProtocol(readTimeout, writeTimeout, connectionSpecSelector);
-  }
+"CONNECT m.taobao.com:443 HTTP/1.1"
 ```
-建立socket连接，然后建立Protocol。建立Protocol的过程为：
-```
-  private void establishProtocol(int readTimeout, int writeTimeout,
-      ConnectionSpecSelector connectionSpecSelector) throws IOException {
-    if (route.address().sslSocketFactory() != null) {
-      connectTls(readTimeout, writeTimeout, connectionSpecSelector);
-    } else {
-      protocol = Protocol.HTTP_1_1;
-      socket = rawSocket;
-    }
+这里可能会根据HTTP代理是否需要认证而有多次HTTP请求/响应交互。
 
-    if (protocol == Protocol.HTTP_2) {
-      socket.setSoTimeout(0); // Framed connection timeouts are set per-stream.
-
-      Http2Connection http2Connection = new Http2Connection.Builder(true)
-          .socket(socket, route.address().url().host(), source, sink)
-          .listener(this)
-          .build();
-      http2Connection.start();
-
-      // Only assign the framed connection once the preface has been sent successfully.
-      this.allocationLimit = http2Connection.maxConcurrentStreams();
-      this.http2Connection = http2Connection;
-    } else {
-      this.allocationLimit = 1;
-    }
-  }
-```
-
-HTTP/2协议的协商过程在connectTls()的过程中完成。
-
-总结一下OkHttp3的连接RealConnection的含义，或者说是ConnectInterceptor从StreamAllocation中获取的RealConnection对象的状态：
-1. 对于不使用HTTP代理的HTTP请求，为一个到HTTP服务器的Socket连接。后续直接向该Socket连接中写入常规的HTTP请求，并从中读取常规的HTTP响应。
-2. 对于不使用代理的https请求，为一个到https服务器的Socket连接，但经过了TLS握手，协议协商等过程。后续直接向该Socket连接中写入常规的请求，并从中读取常规的响应。
-3. 对于使用HTTP代理的HTTP请求，为一个到HTTP代理服务器的Socket连接。后续直接向该Socket连接中写入常规的HTTP请求，并从中读取常规的HTTP响应。
-4. 对于使用代理的https请求，为一个到代理服务器的隧道连接，但经过了TLS握手，协议协商等过程。后续直接向该Socket连接中写入常规的请求，并从中读取常规的响应。
+总结一下OkHttp3中代理相关的处理：
+1. 没有设置代理的情况下，直接与HTTP服务器建立TCP连接，然后进行HTTP请求/响应的交互。
+2. 设置了SOCKS代理的情况下，创建Socket时，为其传入proxy，连接时还是以HTTP服务器为目标地址。在标准库的Socket中完成SOCKS协议相关的处理。此时基本上感知不到代理的存在。
+3. 设置了HTTP代理时的HTTP请求，与HTTP代理服务器建立TCP连接。HTTP代理服务器解析HTTP请求/响应的内容，并根据其中的信息来完成数据的转发。也就是说，如果HTTP请求中不包含"Host" header，则有可能在设置了HTTP代理的情况下无法与HTTP服务器建立连接。
+4. 设置了HTTP代理时的HTTPS/HTTP2请求，与HTTP服务器建立通过HTTP代理的隧道连接。HTTP代理不再解析传输的数据，仅仅完成数据转发的功能。此时HTTP代理的功能退化为如同SOCKS代理类似。
+5. 设置了代理时，HTTP服务器的域名解析会被交给代理服务器执行。其中设置了HTTP代理时，会对HTTP代理的域名做域名解析。
 
 关于HTTP代理的更多内容，可以参考[HTTP 代理原理及实现（一）](https://imququ.com/post/web-proxy.html)。
 
-OkHttp3中对路由的处理大体如此。
+OkHttp3中代理相关的处理大体如此。
