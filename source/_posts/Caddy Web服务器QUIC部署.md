@@ -1,8 +1,17 @@
+---
+title: Caddy Web服务器QUIC部署
+date: 2017-01-09 16:05:49
+tags:
+- 服务器
+- 网络
+---
+
 # Caddy 简介
 Caddy是一个Go语言写的，易于使用的通用Web服务器。它具有如下的一些功能：
 * **配置简单**：Caddy服务器的运行可以通过Caddyfile配置文件进行配置，Web服务配置起来非常简单。
 * **自动的HTTPS**：它可以自动地为我们申请 [Let's Encrypt](https://letsencrypt.org/) 域名证书，管理所有的密码学设施，并进行配置。
 * **HTTP/2**：默认支持HTTP/2（由Go标准库支持）
+<!--more-->
 * **虚拟主机托管**：Caddy支持TLS的SNI。SNI是在2006年加入TLS的一个TLS扩展。客户端在TLS握手的Client Hello消息中，通过SNI扩展将请求的资源的域名发送给服务器，服务器根据SNI的域名来下发TLS证书。这样就可以在具有单个公网IP的同一台主机上部署多个不同的域名的服务。可以为Caddy服务的不同域名配置不同的证书和密钥。
 * **QUIC支持**：Caddy实验性地支持QUIC协议，以获取更好的性能。
 * TLS session ticket **key rotation** for more secure connections
