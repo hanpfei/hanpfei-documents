@@ -3,7 +3,7 @@ title: 在C代码调用C++代码
 date: 2017-01-24 11:43:49
 tags:
 - C/C++
-categories
+categories:
 - C/C++
 ---
 
