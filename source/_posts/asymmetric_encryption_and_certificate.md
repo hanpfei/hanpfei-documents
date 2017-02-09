@@ -27,20 +27,16 @@ tags:
 
  - 鲍勃有两把钥匙，一把是公钥，另一把是私钥。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-4bdc062fc2e04eb6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-4bdc062fc2e04eb6.png)
  - 鲍勃把公钥送给他的朋友们----帕蒂、道格、苏珊----每人一把。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-846117a1cc6173a3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-846117a1cc6173a3.png)
  - 苏珊要给鲍勃写一封不希望别人看到的保密的信。她写完后用鲍勃的公钥加密，就可以达到保密的效果。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-f7da60bdd7ba832f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-f7da60bdd7ba832f.png)
  - 鲍勃收到信后，用私钥解密，就可以看到信件内容。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-97125d541d70613a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-97125d541d70613a.png)
 对于非对称加密，**只要私钥不泄露**，传输的数据就是安全的。即使数据被别人获取，也无法解密。
 
 非对称加密的这些特性直击对称加密中只用一个密钥，而该密钥不方便传输、保存的痛点。它大大方便了大规模团体的安全通信，方便了安全通信在互联网中的应用。
@@ -56,24 +52,19 @@ tags:
 通过几幅图来说明这个过程。
  - 鲍勃给苏珊回信，决定采用"数字签名"来证明自己的身份，表示自己对信件的内容负责。他写完后先用散列函数，生成信件的摘要（digest）。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-4162736fa50ddf8a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-4162736fa50ddf8a.png)
  - 然后，鲍勃使用自己的私钥，对这个摘要加密，生成"数字签名"（signature）。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-8bcc4f094b3c6255.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-8bcc4f094b3c6255.png)
  - 鲍勃将这个签名，附在信件下面，一起发给苏珊。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-4af9ba2ccc7dc241.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-4af9ba2ccc7dc241.png)
  - 苏珊收到信后，取下数字签名，用鲍勃的公钥解密，得到信件的摘要。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-9fe9f0a77032433f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-9fe9f0a77032433f.png)
  - 苏珊再对信件本身应用散列函数，将得到的结果，与上一步得到的摘要进行对比。如果两者一致，则证明这封信确实是鲍勃发出的，信件完整且未被篡改过。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-c7e39a037d89f203.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-c7e39a037d89f203.png)
 如果鲍勃向苏珊借了钱，并用上面这样的过程写信给苏珊确认自己收到了钱，那么鲍勃就再也不能抵赖了——信件的末尾可是清清楚楚地签着鲍勃的大名呢。
 
 如果我们的网络世界能像上图的过程那样，每个人都可以方便地获得可靠的公钥，那就太美好了。互联网上的网站成千上万，每个人都走到自己要访问的网站站长的办公室把网站的公钥拷走，或者网站站长挨个走到自己的目标用户家门口，把自己网站的公钥交给用户，那可就太麻烦，代价太大了。
@@ -82,8 +73,7 @@ tags:
 
 如道格想欺骗苏珊，他在鲍勃将公钥交给苏珊时拦住鲍勃，表示要替鲍勃转交。正好鲍勃有老板交待的其它重要事情要完成，于是就把自己的公钥交给道格请他帮忙转交。但道格把鲍勃的公钥丢进垃圾桶，而把自己的公钥交给了苏珊。此时，苏珊实际拥有的是道格的公钥，但还以为这是鲍勃的。因此，道格就可以冒充鲍勃，用自己的私钥做成"数字签名"，写信给苏珊，让苏珊用假的鲍勃公钥进行解密。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-ffdb2b2f36579bb7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-ffdb2b2f36579bb7.png)
 # 证书
 
 证书正是为了解决公钥的信任问题而引入。证书体系通过引入可信的第三机构，称为 **证书签发机构（certificate authority，简称CA）**，为公钥做认证，来确保公钥的真实可靠。证书是经过了 **CA** 私钥签名的 **证书持有者的公钥、身份信息及其它相关信息** 的文件，用户通过 **CA** 的公钥解密获取证书中包含的 **证书持有者** 的公钥。只要 **CA** 的私钥保持机密，通过证书验证 **证书持有者** 的身份，及获取公钥的过程就可靠。
@@ -92,24 +82,20 @@ tags:
 
 互联网PKI证书体系的结构如下图：
 
-![](http://upload-images.jianshu.io/upload_images/1315506-0573ac1556ca9a62.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-0573ac1556ca9a62.png)
  **证书订阅人** ，也就是需要提供安全服务的人，向 **证书中心 (CA)** 的代理—— **登记机构** 提交自己的公钥来申请证书。 **登记机构** 对 **证书订阅人** 的身份进行核实，然后向 **证书中心 (CA)** 提交 **证书订阅人** 的公钥及身份信息。 **证书中心 (CA)** 用自己的私钥，对 **证书订阅人** 的公钥、身份信息和其它一些相关信息进行加密，生成 **"数字证书"（Digital Certificate）** ，并发送给 **登记机构**。 **登记机构** 将证书发送给 **证书订阅人** 。 **证书订阅人** 将证书部署在Web服务器上。 **信赖方**，即安全服务的用户，维护 **CA** 根证书库，并在与Web服务器通信时，从服务器获得证书。 **信赖方** 用CA根证书验证接收到的证书的有效性，进而验证服务器的真实性。
 
 同样通过几幅图来说明这个过程。
 
  - 鲍勃去找证书签发机构，为公钥做认证。证书中心用自己的私钥，对鲍勃的公钥、身份信息和一些其它相关信息一起加密，生成"数字证书"（Digital Certificate）。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-043f723024c31644.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-043f723024c31644.png)
  - 鲍勃拿到数字证书以后，就可以放心，以后再也没人能冒充自己了。再需要发送自己的公钥给朋友们时，只要把自己事先拿到的 **数字证书** 发送给朋友就可以了。需要写信给苏珊时，照常附上自己的数字签名即可。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-66f43b8757962180.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-66f43b8757962180.png)
  - 苏珊收到信后，用CA的公钥解开数字证书，就可以拿到鲍勃真实的公钥，然后就能证明"数字签名"是否真的是鲍勃签的。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-f51a67cbaaaea6fc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-f51a67cbaaaea6fc.png)
 ## 证书里有什么
 
 PKI证书是 **抽象语法表示一 (Abstract syntax notation one, ASN.1)** 表示， **基本编码规则 (base encoding rules, BER)** 的一个子集 **唯一编码规则 (distinguished encoding rules, DER)** 编码的二进制文件。我们通常看到的证书则是DER使用Base64编码后的ASCII编码格式，即 **PEM (Privacy-enhanced mail)** 这种更容易发送、复制和粘贴的编码格式的纯文本文件。
@@ -272,18 +258,15 @@ $ ./certbot-auto
 
  **Certbot** 自动地完成证书的申请过程。
 
-![Request Certificate](http://upload-images.jianshu.io/upload_images/1315506-a8c6e0d4ee7eb1c7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![Request Certificate](https://www.wolfcstech.com/images/1315506-a8c6e0d4ee7eb1c7.png)
 证书申请成功之后可以看到如下的提示：
 
-![Request Certificate Successfully](http://upload-images.jianshu.io/upload_images/1315506-8d6c07987333dcb0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![Request Certificate Successfully](https://www.wolfcstech.com/images/1315506-8d6c07987333dcb0.png)
 更多关于使用 **Certbot** 申请 **Let’s Encrypt** 证书的信息，可以参考 [**Certbot** 官网](https://certbot.eff.org/)。
 
 从上面的图可以看到证书申请的大体过程：
 
-![Certificate Request Flow](http://upload-images.jianshu.io/upload_images/1315506-2d2891c77738d687.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![Certificate Request Flow](https://www.wolfcstech.com/images/1315506-2d2891c77738d687.png)
 申请得到的证书及相关文件被放在`/etc/letsencrypt/`目录下：
 ```
 # find /etc/letsencrypt/

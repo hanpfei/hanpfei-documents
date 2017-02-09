@@ -15,8 +15,7 @@ tags:
 #总览
 先来看一下 **Protocol Buffers** 项目已经为我们提供了什么，我们在使用 **Protocol Buffers** 时需要做什么的整体流程。如下图：
 
-![Protocol Buffers Architecture](http://upload-images.jianshu.io/upload_images/1315506-b9bc1c0cc87c80e4.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![Protocol Buffers Architecture](https://www.wolfcstech.com/images/1315506-b9bc1c0cc87c80e4.jpg)
 在使用 **Protocol Buffers** 时，我们需要以特殊的方式定义我们的结构化数据，保存为 .proto 消息定义文件。 **Protocol Buffers** 项目为我们提供了编译器，可以将 .proto 文件编译为Java文件以用于我们的Java 或 Android应用项目。这个编译器在我们的PC机上编译并运行。产生的Java文件是依赖于 **Protocol Buffers** 的Java库的，比如这些文件实现了库的借口等。我们将生成的这些Java文件和 **Protocol Buffers** 的Java库引入我们的Android应用项目，就可以方便地以 **Protocol Buffers** 的二进制格式操作结构化数据了。
 
 每次手动执行 **Protocol Buffers** 编译器将 .proto 文件转换为Java文件显然有点太麻烦了。 **Protocol Buffers** 项目的开发者显然也想到了这一点，因而他们还为我们提供了一个Android Studio gradle插件 **protobuf-gradle-plugin** ，以便于在我们项目的编译期间自动地执行 **Protocol Buffers** 编译器。
@@ -237,8 +236,7 @@ protoc -I=$SRC_DIR --java_out=$DST_DIR $SRC_DIR/addressbook.proto
 我们将 由 .proto 文件生成的Java文件复制到我们的Android项目中：
 
 
-![](http://upload-images.jianshu.io/upload_images/1315506-a61387d76b3fb420.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-a61387d76b3fb420.png)
 
 在我们app的build.gradle中添加对 **protobuf-java** 的依赖，就像依赖其它那些Java库一样：
 ```
@@ -347,8 +345,7 @@ public class AddressBookProtobuf {
 每次单独执行protoc编译 .proto 文件总是太麻烦，通过protobuf-gradle-plugin可以在编译我们的app时自动地编译 .proto 文件，这样就大大降低了我们在Android项目中使用 **Protocol Buffers** 的难度。
 
 首先我们需要将 .proto 文件添加进我们的项目中，如：
-![](http://upload-images.jianshu.io/upload_images/1315506-ec51f69a6134805e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-ec51f69a6134805e.png)
 然后修改 **app/build.gradle** 对protobuf gradle插件做配置：
 1. 为buildscript添加对`protobuf-gradle-plugin`的依赖：
 ```

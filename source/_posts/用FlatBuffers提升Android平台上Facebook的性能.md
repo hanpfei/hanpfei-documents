@@ -11,8 +11,7 @@ tags:
 
 下面的图片描述了在一个含有照片附件的story中这是如何工作的。在这个例子中，John创建了一个story，他的朋友们很喜欢它并加了评论。图片的左边是社交图谱，用来描述Facebook后端的人际关系。当Android app查询story时，我们获得一个以story开始的树结构，包含了参与者的信息，反馈，和附件（如图片的右边所展示的那样）。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-2b695d1b520e3a5a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-2b695d1b520e3a5a.png)
 我们要处理的一个重要问题是如何在app中表示并存储数据。规格化所有这些数据为不同的表并放进SQLite数据库不太现实，因为我们查询节点并关联来自于后端的树结构的方式非常非常多，因此我们直接存储树结构。一个解决方案是将树结构存储为JSON，但那将需要我们在它能够被用于UI展示之前先解析JSON，并转换为一个Java对象。而且，JSON解析耗费时间。我们过去常常在Android平台上使用Jackson JSON解析器，但我们发现了它的一些问题：
 
 * **解析速度**。它要耗费35 ms来解析一个20 KB（Facebook中一个典型的响应的大小）的JSON流，这超出了UI帧刷新的16.6 ms的间隔了。使用这种方法，我们无法在滚动时，按照需要及时地从磁盘缓存中加载stories而不出现丢帧(视觉上的抖动)。
@@ -35,8 +34,7 @@ class Person {
     List<Person>friends;
 }
 ```
-![](http://upload-images.jianshu.io/upload_images/1315506-8b6f86d760d2ef2f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-8b6f86d760d2ef2f.png)
 在上面的布局中，你需要注意：
  * 每个对象都被分为两个部分：元数据的部分(或vtable)在轴心点的左边，真实的数据部分在右边。
 
@@ -76,8 +74,7 @@ FlatBuffer中的每个数据片段可以通过它在FlatBuffer中的绝对位置
 
 最后，我们可以把所有的变化打包进变化缓冲区。变化缓冲区由两部分组成：变化索引和变化数据。变化索引记录了从base buffer中绝对索引到新数据的位置的映射。变化数据以FlatBuffer的格式存储了新的数据。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-01472d5975967300.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-01472d5975967300.png)
 当查询FlatBuffers中的一个数据片段时，我们可以计算出数据的绝对位置，然后查询变化缓冲区来查看是否发生了变化并返回它，否则返回base buffer中的数据。
 
 # 平坦模型
@@ -85,8 +82,7 @@ FlatBuffer中的每个数据片段可以通过它在FlatBuffer中的绝对位置
 FlatBuffers不仅可以被用于存储，也可以被用于网络，以app中的in-memory的格式。这消除了服务器响应的数据到UI显示之间的转换。这已经允许我们走向一个更干净**平坦模型**架构，这将消除UI和存储层之间额外的复杂性。
 
 当使用JSON作为存储格式时，我们需要添加一个内存缓存来迂回地处理反序列化的性能问题。我们最终也在UI和存储层之间添加应用和网络逻辑。
-![](http://upload-images.jianshu.io/upload_images/1315506-368496ff238b02d8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-368496ff238b02d8.png)
 尽管这个三层架构在iOS和桌面上已经相当的流行了，它在Android上依然有一些重要问题：
 
 * 一个内存缓存通常意味着，相对于UI显示的需要，我们将在内存中放多得多的东西。市场上的许多Android设备依然有着每个app 48 MB或更少内存的限制。当你加入了Java的垃圾收集器的开销，这可能对性能有影响。
@@ -97,8 +93,7 @@ FlatBuffers不仅可以被用于存储，也可以被用于网络，以app中的
 
 通过 平坦模型 方法，UI和存储层可以被更简单地集成，如下面的图片所展示的那样。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-e84668ef194cb45e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![](https://www.wolfcstech.com/images/1315506-e84668ef194cb45e.png)
 * 使用标准的Android cursors直接在存储之上构建UI，而且由于storage-to-UI是大多数Android apps中最热的执行路径，这可以帮助保持UI响应性。
 * 应用逻辑和网络组件已经被移到了存储层的下方，允许那里的所有逻辑发生在一个后台线程中，并确保结果首先反映在存储中。然后，通过使用标准Android content provider通知，UI可以被通知去重绘。
 * 这个架构可以将UI和应用逻辑进行干净的分离——我们可以简化每个的逻辑。UI组件只需要反映存储的状态 ，而应用逻辑只需要向存储层写入最终的(正确的)信息。UI和应用逻辑层运行于不同的线程，它们从不需要彼此直接的通信。

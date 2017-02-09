@@ -32,8 +32,7 @@ net/websockets - WebSockets实现。
 
 # 网络请求剖析（集中于HTTP）
 
-![Chromium HTTP Network Request Diagram](http://upload-images.jianshu.io/upload_images/1315506-a1ebf2e63ed9668b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
+![Chromium HTTP Network Request Diagram](https://www.wolfcstech.com/images/1315506-a1ebf2e63ed9668b.png)
 ## URLRequest
 ```
 class URLRequest {
