@@ -126,7 +126,9 @@ $ curl --http2 -v https://www.wolfcstech.com/
 		ssl_prefer_server_ciphers  on;
 ```
 与前面那个配置相比，仅有的改动是对调了`RSA+AES128`和`EECDH+AES128`两个加密套件的位置。再次通过curl访问服务器，可以看到HTTP2流量被解密了：
-![curl_http2.png](https://www.wolfcstech.com/images/1315506-88cc08373bee2950.png)这次协商的加密套件为`TLS_RSA_WITH_AES_128_GCM_SHA256 (0x009c)`，其密钥加密算法为RSA。
+![curl_http2.png](https://www.wolfcstech.com/images/1315506-88cc08373bee2950.png)
+
+这次协商的加密套件为`TLS_RSA_WITH_AES_128_GCM_SHA256 (0x009c)`，其密钥加密算法为RSA。
 
 不过此时通过chrome浏览器访问网站，就会发现页面已经打不开了，如下图所示：
 ![cipher_suite_config_error_for_http2.png](https://www.wolfcstech.com/images/1315506-5ebd6b734aa28bf5.png)
