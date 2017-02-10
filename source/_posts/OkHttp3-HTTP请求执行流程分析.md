@@ -1,5 +1,9 @@
 ---
 title: OkHttp3 HTTP请求执行流程分析
+date: 2016-11-15 17:46:49
+categories:
+- Android
+- 网络
 ---
 
 # OkHttp3的基本用法

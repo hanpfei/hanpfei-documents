@@ -1,5 +1,9 @@
 ---
 title: Netty HTTP on Android
+date: 2016-11-13 17:46:49
+categories:
+- Android
+- 网络
 ---
 
 Netty是一个NIO的客户端服务器框架，它使我们可以快速而简单地开发网络应用程序，比如协议服务器和客户端。它大大简化了网络编程，比如TCP和UDP socket服务器。
