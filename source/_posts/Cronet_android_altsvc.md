@@ -79,7 +79,7 @@ HttpCache::HttpCache(std::unique_ptr<HttpTransactionFactory> network_layer,
 ```
 这里还是会创建`HttpNetworkLayer`。HttpTransactionFactory相关的几个类之间的关系如下：
 
-![HttpTransactionFactory](http://upload-images.jianshu.io/upload_images/1315506-9747918544dc1c4e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![HttpTransactionFactory](https://www.wolfcstech.com/images/1315506-9747918544dc1c4e.png)
 
 **HttpNetworkTransaction**表示一个直接的网络事务，可以理解为一个网络连接。**HttpNetworkSession**用于管理网络连接。**HttpNetworkLayer**主要用于创建**HttpNetworkTransaction**。**HttpCache**和**HttpCache::Transaction**用于处理缓存。**HttpCache::Transaction**表示一个启用了缓存的网络事务，它会借助于**HttpCache**保存的**HttpNetworkLayer**引用创建**HttpNetworkTransaction**，借助于**HttpNetworkTransaction**访问网络，并根据需要将结果缓存起来。**HttpCache**则对缓存进行管理。**HttpNetworkLayer**和**HttpCache**都是**HttpTransactionFactory**，而**HttpNetworkTransaction**和**HttpCache::Transaction**都是**HttpTransaction**。
 
@@ -679,7 +679,7 @@ int HttpStreamFactoryImpl::Job::StartInternal() {
 ```
 执行调用流程大体如下：
 
-![HttpStreamFactoryImpl_Job](http://upload-images.jianshu.io/upload_images/1315506-7a5e27d49cadf278.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![HttpStreamFactoryImpl_Job](https://www.wolfcstech.com/images/1315506-7a5e27d49cadf278.png)
 
 在**HttpStreamFactoryImpl::Job::RunLoop()**中，主要是调用了**HttpStreamFactoryImpl::Job::DoLoop()**，并针对其执行结果，调用响应的回调函数，如：
 ```
@@ -766,7 +766,7 @@ int HttpStreamFactoryImpl::Job::DoLoop(int result) {
 ```
 
 以执行一个QUIC请求为例，创建Stream的整个执行流程大体如下：
-![CreateStream](http://upload-images.jianshu.io/upload_images/1315506-dd573ba5d84ca413.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![CreateStream](https://www.wolfcstech.com/images/1315506-dd573ba5d84ca413.png)
 
 # 备选服务机制
 

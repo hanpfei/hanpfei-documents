@@ -10,11 +10,11 @@ EventBus是一个 `发布/订阅` 模式的消息总线库，它简化了应用�
 <!--more-->
 
 在不使用EventBus的情况下，我们也可能会使用诸如 `Observable/Observer` 这样得一些机制来处理事件的监听/发布。如果在我们的应用程序中，有许多地方需要使用事件的监听/发布，则我们应用程序的整个结构可能就会像下面这个样子：
-![](http://upload-images.jianshu.io/upload_images/1315506-53361a8b711e46fb.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://www.wolfcstech.com/images/1315506-53361a8b711e46fb.jpg)
 每一处需要用到事件的`监听/发布`的地方，都需要实现一整套`监听/发布`的机制，比如定义Listener接口，定义Notification Center/Observable，定义事件类，定义注册监听者的方法、移除监听者的方法、发布事件的方法等。我们不得不写许多繁琐的，甚至常常是重复的冗余的代码来实现我们的设计目的。
 
 引入EventBus库之后，事件的`监听/发布`将变得非常简单，我们应用程序的结构也将更加简洁，会如下面这样：
-![](http://upload-images.jianshu.io/upload_images/1315506-195e1fa92c72804c.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://www.wolfcstech.com/images/1315506-195e1fa92c72804c.jpg)
 我们可以将事件监听者的管理，注册监听者、移除监听者，事件发布等方法等都交给EventBus来完成，而只定义事件类，实现事件处理方法即可。
 
 在使用Observable/Observer来实现事件的`监听/发布`时，监听者和事件发布者之间的关联关系非常明晰，事件发布者找到事件的监听者从不成为问题。引入EventBus之后，它会统一管理所有对不同类型事件感兴趣的监听者，则事件发布者在发布事件时，能够准确高效地找到对事件感兴趣的监听者将成为重要的问题。后面我们就通过对EventBus代码实现的分析，来获取这样一些重要问题的答案，同时来欣赏EventBus得设计。
@@ -387,6 +387,6 @@ public class EventBusBuilder {
 2. 通过`EventBusBuilder`创建自定义配置的`EventBus`对象。这种方式的对象可以通过`EventBusBuilder.installDefaultEventBus()`在对象被创建的同时设置为default `EventBus`对象。
 
 由此可见，引入EventBus库之后，我们应用程序的结构实际上将如下面这样：
-![](http://upload-images.jianshu.io/upload_images/1315506-e8abb39fca19a166.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://www.wolfcstech.com/images/1315506-e8abb39fca19a166.jpg)
 
 EventBus所提供的特性就先介绍到这里。

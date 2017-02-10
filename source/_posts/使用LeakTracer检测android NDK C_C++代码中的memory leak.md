@@ -16,7 +16,7 @@ Memory issue是C/C++开发中比较常遇到，经常带给人比较大困扰，
 # LeakTracer的下载、编译
 
 LeakTracer [official site](http://www.andreasen.org/LeakTracer/)。LeakTracer [github repo](https://github.com/fredericgermain/LeakTracer)。可以通过git clone将LeakTracer的code download下来，这个项目的结构如下：
-![](http://upload-images.jianshu.io/upload_images/1315506-44c1330f9c14410c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://www.wolfcstech.com/images/1315506-44c1330f9c14410c.png)
 
 helpers目录下是一些辅助脚本，用来帮助分析产生的trace文件的；libleaktracer目录下是主要用于trace memory leak的代码，也是需要我们集成进我们项目的代码；test目录下的test 可以参考来对LeakTracer进行集成；README则说明了使用LeakTracer的方法。
 
@@ -66,7 +66,7 @@ leaktracer::MemoryTrace::GetInstance().stopAllMonitoring();
 这个地方为什么要sleep呢？这是为了等待我们library的其它资源的释放，比如一些线程握有的资源等，以减少LeakTracer的false alarm。
 
 集成结束，开始运行来检测memory leak。我们的app刚一运行起来，就发生了一个SIGSEGV的crash：
-![](http://upload-images.jianshu.io/upload_images/1315506-9652bc1a0d639d49.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://www.wolfcstech.com/images/1315506-9652bc1a0d639d49.png)
 
 看上去是一个空指针，这空指针产生略诡异。我们试图通过在System.loadLibrary()前加一段sleep 5s的代码，并用Eclipse的"Debug As"的"Android Native Application"运行程序，以期能获得更多空指针发生的位置的信息，但似乎并不能获得更多这一crash发生的backtrace的信息。
 
@@ -89,7 +89,7 @@ void* realloc(void *ptr, size_t size)
 void* calloc(size_t nmemb, size_t size)
 ```
 加完了log，再次运行我们的程序，这次能够看到这样的一些信息：
-![](http://upload-images.jianshu.io/upload_images/1315506-48aefe5b78e0d45b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://www.wolfcstech.com/images/1315506-48aefe5b78e0d45b.png)
 
 可以看到，这个crash发生在libleaktracer的malloc函数中，调用栈为operator new() -> MemoryTrace::Setup(void) -> MemoryTrace::init_full_from_once() -> MemoryTrace::init_full() -> malloc()。
 
@@ -108,7 +108,7 @@ void *malloc(size_t size)
 }
 ```
 我们就继续加log，在任意两行之间都加上log。这次运行我们的程序，可以看到这样的一些log输出：
-![](http://upload-images.jianshu.io/upload_images/1315506-422bfe07447c1857.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://www.wolfcstech.com/images/1315506-422bfe07447c1857.png)
 
 由此不难看出，正是如下的这一行访问了空指针：
 ```
@@ -185,10 +185,10 @@ android的标准C库中，并没有__libc_malloc这一组符号，因而lt_mallo
 至此libleaktracer的初始化过程终于可以正常的执行了。内存的分配/释放函数调用的频率实在是太高了，因而去掉刚刚加的那些log，准备迎接下一步的挑战。
 
 但运行起来之后，又出现了crash了。
-![](http://upload-images.jianshu.io/upload_images/1315506-c2d6168a67c01d1f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://www.wolfcstech.com/images/1315506-c2d6168a67c01d1f.png)
 
 这次倒是可以通过Eclipse的"Debug As"的"Android Native Application"抓到发生crash的整个backtrace：
-![](http://upload-images.jianshu.io/upload_images/1315506-1b668c12b693edbc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://www.wolfcstech.com/images/1315506-1b668c12b693edbc.png)
 
 MemoryTrace::storeAllocationStack()的code如下：
 ```

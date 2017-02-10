@@ -494,6 +494,6 @@ class AsyncPoster implements Runnable {
 它会对每一个通知（订阅者方法 + 订阅者对象 + 事件对象）都起一个不同的task来进行。
 
 用一张图来总结EventBus中事件通知的过程：
-![](http://upload-images.jianshu.io/upload_images/1315506-0948fc2f84f92f4d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://www.wolfcstech.com/images/1315506-0948fc2f84f92f4d.png)
 
 EventBus发布事件的过程大体如此。

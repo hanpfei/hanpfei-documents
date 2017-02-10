@@ -16,7 +16,7 @@ HTTP/2 引入二进制分帧层（Binary Framing），将每个请求和响应�
 
 对于Chromium浏览器，打开"更多工具(L) -> 开发者工具(D)"，然后选中"Network"，并选中要查看的文件，就可以清晰地看到HTTP/2请求及响应的信息了。如：
 
-![](http://upload-images.jianshu.io/upload_images/1315506-af5d812ebf583fa3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://www.wolfcstech.com/images/1315506-af5d812ebf583fa3.png)
 
 从上图可以看到，HTTP/2资源的内容，与HTTP/1.1资源的内容相比，只有一些细微的变化，如所有的头部字段名都是小写的，引入了以":"开头的伪首部字段等。
 
@@ -38,7 +38,7 @@ $ echo -e '\nexport SSLKEYLOGFILE=~/sslkeylogfile/keylogfile.log' >> ~/.bash_pro
 ```
 接着，通过选择`Edit -> Preferences... -> Protocols -> SSL`打开Wireshark 的 SSL 配置面板(Ubunut版，Mac版通过`Wireshark -> Preferences...`打开首选项)，在「(Pre)-Master-Secret log filename」选项中选择`SSLKEYLOGFILE`文件，或输入该文件的路径。如下图：
 
-![ssl_config.png](http://upload-images.jianshu.io/upload_images/1315506-20425d67971ec92b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![ssl_config.png](https://www.wolfcstech.com/images/1315506-20425d67971ec92b.png)
 
 最好将「SSL debug file」也配上，这样解密过程中的日志都会记录下来，便于调试分析。
 
@@ -67,11 +67,11 @@ CLIENT_RANDOM 2902990ba00c5ad72fddf9a82fd78bdc40e347d423f5aaff71956780683b4df7 f
 ```
 检查无误后，就可以开启 Wireshark，选择合适的网卡开始抓包。为了减少不必要的数据包对我们分析的干扰，我们可以只针对某个域名的TCP 443端口来抓包，以减少抓取的数据包的数量，如：
 
-![Capture Filter](http://upload-images.jianshu.io/upload_images/1315506-c7a4380946f99370.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![Capture Filter](https://www.wolfcstech.com/images/1315506-c7a4380946f99370.png)
 
 新版 Wireshark (如我目前在用的Version 2.0.2) 在配置了 TLS 解密后，会自动识别并解析 HTTP/2 流量。访问想要抓包的 HTTP/2 网站，就可以轻松看到想要的 HTTP/2 数据包了。如下图：
 
-![wireshark_http2.png](http://upload-images.jianshu.io/upload_images/1315506-76a735cc794a4722.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![wireshark_http2.png](https://www.wolfcstech.com/images/1315506-76a735cc794a4722.png)
 
 这种方法也可以用在解密使用 HTTP/1 的 HTTPS 网站上。
 
@@ -87,7 +87,7 @@ Wireshark就像一副眼镜一样，戴上它之后，可以让我们对网络�
 
 还可以通过为Wireshark导入服务器RSA私钥来解密HTTPS流量。方法是选择`Edit -> Preferences... -> Protocols -> SSL`打开Wireshark 的 SSL 配置面板，点击"RSA keys list"后的"Edit..."按钮：
 
-![rsa_key_record.png](http://upload-images.jianshu.io/upload_images/1315506-478ea8593495d286.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![rsa_key_record.png](https://www.wolfcstech.com/images/1315506-478ea8593495d286.png)
 
 添加一个RSA私钥项，输入适当的IP地址，端口，解密后的协议，及私钥文件的路径，其中私钥必须存为 PEM 格式，这种格式的私钥文件类似于下面这样：
 ```
@@ -109,14 +109,14 @@ $ openssl genrsa 4096 > domain.key
 
 但这种方法对客户端与服务器协商的加密套件有要求。如果加密套件的密钥交换算法是ECDHE，也就是当前大多数HTTPS流量所选择的算法，则解密HTTPS流量将失败。可以通过Wireshark抓取的TLS握手的`Server Hello`消息来查看客户端与服务器协商的加密套件：
 
-![Server Hello.png](http://upload-images.jianshu.io/upload_images/1315506-1fc6886778b7c893.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![Server Hello.png](https://www.wolfcstech.com/images/1315506-1fc6886778b7c893.png)
 
 客户端与服务器协商加密套件的过程大体为，客户端在其TLS握手的`Client Hello`消息的`Cipher Suites`字段中发送自己支持的加密套件。如通过curl访问http2资源：
 ```
 $ curl --http2 -v https://www.wolfcstech.com/
 ```
 可以看到curl支持的加密套件集：
-![client_cipher_suites.png](http://upload-images.jianshu.io/upload_images/1315506-9762724006f3c3d2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![client_cipher_suites.png](https://www.wolfcstech.com/images/1315506-9762724006f3c3d2.png)
 
 对于nginx，我们通过`ssl_ciphers`选项为其配置加密套件，如：
 ```
@@ -133,15 +133,15 @@ $ curl --http2 -v https://www.wolfcstech.com/
 		ssl_prefer_server_ciphers  on;
 ```
 与前面那个配置相比，仅有的改动是对调了`RSA+AES128`和`EECDH+AES128`两个加密套件的位置。再次通过curl访问服务器，可以看到HTTP2流量被解密了：
-![curl_http2.png](http://upload-images.jianshu.io/upload_images/1315506-88cc08373bee2950.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![curl_http2.png](https://www.wolfcstech.com/images/1315506-88cc08373bee2950.png)
 这次协商的加密套件为`TLS_RSA_WITH_AES_128_GCM_SHA256 (0x009c)`，其密钥加密算法为RSA。
 
 不过此时通过chrome浏览器访问网站，就会发现页面已经打不开了，如下图所示：
-![cipher_suite_config_error_for_http2.png](http://upload-images.jianshu.io/upload_images/1315506-5ebd6b734aa28bf5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![cipher_suite_config_error_for_http2.png](https://www.wolfcstech.com/images/1315506-5ebd6b734aa28bf5.png)
 
 仔细看的话，可以看到`ERR_SPDY_INADEQUATE_TRANSPORT_SECURITY`。这是由于为了安全性考虑，HTTP/2规范建立了[加密套件黑名单](http://http2.github.io/http2-spec/#BadCipherSuites)，并强制要求HTTP/2服务不得配置这样的加密套件。Chromium浏览器严格遵守HTTP/2规范，且在TLS协商阶段，服务器选择了加密套件黑名单中的`TLS_RSA_WITH_AES_128_GCM_SHA256 (0x009c)`，因而连接直接被断开了。通过Wireshark抓包来看：
 
-![http2_goaway.png](http://upload-images.jianshu.io/upload_images/1315506-2c7fc5a87c6557ec.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![http2_goaway.png](https://www.wolfcstech.com/images/1315506-2c7fc5a87c6557ec.png)
 
 可见是HTTP2层，在与服务器建立连接之后，浏览器就立即发送`GOAWAY`帧断开了连接。
 
