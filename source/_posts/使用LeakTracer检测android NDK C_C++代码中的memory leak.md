@@ -17,6 +17,7 @@ Memory issue是C/C++开发中比较常遇到，经常带给人比较大困扰，
 
 LeakTracer [official site](http://www.andreasen.org/LeakTracer/)。LeakTracer [github repo](https://github.com/fredericgermain/LeakTracer)。可以通过git clone将LeakTracer的code download下来，这个项目的结构如下：
 ![](https://www.wolfcstech.com/images/1315506-44c1330f9c14410c.png)
+
 helpers目录下是一些辅助脚本，用来帮助分析产生的trace文件的；libleaktracer目录下是主要用于trace memory leak的代码，也是需要我们集成进我们项目的代码；test目录下的test 可以参考来对LeakTracer进行集成；README则说明了使用LeakTracer的方法。
 
 可以以3种方式来使用使用LeakTracer：
@@ -66,6 +67,7 @@ leaktracer::MemoryTrace::GetInstance().stopAllMonitoring();
 
 集成结束，开始运行来检测memory leak。我们的app刚一运行起来，就发生了一个SIGSEGV的crash：
 ![](https://www.wolfcstech.com/images/1315506-9652bc1a0d639d49.png)
+
 看上去是一个空指针，这空指针产生略诡异。我们试图通过在System.loadLibrary()前加一段sleep 5s的代码，并用Eclipse的"Debug As"的"Android Native Application"运行程序，以期能获得更多空指针发生的位置的信息，但似乎并不能获得更多这一crash发生的backtrace的信息。
 
 但不难想到，这个空指针很可能发生在libleaktracer初始化的代码里。这个library并没有太多的code，我们可以将这个library初始化相关的所有函数的开始结束处都加上log，来追查空指针到底发生在什么地方。主要包括如下的这些函数：
@@ -88,6 +90,7 @@ void* calloc(size_t nmemb, size_t size)
 ```
 加完了log，再次运行我们的程序，这次能够看到这样的一些信息：
 ![](https://www.wolfcstech.com/images/1315506-48aefe5b78e0d45b.png)
+
 可以看到，这个crash发生在libleaktracer的malloc函数中，调用栈为operator new() -> MemoryTrace::Setup(void) -> MemoryTrace::init_full_from_once() -> MemoryTrace::init_full() -> malloc()。
 
 malloc的代码如下：
@@ -106,6 +109,7 @@ void *malloc(size_t size)
 ```
 我们就继续加log，在任意两行之间都加上log。这次运行我们的程序，可以看到这样的一些log输出：
 ![](https://www.wolfcstech.com/images/1315506-422bfe07447c1857.png)
+
 由此不难看出，正是如下的这一行访问了空指针：
 ```
 p = LT_MALLOC(size);
@@ -182,8 +186,10 @@ android的标准C库中，并没有__libc_malloc这一组符号，因而lt_mallo
 
 但运行起来之后，又出现了crash了。
 ![](https://www.wolfcstech.com/images/1315506-c2d6168a67c01d1f.png)
+
 这次倒是可以通过Eclipse的"Debug As"的"Android Native Application"抓到发生crash的整个backtrace：
 ![](https://www.wolfcstech.com/images/1315506-1b668c12b693edbc.png)
+
 MemoryTrace::storeAllocationStack()的code如下：
 ```
 inline void MemoryTrace::storeAllocationStack(void* arr[ALLOCATION_STACK_DEPTH])

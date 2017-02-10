@@ -266,6 +266,7 @@ recv:Connection was broken.
 可以看到，UDT Client端先发送了一个消息MSG1给UDT Server；UDT Server端收到消息MSG1之后，回了一个消息MSG2给UDT Client；UDT Client收到消息MSG2，又回了一个消息MSG3给UDT Server；UDT Server收到消息MSG3后又回了一个消息MSG4给UDT Client，然后从UDT::accept()返回，自此UDT Server认为一个连接已经成功建立；UDT Client则在收到消息MSG4后，从UDT::connect()返回，并自此认为连接已成功建立，可以进行数据的收发了。用一幅图来描述这个过程：
 
 ![150954_myfS_919237.png](https://www.wolfcstech.com/images/1315506-eadbc50fbe607bfa.png)
+
 至于MSG1、2、3、4的具体格式及内容，则留待我们后面来具体分析了。
 
 接着来看连接建立过程消息交互具体的实现，也就是CUDT::connect()函数：

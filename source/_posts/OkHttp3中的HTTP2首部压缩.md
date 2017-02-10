@@ -11,7 +11,9 @@ tags:
 <!--more-->
 
 ![Header 1](https://www.wolfcstech.com/images/1315506-b172bdb63e325d50.jpg)
+
 ![Header 2](https://www.wolfcstech.com/images/1315506-7b62c9574493209c.jpg)
+
 如上图，同一个页面中对不同资源的请求，请求中的头部字段绝大部分是完全相同的。特别是 "User-Agent" 等头部字段通常还会消耗大量的带宽。
 
 HTTP/2的首部压缩正是为了解决这个问题而设计。
@@ -258,6 +260,7 @@ Huffman编码是一种变长字节编码，对于使用频率高的字节，使�
 OkHttp3中的 哈夫曼树 并不是一个二叉树，它的每个节点最多都可以有256个字节点。OkHttp3用这种方式来优化Huffman编码解码的效率。用一个图来表示，将是下面这个样子的：
 
 ![Huffman Tree](https://www.wolfcstech.com/images/1315506-b03c870c6cdcd44c.jpg)
+
 ### Huffman 编码
 ```
   void encode(byte[] data, OutputStream out) throws IOException {

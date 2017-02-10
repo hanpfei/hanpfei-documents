@@ -499,6 +499,7 @@ Handler的构造函数共有7个，其中4个不需要传递Looper参数，3个�
 Handler提供了两组函数用于向一个Looper线程的MessageQueue中发送消息，分别是postXXX()族和sendXXX()族，这两组函数的调用关系大体如下所示：
 
 ![此处输入图片的描述](https://www.wolfcstech.com/images/085042_SlZe_919237.jpg)
+
 我们可以先看一下sendXXX()族消息发送方法：
 ```
     /**

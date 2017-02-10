@@ -200,6 +200,7 @@ private:
 ```
 可以发现，依赖于GC线程的状态，UDT主状态机主要有4个状态，分别是INIT，STARTING，RUNNING和CLOSING，在UDT中，主要用m_bGCStatus和m_bClosing这两个bool类型值来描述。这个状态机只提供了两个函数给调用者，以影响这个状态机的状态，也就是UDT::startup()和UDT::cleanup()函数。这个状态机的几个状态与m_bGCStatus和m_bClosing值的对应关系，及状态转换过程如下图所示：
 ![](https://www.wolfcstech.com/images/1315506-4226944e1a1ff6b3.png)
+
 在使用UDT的程序启动起来时，或者执行了UDT::cleanup()函数之后，可以认为UDT处于INIT状态，也就是初始状态。在CUDTUnited的构造函数中，会将m_bGCStatus和m_bClosing这两个值都初始化为false，而UDT::cleanup()函数结束时，m_bGCStatus的值则为false，m_bClosing的值为true。
 
 调用了UDT::startup()之后，m_bGCStatus的值仍然为false，m_bClosing的值首先被设置为false，然后启动garbageCollect线程。garbageCollect线程的启动需要一定的时间，在这段时间内可以认为UDT主状态机从INIT状态转换到了STARTING状态。

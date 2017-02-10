@@ -22,7 +22,9 @@ Caddy是一个Go语言写的，易于使用的通用Web服务器。它具有如�
 
 此外，Caddy的性能非常好。下面两幅图是我的静态个人博客站点，分别是用Caddy和nginx作为Web服务器，打开主页所需的加载时间对比：
 ![Service with Caddy](https://www.wolfcstech.com/images/1315506-9da3094340e8363f.png)
+
 ![Service with nginx](https://www.wolfcstech.com/images/1315506-b326960e37658396.png)
+
 上面的图显示了以Caddy作为Web服务器，主页的加载时间只有680ms；下面的图显示以nginx作为Web服务器，主页的加载时间则长达1.99s，要慢接近2倍。
 
 # Caddy部署
@@ -115,11 +117,13 @@ Caddy 除了监听http的TCP 80端口和https 的TCP 443端口之外，还监听
 Chrome 52+ 支持QUIC而无需白名单，但需要确认 **#enable-quic** 标记已经被启用了。通过在Chrome浏览器的地址栏输入`chrome://flags/`：
 
 ![Enable QUIC](https://www.wolfcstech.com/images/1315506-9961dddafc3736d1.png)
+
 并根据需要启用QUIC。
 
 然后通过Chrome打开你的网站，则它应该是以QUIC提供服务的！可以通过打开inspector 工具并进入Security tab来验证这一点。重新加载页面并点击来查看连接详情：
 
 ![caddy005.png](https://www.wolfcstech.com/images/1315506-b8ea9d1418be9780.png)
+
 如果你使用老版的Chrome，则为了省事，可以升级一下。
 
 如果你不想升级，则可以：你将需要以特殊的参数来运行Chrome。再Mac上 (将YOUR_SITE替换为你的网站的实际域名)执行如下命令：

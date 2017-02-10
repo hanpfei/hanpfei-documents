@@ -10,6 +10,7 @@ tags:
 先来看一下 **FlatBuffers** 项目已经为我们提供了什么，而我们在将 **FlatBuffers** 用到我们的项目中时又需要做什么的整体流程。如下图：
 
 ![](https://www.wolfcstech.com/images/1315506-5314761d842bf10f.jpg)
+
 在使用 **FlatBuffers** 时，我们需要以特殊的格式定义我们的结构化数据，保存为 .fbs 文件。**FlatBuffers** 项目为我们提供了编译器，可用于将 .fbs 文件编译为Java文件，C++文件等，以用于我们的项目。**FlatBuffers** 编译器在我们的开发机，比如Ubuntu，Mac上运行。这些源代码文件是基于 **FlatBuffers** 提供的Java库生成的，同时我们也需要利用这个Java库的一些接口来序列化或解析数据。
 
 <!--more-->
@@ -195,6 +196,7 @@ out//com/example/tutorial/PhoneType.java
 我们将前面由 .fbs 文件生成的Java文件拷贝到我们的项目中。我们前面提到的，**FlatBuffers** 的Java库比较薄，当前并没有发不到jcenter这样的maven仓库中，因而我们需要将这部分代码也拷贝到我们的额项目中。**FlatBuffers** 的Java库在其repo仓库的 java 目录下。引入这些文件之后，我们的代码结构如下：
 
 ![](https://www.wolfcstech.com/images/1315506-b60d4b8f8ec73a0e.jpg)
+
 添加访问 **FlatBuffers** 的类：
 ```
 package com.netease.volleydemo;
@@ -285,6 +287,7 @@ $ git clone https://github.com/hanpfei/flatbuffers.git
 然后将代码导入Android Studio，将看到如下的代码结构：
 
 ![](https://www.wolfcstech.com/images/1315506-7c687933f10571d7.jpg)
+
 app 模块是一个demo程序，flatbuf-gradle-plugin 模块是 **FlatBuffers** 的gradle插件，而flatbuffers模块则是 **FlatBuffers** 的Java库。
 
 为了使用 flatbuf-gradle-plugin，可以将插件发布到本地文件系统。这可以通过修改flatbuf-gradle-plugin/build.gradle来完成，修改 uploadArchives task 的 repository 指向本地文件系统，如：
@@ -607,6 +610,7 @@ public class Struct {
 整体的结构如下图：
 
 ![](https://www.wolfcstech.com/images/1315506-6696c8be5e0ed785.jpg)
+
 在序列化结构化数据时，我们首先需要创建一个 **FlatBufferBuilder** ，在这个对象的创建过程中会分配或从调用者那里获取 **ByteBuffer**，序列化的数据将保存在这个 **ByteBuffer**中：
 ```
    /**
@@ -790,6 +794,7 @@ addXXX(int o, XXX x, YYY y) 这一组方法在放入数据之后，会将 vtable
 编码数组的过程如下：
 
 ![Encode vector](https://www.wolfcstech.com/images/1315506-75aefc809e8aaa89.jpg)
+
 先执行 startVector()，这个方法会记录数组的长度，处理元素的对齐，准备足够的空间，并设置nested，用于指示记录的开始。
 然后逐个添加元素。
 最后 执行 endVector()，将nested复位，并记录数组的长度。
@@ -823,6 +828,7 @@ addXXX(int o, XXX x, YYY y) 这一组方法在放入数据之后，会将 vtable
 编码后的数组将有如下的内存分布：
 
 ![Encoded Vector](https://www.wolfcstech.com/images/1315506-e4bd7955764cf949.jpg)
+
 其中的Vector Length为4字节的int型值。
 
 ## FlatBuffers编码字符串
@@ -879,6 +885,7 @@ addXXX(int o, XXX x, YYY y) 这一组方法在放入数据之后，会将 vtable
 
 
 ![Encoded String](https://www.wolfcstech.com/images/1315506-c4038fa7add1b462.jpg)
+
 
 ## FlatBuffers编码对象
 
@@ -964,6 +971,7 @@ addXXX(int o, XXX x, YYY y) 这一组方法在放入数据之后，会将 vtable
 编码后的对象有如下的内存分布：
 
 ![Encoded](https://www.wolfcstech.com/images/1315506-3e932cbec3515261.jpg)
+
 图中值为0的那个位置的值实际不是0，它指向vtable，图中是指向在创建对象时创建的vtable，但它也可以相同类已经存在的vtable。
 
 ## 结束编码
@@ -1003,6 +1011,7 @@ addXXX(int o, XXX x, YYY y) 这一组方法在放入数据之后，会将 vtable
 整个编码后的数据有如下的内存分布：
 
 ![Encoded data](https://www.wolfcstech.com/images/1315506-9cd4c809e7c8da16.jpg)
+
 # FlatBuffers 解码原理
 
 这里我们通过一个生成的比较简单的类 PhoneNumber 来了解FlatBuffers的解码。
