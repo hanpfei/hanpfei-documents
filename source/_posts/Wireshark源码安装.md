@@ -10,7 +10,7 @@ tags:
 
 ## 编译安装Wireshark
 首先在Wireshark官网下载最新的源码包，[地址](https://www.wireshark.org/#download)。
-
+<!--more-->
 ![Wireshark Download Site](https://www.wolfcstech.com/images/1315506-f8e80a7420fc6e47.png)
 
 当前最新版是2.2.1。下载Wireshark：

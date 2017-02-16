@@ -6,7 +6,7 @@ categories:
 tags:
 - 源码分析
 - C/C++开发
-- Android
+- Android开发
 ---
 
 ﻿在android中，就如同在Linux下一样，我们也可以在app中，运行时动态加载一些动态链接库，执行调用其中的函数等操作。实现这一切最终依靠的就是dlopen()等几个函数。关于这几个函数的原型机这些API的用法，可以参考 LINUX下动态链接库的使用-dlopen dlsym dlclose dlerror这一篇。而此处我们就来看一下，在android c标准库的bionic中，这些函数究竟是如何实现的。
