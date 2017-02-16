@@ -1,9 +1,17 @@
+---
+title: Android app native代码性能分析
+date: 2015-07-04 16:05:49
+categories: Android开发
+tags:
+- Android开发
+---
+
 分析我们app中native层的C/C++代码性能，能够方便我们找出其中的性能瓶颈，并在稍后做有针对性的优化。
 
 # 下载android-ndk-profiler
 
 工欲善其事，必先利其器，我们先要有良好的工具来支持我们做性能分析的愿望。android-ndk-profiler就是目前我们可用的比较好的工具。原来这个项目是托管在google的代码托管服务器的，[地址](https://code.google.com/p/android-ndk-profiler/)，但现在它已经被迁移到gihub。访问原来的地址时，会自动地被重定向到github上，[地址](https://github.com/richq/android-ndk-profiler)。这样也好，倒省掉我们这些天朝子民翻墙的麻烦了。
-
+<!--more-->
 我们可以到**github**去下载android ndk profiler。可以下载master branch的zip压缩包，也可以把整个项目直接git clone下来，git clone下来可能要更好一点。这个项目的目录结构大体如下(2015-06-25这天的版本)：
 ```
 hanpfei@hanpfei-ThundeRobot:~/android-ndk-profiler_repo$ ls -al
