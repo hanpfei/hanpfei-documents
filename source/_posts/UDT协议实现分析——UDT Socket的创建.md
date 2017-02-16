@@ -1,8 +1,11 @@
 ---
 title: UDT协议实现分析——UDT Socket的创建
 date: 2015-09-07 16:05:49
+categories: 网络协议
 tags:
-- 网络
+- 源码分析
+- 网络协议
+- UDT
 ---
 
 # UDT API的用法

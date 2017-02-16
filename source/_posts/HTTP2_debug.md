@@ -1,9 +1,10 @@
 ---
 title: HTTP/2 流量调试
 date: 2016-11-18 14:35:49
-tags: 
-- HTTP/2
-- 网络
+categories: 网络调试
+tags:
+- 网络调试
+- HTTP2
 ---
 
 当前主要可以通过浏览器和Wireshark等工具调试HTTP/2流量。

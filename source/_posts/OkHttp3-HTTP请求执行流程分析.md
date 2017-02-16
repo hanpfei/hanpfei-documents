@@ -1,9 +1,11 @@
 ---
 title: OkHttp3 HTTP请求执行流程分析
 date: 2016-11-15 17:46:49
-categories:
+categories: 网络协议
+tags:
+- 源码分析
 - Android
-- 网络
+- 网络协议
 ---
 
 # OkHttp3的基本用法

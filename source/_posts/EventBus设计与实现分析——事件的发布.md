@@ -1,8 +1,10 @@
 ---
 title: EventBus设计与实现分析——事件的发布
 date: 2016-8-4 11:43:49
+categories: Android开发
 tags:
-- Android
+- 源码分析
+- Android开发
 ---
 
 前面在 [EventBus设计与实现分析——特性介绍](https://www.wolfcstech.com/2016/07/03/EventBus%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90%E2%80%94%E2%80%94%E7%89%B9%E6%80%A7%E4%BB%8B%E7%BB%8D/)中介绍了EventBus的基本用法，及其提供的大多数特性的用法；在[EventBus设计与实现分析——订阅者的注册](https://www.wolfcstech.com/2016/07/04/EventBus%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90%E2%80%94%E2%80%94%E8%AE%A2%E9%98%85%E8%80%85%E7%9A%84%E6%B3%A8%E5%86%8C/) 中介绍了EventBus中订阅者注册的过程。这里就继续分析EventBus的代码，来了解其事件发布的过程。

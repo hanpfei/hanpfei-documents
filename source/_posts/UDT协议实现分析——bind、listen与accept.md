@@ -1,8 +1,11 @@
 ---
 title: UDT协议实现分析——bind、listen与accept
 date: 2015-09-09 16:05:49
+categories: 网络协议
 tags:
-- 网络
+- 源码分析
+- 网络协议
+- UDT
 ---
 
 UDT Server启动之后，基于UDT协议的UDP数据可靠传输才成为可能，因而接下来分析与UDT Server有关的几个主要API的实现，来了解下UDT Server是如何listening在特定UDP端口上的。主要有UDT::bind()，UDT::listen()和UDT::accept()等几个函数。

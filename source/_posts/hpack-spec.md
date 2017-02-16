@@ -1,7 +1,10 @@
 ---
 title: HPACK：HTTP/2的首部压缩 (RFC7541)
 date: 2016-10-29 13:46:49
-categories: HTTP2相关规范
+categories: 网络协议
+tags:
+- 网络协议
+- HTTP2
 ---
 
 # 摘要

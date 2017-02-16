@@ -1,7 +1,10 @@
 ---
 title: HTTP/2规范：11. IANA 注意事项
 date: 2016-10-29 12:36:49
-categories: HTTP2相关规范
+categories: 网络协议
+tags:
+- 网络协议
+- HTTP2
 ---
 
 一个用于识别HTTP/2的字符串进入了由 [[TLS-ALPN]

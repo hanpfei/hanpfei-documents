@@ -1,7 +1,11 @@
 ---
 title: android下运行时动态链接dlopen()和dlsym()的实现
 date: 2013-7-13 11:43:49
+categories:
+- C/C++开发
 tags:
+- 源码分析
+- C/C++开发
 - Android
 ---
 

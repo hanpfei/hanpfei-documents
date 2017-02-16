@@ -1,8 +1,10 @@
 ---
 title: EventBus设计与实现分析——订阅者的注册
 date: 2016-7-4 11:43:49
+categories: Android开发
 tags:
-- Android
+- 源码分析
+- Android开发
 ---
 
 前面在 [EventBus设计与实现分析——特性介绍](https://www.wolfcstech.com/2016/07/03/EventBus%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90%E2%80%94%E2%80%94%E7%89%B9%E6%80%A7%E4%BB%8B%E7%BB%8D/) 一文中介绍了EventBus的基本用法，及其提供的大多数特性的用法，这让我们对EventBus为用户提供的主要功能有了大体的了解，为我们后续理解EventBus的设计决策提供了良好的基础。这里我们就开始深入到EventBus的实现细节，先来了解其中的订阅者注册的过程。

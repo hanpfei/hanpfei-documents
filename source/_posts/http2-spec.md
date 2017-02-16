@@ -1,8 +1,10 @@
 ---
 title: HTTP2规范（RFC7540）
 date: 2016-10-29 13:37:49
+categories: 网络协议
 tags:
-categories: HTTP2相关规范
+- 网络协议
+- HTTP2
 ---
 
 # 摘要

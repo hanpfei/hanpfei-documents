@@ -1,7 +1,10 @@
 ---
 title: 基于nginx和uWSGI在Ubuntu上部署Django
 date: 2016-11-14 11:45:49
-categories: 服务器
+categories: 后台开发
+tags:
+- 后台开发
+- Django
 ---
 
 # 1. nginx

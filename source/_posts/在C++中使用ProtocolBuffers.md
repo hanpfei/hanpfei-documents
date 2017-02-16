@@ -1,8 +1,10 @@
 ---
 title: 在C++中使用Protocol Buffers
 date: 2016-12-2 11:43:49
+categories:
+- C/C++开发
 tags:
-- 网络
+- C/C++开发
 ---
 
 # 下载并编译Protocol Buffer

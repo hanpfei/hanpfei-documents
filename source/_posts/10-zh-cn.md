@@ -1,7 +1,10 @@
 ---
 title: HTTP/2规范：10. 安全注意事项
 date: 2016-10-29 12:35:49
-categories: HTTP2相关规范
+categories: 网络协议
+tags:
+- 网络协议
+- HTTP2
 ---
 
 ## [10.1 服务器认证](https://http2.github.io/http2-spec/#authority)

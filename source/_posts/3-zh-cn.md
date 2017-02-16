@@ -1,7 +1,10 @@
 ---
 title: HTTP/2规范：3. 启动 HTTP/2
 date: 2016-10-29 12:28:49
-categories: HTTP2相关规范
+categories: 网络协议
+tags:
+- 网络协议
+- HTTP2
 ---
 
 一个HTTP/2连接是一个运行于一个TCP连接([[TCP]

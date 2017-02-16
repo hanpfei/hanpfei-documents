@@ -1,8 +1,10 @@
 ---
 title: 使用LeakTracer检测android NDK C/C++代码中的memory leak
 date: 2017-01-12 20:35:49
+categories: Android开发
 tags: 
-- Android
+- Android开发
+- C/C++开发
 ---
 
 Memory issue是C/C++开发中比较常遇到，经常带给人比较大困扰，debug起来又常常让人无从下手的一类问题，memory issue主要又分为memory leak，野指针，及其它非法访问等问题。在android平台上，使用NDK开发C/C++ code，由于没有其它成熟的平台，如Windows，Linux等上面可用的许多工具，使得memory issue变得更为棘手。

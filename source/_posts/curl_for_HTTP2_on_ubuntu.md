@@ -1,7 +1,10 @@
 ---
 title: 为curl命令启用HTTP2支持
 date: 2016-11-14 16:05:49
-categories: HTTP2
+categories: 网络调试
+tags:
+- 网络调试
+- HTTP2
 ---
 
 ## 检查curl版本

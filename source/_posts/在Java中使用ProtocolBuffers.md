@@ -1,8 +1,9 @@
 ---
 title: 在Java中使用Protocol Buffers
 date: 2016-12-2 16:43:49
+categories: Java开发
 tags:
-- 网络
+- Java开发
 ---
 
 这份教程为Java开发者提供了使用 **Protocol Buffer** 的基本介绍。通过创建一个简单的示例应用，它展示了

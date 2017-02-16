@@ -1,9 +1,9 @@
 ---
 title: 在Android中使用FlatBuffers
 date: 2016-12-8 20:36:49
+categories: Android开发
 tags:
-- 网络
-- Android
+- Android开发
 ---
 
 # 总览

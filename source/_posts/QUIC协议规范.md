@@ -1,9 +1,10 @@
 ---
 title: QUIC协议规范
 date: 2017-01-13 18:35:49
-tags: 
+categories: 网络协议
+tags:
+- 网络协议
 - QUIC
-- 网络
 ---
 
 # 介绍

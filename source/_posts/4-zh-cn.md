@@ -1,7 +1,10 @@
 ---
 title: HTTP/2规范：4. HTTP帧
 date: 2016-10-29 12:29:49
-categories: HTTP2相关规范
+categories: 网络协议
+tags:
+- 网络协议
+- HTTP2
 ---
 
 建立了HTTP/2连接之后，端点间就可以开始进行帧的交换了。

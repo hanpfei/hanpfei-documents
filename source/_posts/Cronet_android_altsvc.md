@@ -1,7 +1,12 @@
 ---
 title: Cronet android 设计与实现分析——备选服务机制
 date: 2016-10-29 14:07:49
-tags: Cronet
+categories: 网络协议
+tags:
+- 源码分析
+- Android
+- 网络协议
+- chromium
 ---
 
 前面我们分析到，在`URLRequestHttpJob::StartTransactionInternal()`中，会通过`URLRequestContext`的`HttpTransactionFactory`创建`HttpTransaction`，在`URLRequestContextBuilder::Build()`中创建`HttpTransactionFactory`的过程如下：

@@ -1,8 +1,11 @@
 ---
 title: UDT协议实现分析——UDT初始化和销毁
 date: 2015-09-06 16:05:49
+categories: 网络协议
 tags:
-- 网络
+- 源码分析
+- 网络协议
+- UDT
 ---
 
 UDT协议是一个用于在高速Internet上传输大量数据的基于UDP的可靠传输协议。

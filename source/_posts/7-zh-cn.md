@@ -1,7 +1,10 @@
 ---
 title: HTTP/2规范：7. 错误码
 date: 2016-10-29 12:32:49
-categories: HTTP2相关规范
+categories: 网络协议
+tags:
+- 网络协议
+- HTTP2
 ---
 
 错误码是用在[RST_STREAM](https://http2.github.io/http2-spec/#RST_STREAM)和[GOAWAY](https://http2.github.io/http2-spec/#GOAWAY)帧中的32位字段，来携带流或连接错误的原因的。

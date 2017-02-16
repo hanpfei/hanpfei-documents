@@ -1,7 +1,10 @@
 ---
 title: HTTP/2规范：2. HTTP/2 协议总览
 date: 2016-10-29 12:27:49
-categories: HTTP2相关规范
+categories: 网络协议
+tags:
+- 网络协议
+- HTTP2
 ---
 
 HTTP/2为HTTP语义提供了一个优化的传输方式。HTTP/2支持HTTP/1.1所有的核心功能，但在一些方面又更加高效。

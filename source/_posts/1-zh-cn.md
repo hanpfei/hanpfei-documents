@@ -1,7 +1,10 @@
 ---
 title: HTTP/2规范：1. 简介
 date: 2016-10-29 12:26:49
-categories: HTTP2相关规范
+categories: 网络协议
+tags:
+- 网络协议
+- HTTP2
 ---
 
 # 摘要

@@ -1,7 +1,12 @@
 ---
 title: Cronet android设计与实现分析--库的初始化﻿
 date: 2016-10-29 14:05:49
-tags: Cronet
+categories: 网络协议
+tags:
+- 源码分析
+- Android
+- 网络协议
+- chromium
 ---
 # Cronet的基本用法
 

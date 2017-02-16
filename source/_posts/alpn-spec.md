@@ -1,7 +1,10 @@
 ---
 title: 应用层协议协商（ALPN）规范（RFC7301）
 date: 2016-10-29 13:44:49
-categories: HTTP2相关规范
+categories: 网络协议
+tags:
+- 网络协议
+- HTTP2
 ---
 
 # 摘要

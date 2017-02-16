@@ -1,7 +1,10 @@
 ---
 title: 传输层安全(TLS)下一个协议协商(NPN)扩展
 date: 2016-10-29 13:48:49
-categories: HTTP2相关规范
+categories: 网络协议
+tags:
+- 网络协议
+- HTTP2
 ---
 
 

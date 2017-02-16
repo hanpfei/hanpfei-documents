@@ -1,9 +1,9 @@
 ---
 title: 在Android中使用Protocol Buffers
 date: 2016-12-2 20:36:49
+categories: Android开发
 tags:
-- 网络
-- Android
+- Android开发
 ---
 
 网络性能优化的终极手法就是不通过网络传输，但这常常是不可能的。但我们还是可以通过对网络传输的数据本身做优化，来获得更好的性能，性能就应该从每一个可能的地方榨取。这里来看一下 **Protocol Buffers** 。

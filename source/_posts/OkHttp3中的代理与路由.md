@@ -1,9 +1,11 @@
 ---
 title: OkHttp3中的代理与路由
 date: 2016-10-14 11:43:49
+categories: 网络协议
 tags:
+- 源码分析
 - Android
-- 网络
+- 网络协议
 ---
 
 HTTP请求的整体处理过程大体可以理解为，

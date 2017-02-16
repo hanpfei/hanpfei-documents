@@ -1,9 +1,11 @@
 ---
 title: OkHttp3连接建立过程分析
 date: 2016-10-27 11:43:49
+categories: 网络协议
 tags:
+- 源码分析
 - Android
-- 网络
+- 网络协议
 ---
 
 如我们前面在 [OkHttp3 HTTP请求执行流程分析](https://www.wolfcstech.com/2016/10/14/OkHttp3-HTTP%E8%AF%B7%E6%B1%82%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90/) 中的分析，OkHttp3通过Interceptor链来执行HTTP请求，整体的执行过程大体如下：
