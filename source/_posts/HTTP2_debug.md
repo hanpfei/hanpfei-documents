@@ -150,6 +150,19 @@ $ curl --http2 -v https://www.wolfcstech.com/
 
 是否可以通过为Wireshark添加RSA私钥解密HTTPS流量的决定性因素，在于客户端与服务器协商的加密套件，而不在于通过HTTPS传输的流量是HTTP/1.1的还是HTTP/2的。不过可以通过这种方法让Wireshark解密的所有加密套件都已经进了HTTP/2规范的加密套件黑名单，因而对于符合规范的HTTP/2流量传输，都是无法通过这种方法来解密流量的。
 
+## 判断HTTP2是否启用
+如前面所述，在某些情况下，直接解密HTTP/2流量确实是难以实现的。而如果我们的需求仅仅是判断HTTP/2是否启用的话，则还是可以通过Wireshark实现的。
+
+HTTP/2在TCP连接建立完成之后，TLS握手的过程中，会进行协议协商，以确定客户端和服务器之间通信最终所用的应用层协议。这个协议协商协议成为ALPN。ALPN是TLS的特性，客户端的SSL/TLS库及使用SSL/TLS库的模块，如HTTP栈，只要支持这一扩展，在发送Client Hello消息时，就会带上相关消息，如：
+
+![ALPN Extension(Client Hello)](https://www.wolfcstech.com/images/1315506-77c5dff03d4e7e02.png)
+
+服务器的SSL/TLS库及Web服务器如果能识别这一扩展，会在Server Hello消息中的相同扩展处放上服务器所选择的用户双方通信的协议标识。如果为服务器配置了支持HTTP/2时，Server Hello消息的ALPN扩展值将为`h2`，否则将是`http/1.1`，如：
+
+![ALPN Extension(Server Hello)](https://www.wolfcstech.com/images/1315506-1ef3e4bf0fc2538c.png)
+
+因而尽管对于无法解密TLS流的HTTP/2流，在Wireshark中无法查看传输更多的细节过程，但还是可以通过Wireshark抓取到的`Server Hello`消息的ALPN扩展值判断协议协商的结果。
+
 参考文档：
 [SSL - The Wireshark Wiki](https://wiki.wireshark.org/SSL#Wireshark)
 [Ubuntu系统环境变量详解](http://blog.csdn.net/netwalk/article/details/9455893)
