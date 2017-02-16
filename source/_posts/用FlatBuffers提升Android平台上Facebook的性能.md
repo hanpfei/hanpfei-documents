@@ -1,8 +1,9 @@
 ---
 title: 用FlatBuffers提升Android平台上Facebook的性能
 date: 2016-11-2 21:36:49
-tags:
-- 网络
+categories: Android开发
+tags: 
+- Android开发
 ---
 
 在Facebook上，人们可以通过阅读状态更新和查看照片同他们的家人和朋友来往。在我们的后端，我们保存了组成这些连接的社交图谱的所有数据。在我们的移动客户端，我们不能下载完整的图谱，而是以一个本地的树结构的形式下载一个节点及它的一些连接。

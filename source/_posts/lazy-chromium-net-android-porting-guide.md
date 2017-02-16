@@ -1,7 +1,10 @@
 ---
 title: 懒人chromium net android移植指南
 date: 2016-11-11 14:07:49
-tags: Cronet
+categories: Android开发
+tags:
+- Android开发
+- chromium
 ---
 
 ﻿Chromium浏览器的网络库是一个功能非常强大的网络库，它支持的网络协议非常多，除了常见的HTTP/1.1，它还支持HTTP/2，QUIC等比较新的协议。这里我们尝试将Chromium net网络库移植到Android平台，在我们的Android应用中跑起来。

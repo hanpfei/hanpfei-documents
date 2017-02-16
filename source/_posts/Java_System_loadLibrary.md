@@ -1,8 +1,10 @@
 ---
 title: Java中System.loadLibrary() 的执行过程
 date: 2013-5-11 11:43:49
+categories: Android开发
 tags:
-- Android
+- Android开发
+- 源码分析
 ---
 
 ﻿***System.loadLibrary()*** 是我们在使用Java的JNI机制时，会用到的一个非常重要的函数，它的作用即是把实现了我们在Java code中声明的native方法的那个libraryload进来，或者load其他什么动态连接库。

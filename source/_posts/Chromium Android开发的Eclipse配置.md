@@ -1,7 +1,10 @@
 ---
 title: Chromium Android开发的Eclipse配置
 date: 2017-01-22 14:05:49
-tags: Cronet
+categories: Android开发
+tags:
+- Android开发
+- chromium
 ---
 
 # 单次的Eclipse配置

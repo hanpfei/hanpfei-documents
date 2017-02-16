@@ -1,9 +1,10 @@
 ---
 title: Chromium net design
-date: 2016-10-09 17:17:49
-categories:
-- Chromium
-- 网络
+date: 2016-10-11 17:17:49
+categories: 网络协议
+tags:
+- 网络协议
+- chromium
 ---
 
 # 总览

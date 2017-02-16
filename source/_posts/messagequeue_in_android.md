@@ -1,8 +1,9 @@
 ---
 title: android的消息队列机制
 date: 2013-9-11 11:43:49
+categories: Android开发
 tags:
-- Android
+- Android开发
 ---
 
 ﻿android下的线程，Looper线程，MessageQueue，Handler，Message等之间的关系，以及Message的send/post及Message dispatch的过程。

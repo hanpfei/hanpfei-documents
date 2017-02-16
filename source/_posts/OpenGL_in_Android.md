@@ -1,8 +1,9 @@
 ---
 title: 在android中使用OpenGL
 date: 2013-2-26 11:43:49
+categories: Android开发
 tags:
-- Android
+- Android开发
 - OpenGL
 ---
 

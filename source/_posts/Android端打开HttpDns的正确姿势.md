@@ -1,9 +1,9 @@
 ---
 title: Android端打开HttpDns的正确姿势
 date: 2017-02-06 16:05:49
+categories: Android开发
 tags:
-- Android
-- 网络
+- Android开发
 ---
 
 # 什么是HttpDns？

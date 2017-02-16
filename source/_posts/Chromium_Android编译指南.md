@@ -1,5 +1,10 @@
 ---
 title: Chromium Android编译指南
+date: 2016-10-16 16:05:49
+categories: Android开发
+tags:
+- Android开发
+- chromium
 ---
 
 ## 先决条件
