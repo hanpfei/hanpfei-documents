@@ -5,6 +5,7 @@ categories:
 - C/C++开发
 tags:
 - C/C++开发
+- 翻译
 ---
 
 # 下载并编译Protocol Buffer

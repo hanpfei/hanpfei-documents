@@ -5,6 +5,7 @@ categories: Android开发
 tags:
 - Android开发
 - chromium
+- 翻译
 ---
 
 # 单次的Eclipse配置
