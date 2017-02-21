@@ -547,7 +547,7 @@ $cat report
 ```
 
 # 剖析 Java 代码
-Simpleperf 只支持剖析 ELF 格式二进制文件中的本地指令。如果 java 代码由解释器执行，或使用 jit 缓存，则它不能由 simpleperf 剖析。由于 Android 支持 ahead-of-time compilation，它可以将 java 字节码编译为包含调试信息的本地层指令。在 Android 版本 <= M 的设备上，我们需要 root 权限来编译包含调试信息的 java 字节码。然而，在 Android 版本 >= N 的设备上，我们无需 root 权限就可以做这些。
+Simpleperf 只支持剖析 ELF 格式二进制文件中的本地指令。如果 java 代码由解释器执行，或使用 jit 缓存，则它不能由 simpleperf 剖析。由于 Android 支持提前编译，它可以将 java 字节码编译为包含调试信息的本地层指令。在 Android 版本 <= M 的设备上，我们需要 root 权限来编译包含调试信息的 java 字节码。然而，在 Android 版本 >= N 的设备上，我们无需 root 权限就可以做这些。
 
 
 ## 在Android N上
