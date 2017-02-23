@@ -14,11 +14,8 @@ title: 关于我
 * ** 豆瓣书单：** https://book.douban.com/people/3681478/
 * **GitHub：** https://github.com/hanpfei
 
-
-{:.center}
 ### 微信打赏
 ![](https://www.wolfcstech.com/images/wxpay.png)
 
-{:.center}
 ### 支付宝打赏
 ![](https://www.wolfcstech.com/images/alipay.jpg) 
