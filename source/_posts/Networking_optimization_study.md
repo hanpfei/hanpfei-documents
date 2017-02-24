@@ -24,3 +24,5 @@ tags:
 [微信 Mars](https://github.com/Tencent/mars/wiki)
 
 [Webkit 远程调试协议初探](http://taobaofed.org/blog/2015/11/20/webkit-remote-debug-test/)
+
+[基于TLS1.3的微信安全通信协议mmtls介绍](https://mp.weixin.qq.com/s?__biz=MzAwNDY1ODY2OQ==&mid=2649286266&idx=1&sn=f5d049033e251cccc22e163532355ddf&mpshare=1&scene=1&srcid=01036d3uXgfesl07utb04Hko&pass_ticket=81sKOxJ6az7s%2Bt9iX%2BimmP9aQMHGKJBFGy9jouP6LK%2FoKPoA34mrlGBUph5RD7LR#rd)

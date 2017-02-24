@@ -1,6 +1,6 @@
 # 关于我
 
-我是韩鹏飞，目前就职于杭州网易，从事 Android 软件开发。推崇 Unix 的 KISS 哲学，喜欢Linux。曾玩过嵌入式系统和 Linux 内核，关注物联网IoT的发展应用。工作原因入了 Android 开发的坑。做过 Android framework 开发维护，Android 应用开发，Android P2P视频直播系统，以及Python后台开发等。Python 爱好者，对 Python Web开发感兴趣，目前主要用 Python 来写写小工具；C/C++ 爱好者；Java 爱好者；对网络安全信息安全充满兴趣。各种技术上的新鲜玩意儿爱好者。对数据统计分析及AI感兴趣，特别是其在移动平台上的应用。
+我是韩鹏飞，目前就职于杭州网易，从事 Android 软件开发。推崇 Unix 的 KISS 哲学，喜欢 Linux 以及开源文化。曾玩过嵌入式系统和 Linux 内核，关注物联网IoT的发展应用。工作原因入了 Android 开发的坑。做过 Android framework 开发维护，Android 应用开发，Android P2P视频直播系统，以及Python后台开发等。Python 爱好者，对 Python Web开发感兴趣，目前主要用 Python 来写写小工具；C/C++ 爱好者；Java 爱好者；对网络安全信息安全充满兴趣。各种技术上的新鲜玩意儿爱好者。对数据统计分析及AI感兴趣，特别是其在移动平台上的应用。
 
 # 关于这个博客
 
@@ -14,10 +14,10 @@
 * ** 豆瓣书单：** https://book.douban.com/people/3681478/
 * **GitHub：** https://github.com/hanpfei
 
-# 欢迎慷慨的朋友积极打赏
+# 欢迎朋友们多多打赏[:微笑+感谢脸]
 
-### 微信打赏
+### 微信
 ![](https://www.wolfcstech.com/images/wxpay.png)
 
-### 支付宝打赏
+### 支付宝
 ![](https://www.wolfcstech.com/images/alipay.jpg) 
