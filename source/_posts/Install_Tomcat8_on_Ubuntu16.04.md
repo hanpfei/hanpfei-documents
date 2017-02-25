@@ -1,20 +1,20 @@
 ---
-title: IntelliJ J2EE Tomcat Spring开发环境搭建
+title: Ubuntu 16.04 Tomcat 8安装指南
 date: 2017-02-24 22:05:49
-categories: 后台开发
+categories: Java开发
 tags:
 - 后台开发
+- Java开发
 ---
 
-# Tomcat安装
-## 介绍
+# 介绍
 Apache Tomcat 是一个 Web 服务器及 Servlet 容器，它可被用于提供 Java 应用服务。Tomcat 是 Java Servlet 和 JSP (JavaServer Pages) 技术的一个开源实现，由 Apache 软件基金会发布。这份指南描述在 Ubuntu 16.04 主机上，发行版 Tomcat 8 的基本安装和一些配置。
 <!--more-->
-## 预备条件
+# 预备条件
 
 在开始后面的操作之前，在你的主机上应该有一个具有 sudo 权限的非 root 用户。
 
-## 第一步：安装Java
+# 第一步：安装Java
 
 要安装 Tomcat，需要先在服务器上安装 Java，以使 Java Web 应用代码可以执行。我们可以通过 apt-get 来安装 OpenJDK，以满足这一点。
 
@@ -29,7 +29,7 @@ $ sudo apt-get install default-jdk
 ```
 现在Java已经安装好了。我们创建一个 **tomcat** 用户，用于运行 Tomcat 服务。
 
-## 第二步：创建 **tomcat** 用户
+# 第二步：创建 **tomcat** 用户
 
 出于安全考虑，Tomcat 应该以非特权用户 (比如，非 root ) 运行。我们将创建一个新的用户和组来运行 Tomcat 服务。
 
@@ -44,10 +44,10 @@ $ sudo useradd -s /bin/false -g tomcat -d /opt/tomcat tomcat
 ```
 现在我们的 **tomcat** 用户就设置好了，让我们下载并安装Tomcat。
 
-## 第三步：安装Tomcat
+# 第三步：安装Tomcat
 安装 Tomcat 8 的最好方式是下载最新版的二进制发行包，然后手动配置它。
 
-可以在 [Tomcat 8下载页面](http://tomcat.apache.org/download-80.cgi) 找到Tomcat 8的最新版。当前的最新版是 **8.5.11**，但应该使用一个较新的稳定版。在 **Binary Distributions** 下，然后是 **Core** 下的列表，复制 **"tar.gz"** 的链接。
+可以在 [Tomcat 8下载页面](http://tomcat.apache.org/download-80.cgi) 找到Tomcat 8的最新版。当前 Tomcat 8 的最新版是 **8.5.11**，但应该使用一个较新的稳定版。在 **Binary Distributions** 下，然后是 **Core** 下的列表，可以找到它的 **"tar.gz"** 的链接。然而直接使用最新的版本，有一个不好的地方就是，与许多 IDE 的配合还不够好， IntelliJ 2016.3 可能识别不出来太新的版本，比如 8.5.x 的版本就无法识别。因而我们从这个 [位置](http://archive.apache.org/dist/tomcat/tomcat-8/) 找以版本点进去，进入 `/bin`，然后找到 `.tar.gz` 包，并复制链接。
 
 接下来，切换到你的服务器的 /tmp 目录下。这是下载临时文件的好地方，比如 Tomcat tarball，在我们解压 Tomcat 之后它就没用了：
 ```
@@ -57,7 +57,7 @@ $ cd /tmp
 ```
 $ curl -O http://archive.apache.org/dist/tomcat/tomcat-8/v8.0.32/bin/apache-tomcat-8.0.32.tar.gz
 ```
-注意，下载的 Tomcat 版本不能太新，否则 IntelliJ 可能识别不出来，比如 8.5.x 的版本就无法识别。
+这里我们选择安装 `Tomcat 8.0.32` 这一版。
 
 我们把 Tomcat 安装到 /opt/tomcat 文件夹下。创建文件夹，然后用如下这些命令将归档提取到它下面：
 ```
@@ -66,7 +66,7 @@ $ sudo tar xzvf apache-tomcat-8*tar.gz -C /opt/tomcat --strip-components=1
 ```
 接下来为我们的安装设置适当的用户权限。
 
-## 第四步：更新权限
+# 第四步：更新权限
 我们创建的 **tomcat** 用户需要有访问 Tomcat 安装的权限。现在我们将设置它。
 
 切换到我们解压 Tomcat 安装的目录下：
@@ -90,9 +90,85 @@ $ sudo chown -R tomcat webapps/ work/ temp/ logs/
 ```
 现在适当的权限已经设置好了。我们可sudo update-java-alternatives -l以创建一个 systemd 服务文件来管理 Tomcat 进程。
 
-上面的第二、三和四步，写一个 shell 脚本来执行更方便。我写了一个，放在 [GitHub](https://github.com/hanpfei/wolfcs-tools/blob/master/TomcatInstaller.sh)上，有兴趣的朋友可以拿下来用。
+上面的第二、三和四步，其实不用手动的一个个执行命令那么麻烦，写个 shell 脚本来执行更方便，如下面这样：
+```
+#!/bin/bash
 
-## 第五步：创建一个systemd服务文件
+## Step Two.
+
+groupId=`id -g "tomcat"`
+
+if [ $groupId -ne 0 ]; then
+  echo "Group exists"
+else
+  groupadd tomcat
+fi 
+
+userId=`id -u "tomcat"`
+
+if [ $userId -ne 0 ]; then
+  echo "User exists"
+else
+  useradd -s /bin/false -g tomcat -d /opt/tomcat tomcat
+fi
+
+## Step Three.
+
+cd /tmp
+
+url=http://archive.apache.org/dist/tomcat/tomcat-8/v8.0.32/bin/apache-tomcat-8.0.32.tar.gz
+filename=`basename $url`
+
+# echo "filename "
+# echo $filename
+
+if [ ! -f $filename ]; then 
+  curl -O $url
+else
+  echo "$filename File exists"
+fi
+
+if [ $? -ne 0 ]; then
+  echo "Download failed!!!"
+  exit 1
+fi
+
+if [ -d "/opt/tomcat" ]; then
+  mv /opt/tomcat /opt/tomcat_bak
+fi
+
+mkdir /opt/tomcat
+
+if [ $? -ne 0 ]; then
+  echo "mkdir /opt/tomcat failed!!!"
+  exit 1
+fi
+
+tar xzf apache-tomcat-8*tar.gz -C /opt/tomcat --strip-components=1
+
+if [ $? -ne 0 ]; then
+  echo "mkdir /opt/tomcat failed!!!"
+  exit 1
+fi
+
+## Step Four.
+
+cd /opt/tomcat
+
+chown -R tomcat:tomcat .
+
+chgrp -R tomcat /opt/tomcat
+
+chmod -R g+r conf
+
+sudo chmod g+x conf
+
+chown -R tomcat webapps/ work/ temp/ logs/
+
+```
+只需要配置 Apache Tomcat 的下载地址，其它的一切，脚本都会帮忙搞定。相关的代码已经放在了我的 [GitHub repo](https://github.com/hanpfei/wolfcs-tools/blob/master/TomcatInstaller.sh) 里了，有兴趣的朋友可以拿下来用。
+
+# 第五步：创建一个systemd服务文件
 我们想要能够以一个服务来运行 Tomcat，因而我们将建立 systemd 服务文件。
 
 Tomcat 需要知道Java安装在哪里。这个路径通常称为 **"JAVA_HOME"**。查看那个位置最简单的方法是通过执行这个命令：
@@ -297,38 +373,6 @@ Web应用管理用于管理你的 Java 应用。你可以在这里启动，停�
 ![](https://www.wolfcstech.com/images/1315506-e46708796c8a7d70.png)
 
 这样 Tomcat 就安装好了。
-
-# 安装 IntelliJ
-在 JetBrains [官网](https://www.jetbrains.com/idea/#chooseYourEdition) 下载最新版本的 IntelliJ IDEA，如下图：
-
-![](https://www.wolfcstech.com/images/1315506-29ef48bfe568d938.png)
-
-需要注意的是，社区版不支持 Java EE，因而***下载 Ultimate 版***。下载之后，将压缩包移至任何适当的地方并解压缩：
-```
-$ tar xvf ideaIU-2016.3.4.tar.gz
-$ ln -s idea-IU-163.12024.16/ idea-IU
-```
-
-接着通过修改 `~/.bashrc`，加入如下的行将 `idea-IU/bin` 目录添加到PATH环境变量：
-```
-export PATH=~/bin:$PATH:/media/data/dev_tools/idea-IU/bin
-```
-更新环境变量：
-```
-$ source ~/.bashrc
-```
-
-## 新建一个 Application Server，
-
-![](https://www.wolfcstech.com/images/new.png)
-
-## Run/Debug 配置
-
-Run -> Edit Configurations -> ![](https://www.jetbrains.com/help/img/idea/2016.3/new.png) -> Tomcat Server -> Local or Remote"
-
-![](https://www.wolfcstech.com/images/1315506-187cfa09acfa8762.png)
-
-
 
 # 参考文档
 
