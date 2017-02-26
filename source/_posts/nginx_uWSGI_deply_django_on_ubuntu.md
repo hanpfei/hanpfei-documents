@@ -16,9 +16,7 @@ $ nginx
 $ nginx -s stop
 $ nginx -s reload
 ```
-
 <!--more-->
-
 # 2. uWSGI安装
 用python的pip安装最简单：
 ```
