@@ -13,11 +13,3 @@
 * **Email：** hanpfei@gmail.com
 * ** 豆瓣书单：** https://book.douban.com/people/3681478/
 * **GitHub：** https://github.com/hanpfei
-
-# 欢迎朋友们多多打赏[:微笑+感谢脸]
-
-### 微信
-![](https://www.wolfcstech.com/images/wxpay.png)
-
-### 支付宝
-![](https://www.wolfcstech.com/images/alipay.jpg) 
