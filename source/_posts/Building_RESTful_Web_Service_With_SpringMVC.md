@@ -300,7 +300,7 @@ Using CLASSPATH:       /opt/tomcat/bin/bootstrap.jar:/opt/tomcat/bin/tomcat-juli
 
 部署终于成功了。（通过菜单栏打开 File -> Project Structure... （或使用 Ctrl + Alt + Shift + S ）工程配置对话框，选中左边的 `Libraries`，重新配置之前我们导入的 Jar 包，将仍然可以 通过前面配置的 `Spring Boot` 运行配置运行我们的 Web 应用，否则将由于符号找不到而运行失败。）
 
-而当我们通过，却发现返回了 404：
+而当我们通过 `http://localhost:8080/greeting?name=hanpfei` 访问我们的 Web 服务，却发现返回了 404：
 ![](https://www.wolfcstech.com/images/1315506-8976b85acb1493d7.png)
 
 # 配置 web.xml
