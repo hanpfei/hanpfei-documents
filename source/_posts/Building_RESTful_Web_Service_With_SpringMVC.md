@@ -638,3 +638,9 @@ Web应用的配置文件都被放入了 `HelloHanpfeiSpring/src/main/` 下面，
 [使用IntelliJ IDEA开发SpringMVC网站（一）开发环境](https://my.oschina.net/gaussik/blog/385697)
 
 [使用IntelliJ IDEA开发SpringMVC网站（二）框架配置](https://my.oschina.net/gaussik/blog/513353)
+
+[关于SPRING”通配符的匹配很全面, 但无法找到元素 'CONTEXT:COMPONENT-SCAN' 的声明“的错误](http://www.cnblogs.com/zhaoxinshanwei/p/5948344.html)
+
+[解决springmvc报No converter found for return value of type](http://www.cnblogs.com/hafiz/p/5812873.html)
+
+[关于spring”通配符的匹配很全面, 但无法找到元素 'context:component-scan' 的声明“的错误](http://blog.csdn.net/eacter/article/details/44624505)
