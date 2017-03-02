@@ -118,6 +118,8 @@ JVM:          1.8.0_121 (Oracle Corporation 25.121-b13)
 OS:           Linux 4.4.0-62-generic amd64
 ```
 
+### [打赏](https://www.wolfcstech.com/about/donate.html)
+
 # 参考文档
 [Ubuntu之安装Gradle](http://blog.csdn.net/stwstw0123/article/details/47809189)
 

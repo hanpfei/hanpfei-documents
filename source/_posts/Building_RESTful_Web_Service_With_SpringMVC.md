@@ -630,7 +630,7 @@ Web应用的配置文件都被放入了 `HelloHanpfeiSpring/src/main/` 下面，
 
 通过一个非常简单的 RESTful Web服务的构建，来了解在 IntelliJ + Tomcat + Maven + SpringMVC 环境下，开发 Web 服务的过程，至此结束。
 
-#### [打赏](https://www.wolfcstech.com/about/donate.html)
+### [打赏](https://www.wolfcstech.com/about/donate.html)
 
 # 参考文档：
 [Building a RESTful Web Service](http://spring.io/guides/gs/rest-service/#initial)
