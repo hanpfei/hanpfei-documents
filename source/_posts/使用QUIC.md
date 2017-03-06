@@ -141,7 +141,115 @@ chromium-browser \
   --host-resolver-rules='MAP www.example.org:443 127.0.0.1:32457' \
   https://www.example.org
 ```
+
 # 使用Chromium net访问QUIC资源
+我们不仅可以通过 Chrome 浏览器访问 QUIC 服务，还可以通过 Chromium net来访问。Chromium 有一个名为 cronet 的子项目，是一个 Chromium net 在移动端的封装，它提供了非常方便的接口，以便于将 Chromium net 用在移动平台，cronet 具体的移植过程，可以参考 [懒人chromium net android移植指南](https://www.wolfcstech.com/2016/11/11/lazy-chromium-net-android-porting-guide/) 一文。
+
+在将 Chromium net 移植到 Android 之后，我们可以通过如下的方式在手机上访问QUIC 服务：
+```
+package com.netease.netlib;
+
+import android.content.Context;
+
+import org.chromium.net.CronetEngine;
+import org.chromium.net.UploadDataProviders;
+import org.chromium.net.UrlRequest;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
+public class CronetUtils {
+    private static final String TAG = "CronetUtils";
+
+    private static CronetUtils sInstance;
+
+    private CronetEngine mCronetEngine;
+    private Executor mExecutor = Executors.newCachedThreadPool();
+
+    private CronetUtilsBak() {
+    }
+
+    public static synchronized CronetUtilsBak getsInstance() {
+        if (sInstance == null) {
+            sInstance = new CronetUtilsBak();
+        }
+        return sInstance;
+    }
+
+    public synchronized void init(Context context) {
+        if (mCronetEngine == null) {
+            CronetEngine.Builder builder = new CronetEngine.Builder(context);
+            builder.enableHttpCache(CronetEngine.Builder.HTTP_CACHE_IN_MEMORY,
+                            100 * 1024)
+                    .enableHttp2(true)
+                    .enableQuic(true)
+                    .enableSDCH(true)
+                    .setLibraryName("cronet")
+                    .addQuicHint("www.example.org", 32457, 32457)
+                    .addQuicHint("www.wolfcstech.com", 443, 6121)
+                    .addQuicHint("www.wolfcstech.cn", 443, 6121)
+                    .addQuicHint("www.wolfcstech.com", 6121, 6121)
+                    .addQuicHint("www.wolfcstech.cn", 6121, 6121);
+
+            JSONObject experimentalOptions = null;
+            try {
+                JSONObject quicParams = new JSONObject()
+                        .put("connection_options", "PACE,IW10,FOO,DEADBEEF")
+                        .put("host_whitelist", "www.example.org")
+                        .put("max_server_configs_stored_in_properties", 2)
+                        .put("delay_tcp_race", true)
+                        .put("max_number_of_lossy_connections", 10)
+                        .put("packet_loss_threshold", 0.5)
+                        .put("idle_connection_timeout_seconds", 300)
+                        .put("close_sessions_on_ip_change", false)
+                        .put("migrate_sessions_on_network_change", false)
+                        .put("migrate_sessions_early", false)
+                        .put("race_cert_verification", true);
+                experimentalOptions = new JSONObject().put("QUIC", quicParams);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            builder.setExperimentalOptions(experimentalOptions.toString());
+
+            mCronetEngine = builder.build();
+        }
+    }
+
+    public void getHtml(String url, UrlRequest.Callback callback) {
+        startWithURL(url, callback);
+    }
+
+
+    private void startWithURL(String url, UrlRequest.Callback callback) {
+        startWithURL(url, callback, null);
+    }
+
+    private void startWithURL(String url, UrlRequest.Callback callback, String postData) {
+        UrlRequest.Builder builder = new UrlRequest.Builder(url, callback, mExecutor, mCronetEngine);
+        applyPostDataToUrlRequestBuilder(builder, mExecutor, postData);
+        builder.build().start();
+    }
+
+    private void applyPostDataToUrlRequestBuilder(
+            UrlRequest.Builder builder, Executor executor, String postData) {
+        if (postData != null && postData.length() > 0) {
+            builder.setHttpMethod("POST");
+            builder.addHeader("Content-Type", "application/x-www-form-urlencoded");
+            builder.setUploadDataProvider(
+                    UploadDataProviders.create(postData.getBytes()), executor);
+        }
+    }
+}
+```
+基本的过程与常规的通过 Cronet 发起 ***HTTPS*** 请求类似：
+1. 创建 `CronetEngine` 对象。
+2. 实现 `UrlRequest.Callback` 回调，以接收请求结果。
+3. 发起请求。
+
+在访问 QUIC 服务时，仅有的差别在于，创建 `CronetEngine` 对象时，要注意启用 `QUIC` ，同时要调用 `addQuicHint()`，添加一些 `QuicHint`。`QuicHint` 作用于 Chromium net 的 Alternative-Service 实现，使得 Chromium net 在请求服务时，会尝试用QUIC 协议去做。
 
 # 故障排查
 
