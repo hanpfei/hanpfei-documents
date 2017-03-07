@@ -1,6 +1,15 @@
+---
+title: Apache HBase 入门
+date: 2017-03-07 11:05:49
+categories: Java开发
+tags:
+- 后台开发
+- Java开发
+---
+
 # 介绍
 [Quickstart](http://hbase.apache.org/book.html#quickstart) 将使您运行一个单节点，独立的 HBase 实例。
-
+ <!--more-->
 # 快速开始 —— 独立的 HBase
 这一节描述了单节点独立 HBase 的设置。***独立的*** 实例具有所有的 HBase 守护进程 —— Master，RegionServers，和 ZooKeeper —— 运行于一个单独的JVM 持久化到本地文件系统。它是我们的大多数基本部署配置文件。我们将向你展示如何使用 `hbase shell` CLI 在 HBase 中创建一个表，向表中插入行，对表执行 put 和 scan 操作，启用或禁用表，以及启动和停止 HBase。
 
@@ -296,27 +305,25 @@ $ cat id_rsa.pub >> ~/.ssh/authorized_keys
 ```
 
 4. 测试无密码登录。
+如果你正确地执行了过程，如果你从 `node-a` SSH 到其它的节点，使用相同的用户名，那么你应该不会再看到输入密码的提示符了。
 
-If you performed the procedure correctly, if you SSH from `node-a` to either of the other nodes, using the same username, you should not be prompted for a password.
-
-5. Since `node-b` will run a backup Master, repeat the procedure above, substituting `node-b` everywhere you see `node-a`. Be sure not to overwrite your existing *.ssh/authorized_keys* files, but concatenate the new key onto the existing file using the *>>* operator rather than the *>* operator.
+5. 由于 `node-b` 将运行一个备份 Master，重复上面的过程，将你看到的`node-a`的地方替换为 `node-b`。确保不要重写了已有的*.ssh/authorized_keys* 文件，使用 *>>* 操作符将新的密钥附接在已有文件，而不是 *>* 操作符。
 
 ## 过程：准备 `node-a`
-`node-a` will run your primary master and ZooKeeper processes, but no RegionServers. . Stop the RegionServer from starting on `node-a`.
+`node-a` 将运行你的主 master 和 ZooKeeper 进程，但没有 RegionServers。停止在 `node-a` 上启动 RegionServer。
 
-1. Edit *conf/regionservers* and remove the line which contains `localhost`. Add lines with the hostnames or IP addresses for `node-b` and `node-c`.
+1. 编辑 *conf/regionservers* 并移除包含 `localhost` 的行。添加包含 `node-b` 和 `node-c` 的主机名和 IP 地址的行。
 
-Even if you did want to run a RegionServer on `node-a`, you should refer to it by the hostname the other servers would use to communicate with it. In this case, that would be `node-a.example.com`. This enables you to distribute the configuration to each node of your cluster any hostname conflicts. Save the file.
+即使你不想在`node-a`上运行 RegionServer，你应该通过其它服务器将用以与它通信的主机名引用它。在这个例子中，那将是 `node-a.example.com`。这使您能够将配置分发到集群的每个节点，任何主机名冲突。保存文件。
 
-2. Configure HBase to use `node-b` as a backup master.
+2. 配置 HBase 使用 `node-b` 作为备份 master。
 
-Create a new file in *conf/* called *backup-masters*, and add a new line to it with the hostname for `node-b`. In this demonstration, the hostname is `node-b.example.com`.
+创建一个新的文件 *conf/* called *backup-masters*，添加新的包含`node-b`的主机名的行。在这个示例中，主机名是 `node-b.example.com`。
 
-3. Configure ZooKeeper
+3. 配置 ZooKeeper
+事实上，你应该小心地考虑你的 ZooKeeper 配置。你可以在 zookeeper 中找到更多关于配置 ZooKeeper 的东西。这个配置将指导 HBase 在集群的每个节点上启动并管理一个 ZooKeeper 实例。
 
-In reality, you should carefully consider your ZooKeeper configuration. You can find out more about configuring ZooKeeper in zookeeper. This configuration will direct HBase to start and manage a ZooKeeper instance on each node of the cluster.
-
-On node-a, edit *conf/hbase-site.xml* and add the following properties.
+在 `node-a` 上，编辑 *conf/hbase-site.xml* 并添加如下的属性。
 ```
 <property>
   <name>hbase.zookeeper.quorum</name>
@@ -328,28 +335,28 @@ On node-a, edit *conf/hbase-site.xml* and add the following properties.
 </property>
 ```
 
-4. Everywhere in your configuration that you have referred to `node-a` as `localhost`, change the reference to point to the hostname that the other nodes will use to refer to `node-a`. In these examples, the hostname is `node-a.example.com`.
+4. 你的配置中其它用 `localhost` 引用`node-a` 的地方，修改引用指向其它节点将用以引用 `node-a`的主机名。在这些例子中，主机名是 `node-a.example.com`。
 
 ## 过程：准备 `node-b` 和 `node-c`
 
-`node-b` will run a backup master server and a ZooKeeper instance.
+`node-b` 将运行一个备份 master 服务器和一个 ZooKeeper 实例。
 
-1. Download and unpack HBase.
+1. 下载并解压缩 HBase。
 
-Download and unpack HBase to `node-b`, just as you did for the standalone and pseudo-distributed quickstarts.
+下载并解压缩 HBase 到 `node-b`，就像你在 独立和伪分布式快速开始中做的那样。
 
-Copy the configuration files from `node-a` to `node-b` and `node-c`.
+2. 将配置文件从`node-a`复制到 `node-b` 和 `node-c`。
 
-Each node of your cluster needs to have the same configuration information. Copy the contents of the conf/ directory to the *conf/* directory on `node-b` and `node-c`.
+你的集群的每个节点需要具有相同的配置信息。复制 *conf/* 目录的内容到  `node-b` 和 `node-c`上的 *conf/*  目录。
 
 ## 过程：启动并测试你的集群
-1. Be sure HBase is not running on any node.
+1. 确保 HBase 没有在任何节点上运行。
 
-If you forgot to stop HBase from previous testing, you will have errors. Check to see whether HBase is running on any of your nodes by using the jps command. Look for the processes HMaster, HRegionServer, and HQuorumPeer. If they exist, kill them.
+如果你忘了在前面的测试中停止 HBase，你将遇到错误。使用 `jps` 命令检查 HBase 是否在你的任何节点上运行。查找进程 HMaster，HRegionServer，和 HQuorumPeer。如果它们存在则杀掉它们。
 
-2. Start the cluster.
+2. 启动集群。
 
-On node-a, issue the start-hbase.sh command. Your output will be similar to that below.
+在 `node-a` 上，发出 `start-hbase.sh` 命令。你的输出将类似下面这样。
 ```
 $ bin/start-hbase.sh
 node-c.example.com: starting zookeeper, logging to /home/hbuser/hbase-0.98.3-hadoop2/bin/../logs/hbase-hbuser-zookeeper-node-c.example.com.out
@@ -361,13 +368,12 @@ node-b.example.com: starting regionserver, logging to /home/hbuser/hbase-0.98.3-
 node-b.example.com: starting master, logging to /home/hbuser/hbase-0.98.3-hadoop2/bin/../logs/hbase-hbuser-master-nodeb.example.com.out
 ```
 
-ZooKeeper starts first, followed by the master, then the RegionServers, and finally the backup masters.
+ZooKeeper 先启动，然后是 master，接着是 RegionServers，最后是备份 masters。
 
-3. Verify that the processes are running.
+3. 验证进程正在运行。
+在集群的每个节点上，运行 `jps` 命令并验证正确的进程正在每个服务器上运行。你也可能看到其它的 Java 进程正在你的服务器上运行，如果它们用于其它目的。
 
-On each node of the cluster, run the jps command and verify that the correct processes are running on each server. You may see additional Java processes running on your servers as well, if they are used for other purposes.
-
-Example 2. node-a jps Output
+***实例 2. `node-a` `jps` 输出***
 ```
 $ jps
 20355 Jps
@@ -375,7 +381,7 @@ $ jps
 20137 HMaster
 ```
 
-Example 3. node-b jps Output
+***实例 3. `node-b` `jps` 输出***
 ```
 $ jps
 15930 HRegionServer
@@ -384,7 +390,7 @@ $ jps
 16010 HMaster
 ```
 
-Example 4. node-a jps Output
+***实例 4. `node-a` `jps` 输出***
 ```
 $ jps
 13901 Jps
@@ -392,20 +398,22 @@ $ jps
 13737 HRegionServer
 ```
 
-ZooKeeper Process Name
-The HQuorumPeer process is a ZooKeeper instance which is controlled and started by HBase. If you use ZooKeeper this way, it is limited to one instance per cluster node, , and is appropriate for testing only. If ZooKeeper is run outside of HBase, the process is called QuorumPeer. For more about ZooKeeper configuration, including using an external ZooKeeper instance with HBase, see zookeeper.
+***ZooKeeper 进程名***
+`HQuorumPeer` 进程是由 HBase 控制及启动的 ZooKeeper 实例。如果你以这种方式使用 ZooKeeper，则每个集群节点限制只有一个实例，且只有测试时才合适。如果 ZooKeeper 不在 HBase 下运行，则进程名称为`HQuorumPeer` 。更多关于 ZooKeeper 配置的内容，包括在 HBase 下使用一个外部的 ZooKeeper 实例，请参考 [zookeeper](http://hbase.apache.org/book.html#zookeeper)。
 
-4. Browse to the Web UI.
+4. 浏览 Web UI。
 
-Web UI Port Changes
-Web UI Port Changes
+**Web UI 端口改变**
+Web UI 端口改变
 
-In HBase newer than 0.98.x, the HTTP ports used by the HBase Web UI changed from 60010 for the Master and 60030 for each RegionServer to 16010 for the Master and 16030 for the RegionServer.
+在版本新于 0.98.x 的 HBase 中，HBase Web UI 使用的 HTTP 端口从 Master 采用60010，每个 RegionServer 采用 60030 变为了 Master 采用 16010 且 RegionServer 采用 16030。
 
-If everything is set up correctly, you should be able to connect to the UI for the Master http://node-a.example.com:16010/ or the secondary master at http://node-b.example.com:16010/ for the secondary master, using a web browser. If you can connect via localhost but not from another host, check your firewall rules. You can see the web UI for each of the RegionServers at port 16030 of their IP addresses, or by clicking their links in the web UI for the Master.
+如果所有的东西都设置正确，你应该能够连接到 Master 的 UI http://node-a.example.com:16010/ 或从 master 的 http://node-b.example.com:16010/，使用浏览器。如果你能够通过 `localhost` 连接，但无法通过其它主机名，则检查你的防火墙规则。你可以在它们的 IP 地址的端口上 16030 看到每个 RegionServers 的 web UI，或点击 Master 的 web UI 中它们的链接。
 
-5. Test what happens when nodes or services disappear.
+5. 当节点或服务消失时测试发生了什么。
 
-With a three-node cluster like you have configured, things will not be very resilient. Still, you can test what happens when the primary Master or a RegionServer disappears, by killing the processes and watching the logs.
+具有三个节点的集群，就像你配置的那样，不是非常有弹性的。当主 Master 或 RegionServer 消失时，你依然可以通过杀掉进程或看 logs，测试发生了什么。
+
+### [打赏](https://www.wolfcstech.com/about/donate.html)
 
 [原文](http://hbase.apache.org/book.html#getting_started)
