@@ -556,3 +556,7 @@ The handshake is responsible for negotiating a variety of transport parameters f
 * SFCW - Stream Flow Control Window. The size in bytes of the stream level flow control window.
 
 * CFCW - Connection Flow Control Window. The size in bytes of the connection level flow control window.**
+
+### [打赏](https://www.wolfcstech.com/about/donate.html)
+
+[原文](https://docs.google.com/document/d/1WJvyZflAO2pq77yOLbp9NsGjC1CHetAXV8I0fQe-B_U/edit)

@@ -1,6 +1,16 @@
+---
+title: QUIC加密协议
+date: 2017-03-09 18:35:49
+categories: 网络协议
+tags:
+- 网络协议
+- QUIC
+- 翻译
+---
+
 # 摘要
 QUIC加密协议是QUIC的一部分，它为连接提供了传输安全性。QUIC加密协议是 *注定要消亡*的。未来它将由TLS 1.3替代，但在TLS 1.3 最终启用之前QUIC需要一个加密协议。
-
+<!--more-->
 借助于当前的QUIC加密协议，当客户端已经缓存了关于服务器的信息时，它可以无需往返就建立一个加密的连接。TLS，相反地，至少需要两次往返（算上TCP的3次握手）。QUIC握手应该比普通的TLS 握手（2048-bit RSA）高效大约5倍，而且安全等级更高。
 
 # 源地址欺骗
@@ -236,10 +246,11 @@ struct {
 
 ```
 
+# 未来方向
+ChannelID 非常有可能被从协议层移除，
 
 
 
-
-
+### [打赏](https://www.wolfcstech.com/about/donate.html)
 
 [原文](https://docs.google.com/document/d/1g5nIXAIkN_Y-7XJW5K45IblHd_L2f5LTaDUDwvZ5L6g/edit#)
