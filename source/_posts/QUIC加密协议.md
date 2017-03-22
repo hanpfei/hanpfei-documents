@@ -212,15 +212,41 @@ S20P | Salsa20 with Poly1305。(暂时还没有实施。)
 3. 客户端写 IV。
 4. 服务器写 IV。
 
+如果任何原语需要少于密钥材料的整个字节数，则丢弃最后一个字节的剩余部分。
 
+当推导前向安全密钥时，使用相同的输入，除了info使用标签“QUIC前向安全密钥扩展 (QUIC forward secure key expansion)”。
 
+当推导服务器的初始密钥时，它们必须是多样化的，以确保服务器能够向HKDF提供熵。
 
+**第 1 步：HKDF 提取**
 
+服务器写密钥加上来自找到的轮的服务器写IV的级联是用于 HKDF-Extract 函数的输入密钥材料（IKM）。盐输入是多样化随机数。HKDF-Extract 输出一个伪随机密钥（PRK），它是多样化密钥。如果使用 SHA-256 的话，多样化密钥是 32 字节长的。
 
+**第 2 步：HKDF 扩展**
+PRK 输入是多样化密钥。info 输入（上下文和应用特有信息）是标签"QUIC 密钥多样化 (QUIC key diversification)"。
+
+密钥材料按以下顺序分配：
+
+ 1. 服务器写密钥。
+ 2. 服务器写 IV。
 
 # 客户端加密的标签值
+client hello 可能包含一个 CETV 标签，以描述客户端证书，ChannelIDs 和 client hello 中的其它非公有数据。（那与 TLS 相反，它以明文发送客户端证书。）
+
+CETV 消息以 client hello 中的 AEAD 序列化和加密。密钥是以与连接的密钥相同的方式推导的（参考上面的 密钥推导），除了 info 使用标签“QUIC CETV 块（QUIC CETV block）”。推导中所用的 client hello 消息是无 CETV 标记的 client hello。当随后推导连接密钥时，所使用的 client hello 将包含 CETV 标记。
+
+AEAD 随机数总是 0，它是安全的，这是因为只有一个消息曾以该密钥加密。
+
+通过对 CETV 密钥推导中所使用的 HKDF *info* 输入签名，来完成对客户端证书和 ChannelID 两者所需的私钥的拥有。
+
+CETV 消息可以包含如下的标签：
+
+CIDK ChannelID 密钥（ChannelID key）（可选的）：一个 32字节对，大尾端数字，一起描述一个 (x, y) 对。这是 P-256 曲线上的一个点和一个 ECDSA 公钥。
+
+CIDS ChannelID 签名（ChannelID signature）（可选的）：一个 32字节对，大尾端数字，一起描述一个 HKDF 输入的 ECDSA 签名的 (r, s) 对。
 
 # 证书压缩
+在 TLS 中，证书链是无压缩传输的，并占用了完整握手中的绝大多数字节。在 QUIC 中，我们希望能够通过压缩证书来避免一些往返。
 
 ```
 enum { end_of_list(0), compressed(1), cached(2), common(3) } EntryType;
