@@ -206,7 +206,7 @@ try {
 注意，通常为 scan 指定特定的停止点的最简单的方式是使用 [InclusiveStopFilter](http://hbase.apache.org/apidocs/org/apache/hadoop/hbase/filter/InclusiveStopFilter.html) 类。
 
 ### Delete
-[Delete](http://hbase.apache.org/apidocs/org/apache/hadoop/hbase/client/Delete.html) 从表中移除一行。删除通过 []()
+[Delete](http://hbase.apache.org/apidocs/org/apache/hadoop/hbase/client/Delete.html) 从表中移除一行。删除通过 [Table.delete](http://hbase.apache.org/apidocs/org/apache/hadoop/hbase/client/Table.html#delete(org.apache.hadoop.hbase.client.Delete)) 执行。
 
 ## 版本
 
