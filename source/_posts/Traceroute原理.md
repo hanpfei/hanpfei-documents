@@ -159,6 +159,17 @@ traceroute to www.qq.com (182.254.34.74), 30 hops max, 60 byte packets
 
 如图中的第 87 ～ 93 号包。
 
+总结一下，traceroute 主要利用 IP 数据包的 TTL 字段值 + ICMP 来实现，它发送的用于探测网络路径的数据包的 IP 之上的协议可以是 UDP、TCP或ICMP。不同模式下，探测过程中设计的数据包如下：
+
+UDP 模式
+UDP 探测数据包（目标端口大于 30000） + 中间网关发回 ICMP TTL 超时数据包 + 目标主机发回 ICMP Destination Unreachable 数据包
+
+TCP 模式
+TCP [SYN] 探测数据包（目标端口为 Web 服务的 80） + 中间网关发回 ICMP TTL 超时数据包 + 目标主机发回 TCP [SYN ACK] 数据包
+
+ICMP 模式
+ICMP Echo (ping) Request 探测数据包 +  中间网关发回 ICMP TTL 超时数据包 + 目标主机发回 ICMP Echo (ping) reply 数据包
+
 # 参考文档
 [使用tracert命令时，在一个节点后所有的节点都没有数据，这是为什么？](https://www.zhihu.com/question/50220087)
 [联通的网络， traceroute 显示全是星号， tracert 什么都不显示，怎样才能跟踪路由？](https://www.v2ex.com/t/327276)
