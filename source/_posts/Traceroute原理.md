@@ -161,3 +161,8 @@ traceroute to www.qq.com (182.254.34.74), 30 hops max, 60 byte packets
 
 # 参考文档
 [使用tracert命令时，在一个节点后所有的节点都没有数据，这是为什么？](https://www.zhihu.com/question/50220087)
+[联通的网络， traceroute 显示全是星号， tracert 什么都不显示，怎样才能跟踪路由？](https://www.v2ex.com/t/327276)
+[traceroute显示星号，但是wireshark抓包显示返回了icmp type 11](https://segmentfault.com/q/1010000002548654)
+[traceroute 全返回***，我的网络是怎么了？](https://www.v2ex.com/t/338930)
+[USG6680 V5R1C00 tracert 显示星号解决方法](http://support.huawei.com/enterprise/KnowledgebaseReadAction.action?contentId=KB1000086930&idAbsPath=7919710)
+[traceroute 命令](https://www.ibm.com/support/knowledgecenter/zh/ssw_aix_61/com.ibm.aix.performance/traceroute.htm)
