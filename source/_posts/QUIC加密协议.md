@@ -248,6 +248,18 @@ CIDS ChannelID 签名（ChannelID signature）（可选的）：一个 32字节�
 # 证书压缩
 在 TLS 中，证书链是无压缩传输的，并占用了完整握手中的绝大多数字节。在 QUIC 中，我们希望能够通过压缩证书来避免一些往返。
 
+证书链是一系列的证书，就这一节的目的而言，是透明的字节串。叶子证书总是链中的第一个，且从不应该包含根 CA 证书。
+
+当在一个拒绝消息的 CRT\xFF 标签中序列化一个证书链的时候，服务器认为那些信息客户端已经有了。这些先验知识可以来自于两种方式：拥有一般中间证书，或者缓存了之前与相同服务器交互时的证书。
+
+前者表示为 client hello 的 CCS 标签中的一系列 64-bit [FNV-1a](http://isthe.com/chongo/tech/comp/fnv/#FNV-param) 哈希值。如果客户端和服务器共享了至少一个一般证书集合，则可以简单地引用它们中存在的证书。
+
+缓存的证书表示 client hello 的 CCRT 标签中的 64-bit [FNV-1a](http://isthe.com/chongo/tech/comp/fnv/#FNV-param) 哈希值。如果任何一张依然在证书链中，则它们可由哈希值代替。
+
+任何剩余的证书以一个预共享的由前两个方法指定的证书和取自于 Alexa top 5000 的证书中的字符串组成的字典经 gzip 压缩。
+
+具体的表示方式被放置在拒绝消息的CERT标签中，并具有以下 TLS 表示风格中的 Cert 结构格式：
+
 ```
 enum { end_of_list(0), compressed(1), cached(2), common(3) } EntryType;
 
@@ -271,11 +283,23 @@ struct {
 } Certs;
 
 ```
+（回忆一下，QUIC 中的数字是小尾端的。）
+
+entries 列表以一个类型为 end_of_list 的 Entry 结束，而不是
+ TLS 中常见的长度前缀。gzip_data 扩展到值的末尾。
+
+gzip，预共享字典包含类型为 compressed 或 cached 的证书，以相反的顺序连接，其后是此处未提供的 ～1500 个字节的公共子字符串。
+
 
 # 未来方向
-ChannelID 非常有可能被从协议层移除，
+1. ChannelID 非常有可能从协议层中移除，相反，加密握手将产生可以在较高层签名的通道绑定值。
+2. Trevor Perrin 已经指出，服务器可以返回一个加密票证，其中包含客户端可以在未来的连接中回显给服务器的 Hash (前向安全保密)。对于那些握手，这将节省一次 Diffie-Hellman 操作。
+3. 服务器应该能够向客户端指示，它们应该在发送应用数据之前等待直到前向安全密钥建立。
+4. 为了避免 server hello 包造成的队首阻塞，服务器可以避免发送前向安全数据，直到客户端确认接收到 server hello。（比如：通过自身发送前向安全包。）
 
+# 感谢
 
+多谢 Trevor Perrin， Ben Laurie 和 Emilia Käsper 的有价值的反馈。
 
 ### [打赏](https://www.wolfcstech.com/about/donate.html)
 
