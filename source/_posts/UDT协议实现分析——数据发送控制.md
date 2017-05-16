@@ -1,4 +1,16 @@
-在[前文](http://my.oschina.net/wolfcs/blog/506021)中，我们有看到，数据发送的过程，大体是发送者CUDT将要发送的数据放进它的CSndBuffer m_pSndBuffer，并将它自己添加进它的CSndQueue m_pSndQueue的CSndUList m_pSndUList的堆里，后面CSndQueue m_pSndQueue的worker线程会通过CSndUList::pop()从CSndUList m_pSndUList的堆顶CUDT中获取一个要发送的包来发送，包的获取主要是通过CUDT::packData()来完成，而这个函数正是UDT中包发送的执行中心。
+---
+title: UDT协议实现分析——数据发送控制
+date: 2015-09-18 16:05:49
+categories: 网络协议
+tags:
+- 源码分析
+- 网络协议
+- UDT
+---
+
+在 [前文](https://www.wolfcstech.com/2015/09/14/UDT%E5%8D%8F%E8%AE%AE%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90%E2%80%94%E2%80%94%E6%95%B0%E6%8D%AE%E7%9A%84%E5%8F%91%E9%80%81/) 中，我们有看到，数据发送的过程，大体是发送者CUDT将要发送的数据放进它的CSndBuffer m_pSndBuffer，并将它自己添加进它的CSndQueue m_pSndQueue的CSndUList m_pSndUList的堆里，后面CSndQueue m_pSndQueue的worker线程会通过CSndUList::pop()从CSndUList m_pSndUList的堆顶CUDT中获取一个要发送的包来发送，包的获取主要是通过CUDT::packData()来完成，而这个函数正是UDT中包发送的执行中心。
+
+<!--more-->
 
 # CUDT::packData()
 
