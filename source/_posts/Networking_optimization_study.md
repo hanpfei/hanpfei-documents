@@ -26,3 +26,11 @@ tags:
 [Webkit 远程调试协议初探](http://taobaofed.org/blog/2015/11/20/webkit-remote-debug-test/)
 
 [基于TLS1.3的微信安全通信协议mmtls介绍](https://mp.weixin.qq.com/s?__biz=MzAwNDY1ODY2OQ==&mid=2649286266&idx=1&sn=f5d049033e251cccc22e163532355ddf&mpshare=1&scene=1&srcid=01036d3uXgfesl07utb04Hko&pass_ticket=81sKOxJ6az7s%2Bt9iX%2BimmP9aQMHGKJBFGy9jouP6LK%2FoKPoA34mrlGBUph5RD7LR#rd)
+
+[微信Mars——移动互联网下的高质量网络连接探索](http://www.infoq.com/cn/presentations/wechat-mars-high-quality-network-connection)
+
+[Facebook开源Proxygen HTTP框架和服务器](http://code.csdn.net/news/2822509)
+
+[阿里无线11.11：手机淘宝移动端接入网关基础架构演进之路](http://www.infoq.com/cn/articles/taobao-mobile-terminal-access-gateway-infrastructure)
+
+[Facebook wangle](https://www.slideshare.net/vorfeedchen/facebook-cwangle)
