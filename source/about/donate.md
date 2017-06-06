@@ -4,4 +4,4 @@
 ![](https://www.wolfcstech.com/images/wxpay.png)
 
 ### 支付宝
-![](https://www.wolfcstech.com/images/alipay.jpg) 
+![](https://www.wolfcstech.com/images/alipay.jpg)
