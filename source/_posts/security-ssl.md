@@ -11,7 +11,7 @@ tags:
 
 
 安全套接字层（SSL）—— 现在在技术上称为 [传输层安全 (TLS)](http://en.wikipedia.org/wiki/Transport_Layer_Security) —— 是客户端和服务器间加密通信的通用构建块。应用可能以错误的方式使用 SSL， 从而导致恶意实体能够拦截网络上的应用数据。为了帮助您确保您的应用中不会发生这种情况，本文重点介绍了使用安全网络协议的常见陷阱，并解决了关于使用 [公钥基础设施(PKI)](http://en.wikipedia.org/wiki/Public-key_infrastructure) 中更大的担忧。
-
+<!--more-->
 # 概念
 
 在典型的 SSL 使用场景中，会给服务器配置一个包含公钥的证书及对应的私钥。作为 SSL 客户端和服务器握手的一部分，服务器通过 [公钥加密](http://en.wikipedia.org/wiki/Public-key_cryptography) 签名它的证书来证明它具有私钥。
