@@ -23,9 +23,9 @@ widgets:
   - tag
   - archive
   - recent_posts
+  - links
   - recent_comments
   ##- weibo
-  ##- links
 
 # Static files
 js: js
@@ -73,12 +73,12 @@ about:
 
 # Friend link
 links:
-  - title: site-name1
-    url: http://www.example1.com/
-  - title: site-name2
-    url: http://www.example2.com/
-  - title: site-name3
-    url: http://www.example3.com/
+  - title: 蚂蚁网
+    url: http://www.vants.org/
+#  - title: site-name2
+#    url: http://www.example2.com/
+#  - title: site-name3
+#    url: http://www.example3.com/
 
 
 # Miscellaneous
@@ -86,4 +86,5 @@ show_category_count: true ## If you want to show the count of categories in the 
 widgets_on_small_screens: true ## Set to true to enable widgets on small screens.
 busuanzi: true ## If you want to use Busuanzi page views please set the value to true.
 google_analytics: ## Your Google Analytics tracking id, e.g. UA-42425684-2
-baidu_analytics: ## Your Baidu Analytics tracking id, e.g. 8006843039519956000
+baidu_analytics: 3c736b12c32c019fd9ff6c825b6b9b44
+## Your Baidu Analytics tracking id, e.g. 8006843039519956000
