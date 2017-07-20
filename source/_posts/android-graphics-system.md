@@ -5,10 +5,11 @@ categories: Android开发
 tags:
 - Android开发
 - 图形图像
+- 翻译
 ---
 
 Android framework 为2D 和 3D 提供了各种各样的图形渲染 APIs 来与设备制造商的图形驱动实现交互，因此对于那些 API 在上层如何工作有一个好的理解非常重要。这一页介绍驱动基于其构建的图形硬件抽象层 (HAL)。
-
+<!--more-->
 应用程序开发者以两种方式将图像绘制到屏幕上：通过 Canvas 或 OpenGL。参考 [系统级图形架构](https://source.android.com/devices/graphics/architecture.html) 来了解 Android 图形组件的详细描述。
 
 [android.graphics.Canvas](http://developer.android.com/reference/android/graphics/Canvas.html) 是一个 2D 图形 API，且是开发者中最流行的图形 API。Canvas 操作在 Android 中绘制所有的 stock 和 custom [android.view.View](http://developer.android.com/reference/android/view/View.html)s。在 Android 中，Canvas APIs 的硬件加速通过称为 OpenGLRenderer 的绘图库来完成，它将 Canvas 操作转换为 OpenGL 操作，以使它们可以在 GPU 上执行。
@@ -100,5 +101,7 @@ Hardware Composer HAL 执行另一半工作，且是所有 Android 图形渲染�
  工作将结束的栅栏传递给 window 合成器。然后 window 合成器可以提前开始处理，并将工作移交给显示控制器。通过这种方式，GPU 的工作可以提前结束。一旦 GPU 结束，显示控制器可以立即显示图像。
 
 同步框架也允许实现者在它们自己的硬件组件中利用同步资源。最后，框架提供对图形管道的可见性，以帮助调试。
+
+### [打赏](https://www.wolfcstech.com/about/donate.html)
 
 [原文](https://source.android.com/devices/graphics/)

@@ -5,10 +5,11 @@ categories: Android开发
 tags:
 - Android开发
 - 图形图像
+- 翻译
 ---
 
 *每一个开发者都应该了解的关于 Surface，SurfaceHolder，EGLSurface，SurfaceView，GLSurfaceView，SurfaceTexture，TextureView，SurfaceFlinger，和 Vulkan 的东西。*
-
+<!--more-->
 本页描述 Android 系统级图形架构的必要元素及应用框架和多媒体系统如何使用它们。重点是图形数据的缓冲区如何在系统中移动。如果你曾经想知道为什么 SurfaceView 和 TextureView 有着那样的行为，或 Surface 和 EGLSurface 如何交互，那你就来对地方了。
 
 假设读者熟悉 Android 设备和应用开发。你不需要关于应用框架的详细知识，这里只会提到少量的 API 调用，但这里的资料与其它公开的文档不重叠。目标是提供关于渲染一帧用以输出中牵涉的重要事件的详情，以帮助你在设计应用时做出明智的选择。为了实现这一点，我们从底层开始，描述 UI 类如何工作，而不是它们如何使用。
@@ -34,5 +35,7 @@ tags:
  * [SurfaceTexture](https://source.android.com/devices/graphics/arch-st.html)。SurfaceTexture 结合了一个 Surface 和 GLES texture 来创建一个 BufferQueue，你的应用是该 BufferQueue 的消费者。当生产者入队了一个新 buffer，它通知你的应用，这反过来释放了之前持有的 buffer，从队列中获取新的 buffer，执行 EGL 调用使得 buffer 可以作为 GLES 的一个外部 texture 使用。Android 7.0 添加了对安全 texture video playback的支持，使得 GPU 可以后处理受保护的视频内容。
 
  * [TextureView](https://source.android.com/devices/graphics/arch-tv.html)。TextureView 结合了一个 View 和一个 SurfaceTexture。TextureView 包装了一个 SurfaceTexture 并负责响应回调和获取新 buffers。当绘制时，TextureView 使用最近接收的 buffer 的内容作为它的数据源，根据 View 的状态绘制它。View 合成总是由 GLES 执行，意味着更新内容可能导致其它的 View 元素也被重绘。
+
+### [打赏](https://www.wolfcstech.com/about/donate.html)
 
 [原文](https://source.android.com/devices/graphics/architecture)
