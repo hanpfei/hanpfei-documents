@@ -24,8 +24,8 @@ widgets:
   - archive
   - recent_posts
   - links
+  - weibo  
   - recent_comments
-  ##- weibo
 
 # Static files
 js: js
@@ -64,12 +64,10 @@ about:
   photo_url: ## Your photo e.g. http://obzf7z93c.bkt.clouddn.com/themeauthor.jpg
   email: hanpfei@gmail.com
   ## Your email e.g.  zhenggchaoo@gmail.com
-  weibo_url: ## Your weibo's url e.g.  http://weibo.com/zhengchaooo
-  weibo_name: ## Your weibo's name e.g.  秋过冬漫长
+  weibo_url: http://weibo.com/p/1005051775675975
+  weibo_name: Han Pengfei
   github_url: https://github.com/hanpfei
-  ## Your github'url e.g.  https://github.com/chaooo
   github_name: Han Pengfei
-  ## Your github'name e.g.  chaooo
 
 # Friend link
 links:
