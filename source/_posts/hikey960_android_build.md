@@ -20,33 +20,41 @@ HiKey960 有 3GB RAM 的配置，而 HiKey 则只有 1GB 和 2GB 的 RAM 配置�
 # 编译用户空间
 
 1. 下载 Android 源码树
+
 ``` 
 $ repo init -u https://android.googlesource.com/platform/manifest -b master
 $ repo sync -j24
 ``` 
 
 2. 下载并提取二进制文件到 Android 源码树
+
 ```
 $ wget https://dl.google.com/dl/android/aosp/arm-hikey960-NOU-7ad3cccc.tgz
 $ tar xzf arm-hikey960-NOU-7ad3cccc.tgz
 $ ./extract-arm-hikey960.sh
 ```
+
 Android 本身是开源的，但设备本身集成的一些硬件，它们相关的软件，如驱动等，则很有可能是闭源的。这个包主要包含了设备中的硬件所需要的一些闭源的二进制文件，如特有的库等。没有这些文件，很有可能在编译 Android 的时候不会有问题，但在运行的时候会失败。
 
 3. 构建
+
 ```
 $ . ./build/envsetup.sh
 $ lunch hikey960-userdebug
 $ make -j2
 ```
+
 就像为任何设备编译 Android 一样，为 HiKey 960 编译 Android 镜像。
 
 # 刷写镜像
 1. 通过打开开关 1 和 3 来进入 fastboot mode。
+
 ![](https://www.wolfcstech.com/images/1315506-c2747c1381edf7b0.jpg)
+
 开关在板子的如上图所示的这一面，具体位置是在右上角。在图中的右上角可以清晰地看到 “Ext boot”，“Boot mode” 等字样，开关就位于它们的左边并紧挨它们。开关可以通过拨动白色的拨片开打开关闭。板子上可以清晰地看到这些开关的编号，实际上自上至下这些开关的编号分别为 “3”、“2” 和 “1”。
 
 2. 运行如下的命令刷写镜像
+
 ```
 fastboot flash boot out/target/product/hikey960/boot.img
 fastboot flash dts out/target/product/hikey960/dt.img
@@ -64,6 +72,7 @@ HiKey 960 这块板子在拿到手的时候，已经刷写了 AOSP 编译出的 
 # 编译内核
 
 1. 运行下面的命令
+
 ```
 $ git clone https://android.googlesource.com/kernel/hikey-linaro
 $ cd hikey-linaro
@@ -71,8 +80,10 @@ $ git checkout -b android-hikey-linaro-4.4 origin/android-hikey-linaro-4.4
 $ make ARCH=arm64 hikey960_defconfig
 $ make ARCH=arm64 CROSS_COMPILE=aarch64-linux-android- -j24
 ```
+
 Android 用户空间代码和内核代码是分开存放管理的，AOSP 源码树中并不包含内核的代码，而只包含一些已经编译好内核镜像文件。且通常针对不同硬件设备厂商的 Android linux 内核，会位于不同的 git repo 下。可以专门为内核建立一个目录，比如也命名为 `kernel`，然后在这个目录下 clone 内核代码。除了前面看到的 `hikey-linaro`，还有 `msm`、`mediatek`、`tegra`等等版本的内核代码。这里下载 HiKey 的 Android Linux 内核源码，执行配置并编译。
 执行 `make ARCH=arm64 hikey960_defconfig` 命令，会根据预先定义好的一个配置文件，这里也就是 `hikey960_defconfig` 文件，在当前目录下生成后面编译内核所需要的 `.config` 文件。  `hikey960_defconfig` 文件实际位于内核源码树的 `arch/arm64/configs/hikey960_defconfig`，这个文件的内容类似下面这样：
+
 ```
 CONFIG_POSIX_MQUEUE=y
 CONFIG_FHANDLE=y
@@ -84,6 +95,7 @@ CONFIG_BSD_PROCESS_ACCT=y
 CONFIG_BSD_PROCESS_ACCT_V3=y
 . . . . . . 
 ```
+
 主要定义了用于控制一些功能特性的打开或关闭的开关选项。要打开或关闭内核的某一个功能特性，修改这个文件是一种非常方便的方法。
 
 2. 更新 boot image 中的内核
@@ -93,13 +105,16 @@ CONFIG_BSD_PROCESS_ACCT_V3=y
 
 3. 编译 boot image
 在 Android 源码树的根目录执行如下命令：
+
 ```
 $ make bootimage -j24
 ```
+
 编译 Android 用户空间代码时，执行 make 之前所需要做的在执行这个命令之前当然也需要做。需要注意的是，boot image 中除了包含内核之外，还包含了 init 等系统核心可执行文件等。如果 Android 用户空间代码及相关 image 没有更新，可以通过命令 `fastboot flash boot out/target/product/hikey960/boot.img` 只更新 boot image。
 
 # 设置序列号
 要设置随机的序列号，则运行：
+
 ```
 $ fastboot getvar nve:SN@16_DIGIT_NUMBER
 ```
