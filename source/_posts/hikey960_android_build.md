@@ -21,10 +21,10 @@ HiKey960 有 3GB RAM 的配置，而 HiKey 则只有 1GB 和 2GB 的 RAM 配置�
 
 1. 下载 Android 源码树
 
-``` 
+```
 $ repo init -u https://android.googlesource.com/platform/manifest -b master
 $ repo sync -j24
-``` 
+```
 
 2. 下载并提取二进制文件到 Android 源码树
 
