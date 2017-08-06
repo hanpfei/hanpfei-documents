@@ -7,45 +7,90 @@ tags:
 - 翻译
 ---
 
-JNI 是指 Java 本地层接口（Java Native Interface）。它为受控代码（用 Java 编程语言编写）定义了一种与本地层代码（用 C/C++ 编写）交互的方式。它是厂商中立的，支持从动态共享库加载代码，尽管笨重，但时间上是高效的。
+JNI 是指 Java 本地层接口（Java Native Interface）。它为用 Java 语言编写的受控代码定义了一种与本地层代码（用 C/C++ 编写）交互的方式。它是厂商无关的，其支持从动态共享库加载代码，尽管有时笨重，但它仍是有效的。
 
 <!--more-->
 
-如果你还不熟悉它，可以通过阅读 [JNI规范（Java Native Interface Specification）](http://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/jniTOC.html) 来得到关于 JNI 如何工作以及它有哪些功能的认识。接口的某些方面在第一次阅读时不是那么地明显，因而你也许会发现接下来的几节内容还有点用。
+如果你对它还不熟悉，可以阅读 [JNI规范（Java Native Interface Specification）](http://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/jniTOC.html) 来获得对它的更多了解，了解 JNI 如何工作以及它有哪些功能。规范中有些地方的说明，并不是特别的清晰简洁明了，因而接下来的一些内容也许有点用。
 
-## JavaVM and JNIEnv
+## JavaVM 和 JNIEnv
+JNI 定义了两个关键的数据结构，`JavaVM` 和 `JNIEnv`。它们都是指向函数表的指针。(在 C++ 版本中，它们是类，其中包含一个指向函数表的指针，及每个 JNI 函数对应一个的成员函数，这些成员函数则简单地调用函数表中的对应函数。) JavaVM 提供了“调用接口”函数，通过这些函数，可以创建和销毁一个 JavaVM。看一下 JavaVM 结构的定义就一目了然了：
+```
+#if defined(__cplusplus)
+typedef _JavaVM JavaVM;
+#else
+typedef const struct JNIInvokeInterface* JavaVM;
+#endif
 
-JNI 定义了两个关键的数据结构，"JavaVM" 和 "JNIEnv"。这两个都是指向函数表的指针。(在 C++ 版本中，它们是类，其中包含一个指向函数表的指针，及每个 JNI 函数对应一个间接通过函数表的成员函数。)JavaVM 提供了“调用接口”函数，通过这些函数，你可以创建和销毁一个 JavaVM。理论上，每个进程你可以有多个JavaVMs，但 Android 只允许有一个。
+/*
+ * JNI invocation interface.
+ */
+struct JNIInvokeInterface {
+    void*       reserved0;
+    void*       reserved1;
+    void*       reserved2;
 
-JNIEnv 提供了大多数的JNI函数。你的本地层函数都接受一个 JNIEnv 作为第一个参数。
+    jint        (*DestroyJavaVM)(JavaVM*);
+    jint        (*AttachCurrentThread)(JavaVM*, JNIEnv**, void*);
+    jint        (*DetachCurrentThread)(JavaVM*);
+    jint        (*GetEnv)(JavaVM*, void**, jint);
+    jint        (*AttachCurrentThreadAsDaemon)(JavaVM*, JNIEnv**, void*);
+};
 
-JNIEnv 用于线程局部存储。因此，**你不能在线程之间共享一个JNIEnv**。如果一段代码没有其它方法获取它的 JNIEnv，你应该共享 JavaVM，并使用 `GetEnv` 找到线程的 `JNIEnv`。(假设它有一个；参见下面的 `AttachCurrentThread`。)
+/*
+ * C++ version.
+ */
+struct _JavaVM {
+    const struct JNIInvokeInterface* functions;
 
-`JNIEnv` 和 `JavaVM` 的 C 声明与它们的 C++ 声明不同。依赖于是被包含进 C 还是 C++ 文件中，"jni.h" 头文件提供了不同的类型定义。因此，在两个语言都会包含的头文件中，包含 JNIEnv参数不是个好主意。(换句话说：如果你的头文件需要`#ifdef __cplusplus`，且该头文件中有任何内容引用了JNIEnv，那么你可能需要做一些额外的工作。)
+#if defined(__cplusplus)
+    jint DestroyJavaVM()
+    { return functions->DestroyJavaVM(this); }
+    jint AttachCurrentThread(JNIEnv** p_env, void* thr_args)
+    { return functions->AttachCurrentThread(this, p_env, thr_args); }
+    jint DetachCurrentThread()
+    { return functions->DetachCurrentThread(this); }
+    jint GetEnv(void** env, jint version)
+    { return functions->GetEnv(this, env, version); }
+    jint AttachCurrentThreadAsDaemon(JNIEnv** p_env, void* thr_args)
+    { return functions->AttachCurrentThreadAsDaemon(this, p_env, thr_args); }
+#endif /*__cplusplus*/
+};
+```
 
-## Threads
+理论上，每个进程可以有多个 JavaVM 实例，但 Android 只允许有一个。
 
-所有线程都是 Linux 线程，由内核调度。它们通常由受控代码启动 (使用 `Thread.start` )，但它们也可以在其它地方创建，然后附到 JavaVM 。比如，一个由 `pthread_create` 启动的线程，可以通过 `JNI AttachCurrentThread` 或 `AttachCurrentThreadAsDaemon` 函数附到 JavaVM。在一个线程被附到`JavaVM` 之前，它没有 `JNIEnv`，因而也 **不能执行 JNI 调用**。
+JNIEnv 则提供了大多数的 JNI 函数。你的本地层函数都接受 JNIEnv 作为其第一个参数。
 
-把一个本底层创建的线程附接到 `JavaVM` 会创建一个` java.lang.Thread` 对象，并添加到“main” `ThreadGroup`，使它对于调试器可见。对一个已经附接到 `JavaVM` 的线程调用 `AttachCurrentThread` 是一个空操作。
+JNIEnv 用于线程局部存储。因此，**你不能在线程之间共享同一个 JNIEnv**。如果一段代码没有其它方法获取它的 JNIEnv，你应该共享 JavaVM，并使用 `JavaVM` 结构的 `GetEnv` 函数找到线程的 `JNIEnv`。(假设它有一个；参见下面的 `AttachCurrentThread`。)
+
+`JNIEnv` 和 `JavaVM` 的 C 声明与它们的 C++ 声明不同。依赖于是被 include 进 C 还是 C++ 源文件中，"jni.h" 头文件提供了不同的类型定义。因此，在两个语言都会包含的头文件中，包含 JNIEnv 参数并不是个好主意。(换句话说：如果你的头文件需要`#ifdef __cplusplus`，且该头文件中有任何内容引用了 JNIEnv，那么你可能需要做一些额外的工作。)
+
+比如定义了一个函数，其接受一个 `JNIEnv` 指针作为参数。这个函数在 C 源文件和在 C++ 源文件中实现时，这个参数的类型实际上是不一样的。对这个函数的调用，也要区分是在 C 代码中调用还是在 C++ 代码中调用，并做不同的处理。
+
+## 线程
+所有线程都是 Linux 线程，由内核调度。它们通常由 Java 代码启动 (使用 `Thread.start` 方法 )，但它们也可以在其它地方创建，然后附到 JavaVM 上。比如，一个由 `pthread_create` 启动的线程，可以通过 JNI，即 JavaVM 实例的 `AttachCurrentThread` 或 `AttachCurrentThreadAsDaemon` 函数附到 JavaVM。在一个线程被附到 `JavaVM` 之前，它没有 `JNIEnv`，因而也 **不能执行 JNI 调用**。
+
+把一个本底层创建的线程附接到 `JavaVM` 会创建一个 ` java.lang.Thread` 对象，并添加到“main” `ThreadGroup`，使它对于调试器可见。对一个已经附接到 `JavaVM` 的线程调用 `AttachCurrentThread` 是一个空操作。
+
+通过把本地层创建的线程附接到 `JavaVM` 中之后，也就可以在该线程中方便地调用 JNI 函数，访问 Java 对象和结构了。
 
 Android 不会挂起正在执行本地层代码的线程。如果正在进行垃圾回收，或者调试器发出了一个挂起请求，Android 将在线程下一次执行 JNI 调用时暂停它。
 
-通过 JNI 附接的线程在它们退出前必须调用 `DetachCurrentThread`。如果直接这样写代码是不合适的，在 Android 2.0 (Eclair) 或更高版本上，你可以使用`pthread_key_create` 定义一个将会在线程退出前被调用的析构函数，并在那儿调用 `DetachCurrentThread`。(以该 key 调用 `pthread_setspecific` 来将 `JNIEnv` 保存在线程局部存储中；以此，它将会作为参数被传进你的析构函数。)
+通过 JNI 函数附接的线程在它们退出前必须调用 `DetachCurrentThread`。如果直接这样写代码不方便，则在 Android 2.0 (Eclair) 或更高版本上，你可以使用`pthread_key_create` 定义一个将会在线程退出前被调用的析构函数，并在那儿调用 `DetachCurrentThread`。(以该 key 调用 `pthread_setspecific` 来将 `JNIEnv` 保存在线程局部存储中；以此，它将会作为参数被传进你的析构函数。)
 
-## jclass, jmethodID, and jfieldID
-
-如果你想在本地层代码中访问对象的成员，您将执行以下操作：
+## jclass，jmethodID，和 jfieldID
+如果你想在本地层代码中访问 Java 对象的成员，你将需要执行以下操作：
 
 * 通过 `FindClass` 获取该类的类对象引用
-* 通过 `GetFieldID` 获取成员的成员 ID
+* 通过 `GetFieldID` 获取成员的成员 ID 对象引用
 * 通过适当的方法获取成员的内容，比如 `GetIntField`
 
-类似地，要调用一个方法，你首先要获取类对象的引用，然后获得方法 ID。IDs 经常只是指向内部运行时数据结构的指针。查找它们可能需要一些字符串比较，然而一旦有了它们，获取成员或者调用方法的实际调用是非常快的。
+类似地，要调用一个方法，你首先要获取类对象的引用，然后获得方法 ID 对象引用。IDs 经常只是指向内部运行时数据结构的指针。查找它们可能需要一些字符串比较，然而一旦有了它们，获取成员或者调用方法的实际调用是非常快的。
 
-如果性能很重要，在你的本底层代码中，进行一次查找操作并将结果缓存起来会很有用。由于有着每个进程一个 `JavaVM` 的限制，把这些数据保存在一个静态本地结构中是合理的。
+如果性能很重要，在你的本底层代码中，进行一次查找操作并将结果缓存起来会很有用。由于有着每个进程一个 `JavaVM` 实例的限制，把这些数据保存在一个静态本地结构中是合理的。
 
-在类被卸载之前，类引用，成员 IDs，和方法 IDs 会被保证是有效的。只有当与一个ClassLoader 相关联的所有类都可以被垃圾回收时，类才会被卸载，这很罕见，但在 Android 中也不是不可能的。然而，注意 `jclass` 是一个类引用，且 **必须通过调用 `NewGlobalRef` 来保护** (参见下一节)。
+在类被卸载之前，类引用，成员 IDs，和方法 IDs 会保证是有效的。只有当与一个 ClassLoader 相关联的所有类都可以被垃圾回收时，类才会被卸载，这很罕见，但在 Android 中也不是不可能。然而，注意 `jclass` 是一个类引用，且 **必须通过调用 `NewGlobalRef` 来保护** (参见下一节)。
 
 如果你想在类被加载时缓存 IDs，并在类被卸载且重新加载时自动地重新缓存它们，初始化 IDs 的正确方法是，在适当的类中添加一段像下面这样的代码：
 
@@ -65,48 +110,47 @@ Android 不会挂起正在执行本地层代码的线程。如果正在进行垃
 在你的 C/C++ 代码中创建一个 `nativeClassInit` 方法执行 ID 查找。代码将会在类初始化时执行一次。如果类被卸载并重新加载，它将会再次执行。
 
 ## 局部和全局引用
+传递给本地层方法的每个参数，和由 JNI 函数返回的几乎每个对象均是一个 “局部引用”。这意味着它在当前线程的当前本地层方法运行期间是有效的。**即使对象本身在本地层方法返回之后继续存活，引用依然不是有效的**。
 
-传递给本地层方法的每个参数，和由 JNI 函数返回的几乎每个对象均是一个 “局部引用”。这意味着它在当前线程的当前本地层方法运行期间是有效的。**即使对象本身在本地层方法返回之后继续存活，引用是无效的**。
-
-这适用于所有的 `jobject` 子类，包括 `jclass`，`jstring`，和 `jarray`。（当启用 扩展 JNI 检查时，运行时将为大多数引用的错误使用发出警告。）
+这适用于所有的 `jobject` 子类，包括 `jclass`，`jstring`，和 `jarray`。（当启用扩展 JNI 检查时，运行时将为大多数引用的错误使用发出警告。）
 
 获得非局部引用的仅有的方法是通过函数 `NewGlobalRef` 和 `NewWeakGlobalRef`。
 
 如果你想更长期地持有引用，你必须使用一个“全局的”引用。`NewGlobalRef` 函数接收局部引用作为参数，并返回一个全局引用。全局引用保证是有效的，直到你调用 `DeleteGlobalRef`。
 
-This pattern is commonly used when caching a jclass returned from FindClass, e.g.:
-缓存 `FindClass` 返回的 jclass 的常用模式，如：
+这一模式常被用于缓存 `FindClass` 返回的 jclass，如：
 ```
 jclass localClass = env->FindClass("MyClass");
 jclass globalClass = reinterpret_cast<jclass>(env->NewGlobalRef(localClass));
 ```
 
+如果这样说的话，那 jmethodID 和 jfieldID 呢？
+
 所有的 JNI 方法都接收局部和全局的引用作为参数。可能引用同一个对象的引用具有不同的值。比如，连续地对相同对象调用 `NewGlobalRef` 获得的返回值可能不同。**要查看两个引用是否指向相同对象，你必须使用 `IsSameObject` 函数**。千万不要在本地层代码中用 `==` 比较引用。
 
 这样的结果是在本地层代码中你 **一定不能假设对象引用是常量或唯一的**。在对一个方法的一次调用和下一次调用之间表示对象的 32 位值可能不同， 在连续调用中两个不同的对象可能具有相同的 32 位值。不要使用 `jobject` 值作为键。
 
-程序员需要 “不过分地分配”局部引用。实际上，这意味着如果您正在创建大量的局部引用，也许在遍历一个对象数组，您应该使用 `DeleteLocalRef` 手动释放它们，而不是让 JNI 为您执行。实现只被要求为局部引用保留 16 个槽，因此如果你需要更多，你应该或者在运行过程中删除一些，或者使用 `EnsureLocalCapacity` / `PushLocalFrame` 保留更多。
+程序员需要 “不过分地分配”局部引用。实际上，这意味着如果你正在创建大量的局部引用，也许在遍历一个对象数组，你应该使用 `DeleteLocalRef` 手动释放它们，而不是让 JNI 为你执行。实现只被要求为局部引用保留 16 个槽，因此如果你需要更多，你应该或者在运行过程中删除一些，或者使用 `EnsureLocalCapacity` / `PushLocalFrame` 保留更多。
 
-注意 `jfieldIDs` 和 `jmethodIDs` 是不透明类型，而不是对象引用，且不应该被传给 `NewGlobalRef`。像 `GetStringUTFChars` 和 `GetByteArrayElements` 这样的函数返回的原始数据指针也不是对象。（它们可能在线程间传递，且直到对应的 Release 被调用都是有效的。）
+注意 `jfieldID` 和 `jmethodID` 是不透明类型，而不是对象引用，且不应该被传给 `NewGlobalRef`。像 `GetStringUTFChars` 和 `GetByteArrayElements` 这样的函数返回的原始数据指针也不是对象。（它们可以在线程间传递，且直到对应的 Release 被调用都是有效的。）
 
-一种不常见的情况应该分开提一下。如果你通过 `AttachCurrentThread` 附了一个本地层线程，你执行的代码将从不会自动地释放局部引用，直到线程分离。你创建的任何局部引用将不得不被手动删除。通常，在循环中创建局部引用的任何本地层代码可能需要执行一些手动删除。
+一种不常见的情况应该另外提一下。如果你通过 `AttachCurrentThread` 附了一个本地层线程，你执行的代码将从不会自动地释放局部引用，直到线程分离。你创建的任何局部引用将不得不手动删除。通常，在循环中创建局部引用的任何本地层代码可能需要执行一些手动删除。
 
 ## UTF-8 和 UTF-16 字符串
-Java 编程语言使用 UTF-16。为了方便，JNI 也提供方法使用 [改进的 UTF-8](http://en.wikipedia.org/wiki/UTF-8#Modified_UTF-8)。改进的编码对 C 代码很有用，因为它把 `\u0000` 编码为 `0xc0 0x80` 而不是 `0x00`。关于这一点的好处是，您可以依靠具有C风格的零终止字符串，适用于标准 libc 字符串函数。
+Java 编程语言使用 UTF-16。为了方便，JNI 也提供方法使用 [改进的 UTF-8](http://en.wikipedia.org/wiki/UTF-8#Modified_UTF-8)。改进的编码对 C 代码很有用，因为它把 `\u0000` 编码为 `0xc0 0x80` 而不是 `0x00`。关于这一点的好处是，您可以依靠具有 C 风格的以零为终止字符的字符串，适合与标准 libc 的字符串函数一起使用。
 
 缺点是你不能传递任意的 UTF-8 数据给 JNI 并期待它能正确工作。
 
-如果可能，操作 UTF-16 字符串通常更快。当前 Android 在 `GetStringChars` 中不需要拷贝，然而 `GetStringUTFChars` 需要分配并转换为 UTF-8。注意 **UTF-16 字符串不是 0 结尾的，**且允许 \u0000 ，所以你需要挂起字符串长度以及jchar指针。
+如果可能，操作 UTF-16 字符串通常更快。当前 Android 在 `GetStringChars` 中不需要拷贝，然而 `GetStringUTFChars` 需要分配并转换为 UTF-8。注意 **UTF-16 字符串不是以 0 结尾的，**且允许 \u0000 ，所以你需要根据字符串的长度来访问 jchar 指针。
 
 **不要忘记  `Release`  你 `Get` 的字符串**。字符串函数返回 `jchar*` 或 `jbyte*`，它们都是指向原始数据类型数据的 C 风格指针，而不是局部引用。它们保证有效，直到调用 `Release`，这意味着当本地层方法返回时它们不会释放。
 
-**传递给 `NewStringUTF` 的数据必须是改进的 UTF-8 格式**。一个常见的错误是，从文件或网络流读取字符数据并在无过滤的情况下交给 `NewStringUTF` 处理。除非你知道数据是 7 位的 ASCII，您需要删除高 ASCII 字符或将其转换为正确的改进 UTF-8 格式。如果你没有，UTF-16 转换可能不是你期待的那样。扩展的 JNI 检查将扫描字符串，并就无效数据向您提出警告，但它们不会捕获所有内容。
+**传递给 `NewStringUTF` 的数据必须是改进的 UTF-8 格式**。一个常见的错误是，从文件或网络流读取字符数据并在无过滤的情况下交给 `NewStringUTF` 处理。除非你知道数据是 7 位的 ASCII，你需要删除高 ASCII 字符或将其转换为正确的改进 UTF-8 格式。如果你没有，UTF-16 转换可能不是你期待的那样。扩展的 JNI 检查将扫描字符串，并就无效数据向你提出警告，但它们不会捕获所有东西。
 
-## 原始数组
-
+## 原始数据类型的数组
 JNI 提供了访问数组对象内容的函数。尽管每次只能访问一个数组对象的项，但原始数据类型的数组可以直接读或写，就像它们在 C 中声明的一样。
 
-为了使接口尽可能高效且不限制 VM 实现，`Get<PrimitiveType>ArrayElements` 族调用允许运行时返回指向实际元素的指针，或分配一些内存并拷贝一份。无论哪种方式，返回的原始指针保证有效，直到对应的 `Release` 被调用（这表明，如果数据没有拷贝，则数组对象将被固定，并且不能作为压缩堆的一部分重新定位）。**你必须 `Release` 你 `Get` 的每个数组**。此外，如果 `Get` 调用失败，你必须确保你的代码没有在后面试图 `Release` 一个 NULL 指针。
+为了使接口尽可能高效且，`Get<PrimitiveType>ArrayElements` 族调用允许运行时返回指向实际元素的指针，或分配一些内存并拷贝一份。无论哪种方式，返回的原始指针保证有效，直到对应的 `Release` 被调用（这表明，如果数据没有拷贝，则数组对象将被固定，并且不能作为压缩堆的一部分重新定位）。**你必须 `Release` 你 `Get` 的每个数组**。此外，如果 `Get` 调用失败，你必须确保你的代码没有在后面试图 `Release` 一个 NULL 指针。
 
 你可以通过传递一个非空指针作为 `isCopy` 参数决定是否拷贝数据。这很少用到。
 
@@ -122,14 +166,14 @@ JNI 提供了访问数组对象内容的函数。尽管每次只能访问一个�
     * 实际数据：数组对象是未固定的。早期写入 **不会** 中止。
     * 拷贝：拷贝的缓冲区被释放；任何修改丢失。
     
-    检查 `isCopy` 的一个原因是了解在对数组做了修改后你是否需要以 `JNI_COMMIT` 调用 `Release`—— 如果您在进行更改和执行使用数组内容的代码之间进行交替，您可能可以跳过无操作提交。另一个检查标记的可能原因是高效的处理 `JNI_ABORT`。比如，你也许想要获得一个数组，修改它，传递一部分给其它函数，然后丢弃修改。如果你知道 JNI 为你创建了一份拷贝，则无需创建另一份“可编辑的”拷贝。如果 JNI 向你传递了原始的，则你确实需要创建你自己的拷贝。
+检查 `isCopy` 的一个原因是了解在对数组做了修改后你是否需要以 `JNI_COMMIT` 调用 `Release`—— 如果你在改变数组内容和执行使用数组内容的代码之间进行交替，你可能可以跳过无操作提交。另一个检查标记的可能原因是高效的处理 `JNI_ABORT`。比如，你也许想要获得一个数组，修改它，传递一部分给其它函数，然后丢弃修改。如果你知道 JNI 为你创建了一份拷贝，则无需创建另一份“可编辑的”拷贝。如果 JNI 向你传递了原始的，则你确实需要创建你自己的拷贝。
     
-    一个常见的错误是（在示例代码中复现）假设你可以在 `* isCopy` 为假时跳过调用 `Release`。这不是实际的情况。如果没有分配拷贝缓冲区，则原始的内存必须被固定下来，且不能由垃圾收集器移动。
+一个常见的错误是（在示例代码中重现）假设你可以在 `* isCopy` 为 false 时跳过调用 `Release`。这不是实际的情况。如果没有分配拷贝缓冲区，则原始的内存必须被固定下来，且不能由垃圾收集器移动。
     
-    还要注意 `JNI_COMMIT` 标记 **不** 释放数组，在最后你将需要以一个不同的标记再次调用 `Release`。
+还要注意 `JNI_COMMIT` 标记 **不** 释放数组，在最后你将需要以一个不同的标记再次调用 `Release`。
 
 ## 区域调用
-当所有你想做的就是拷入拷出数据，有另一种调用像 `Get<Type>ArrayElements` 和 `GetStringChars` 的方法可能非常有用。考虑下面的代码：
+当你想做的就只是拷入拷出数据，有另外一些像 `Get<Type>ArrayElements` 和 `GetStringChars` 的调用可能非常有用。考虑下面的代码：
 ```
     jbyte* data = env->GetByteArrayElements(array, NULL);
     if (data != NULL) {
@@ -138,9 +182,9 @@ JNI 提供了访问数组对象内容的函数。尽管每次只能访问一个�
     }
 ```
 
-获取数组，拷贝前面的 `len ` 字节的元素，然后释放数组。依赖于实现，`Get` 调用将固定或拷贝数组的内容。代码拷贝数据（也许第二次），然后调用 `Release`；在这种情况下 `JNI_ABORT` 确保没有第三副本的机会。
+获取数组，拷贝前面的 `len ` 字节的元素，然后释放数组。`Get` 调用是固定还是拷贝数组的内容依赖于实现。代码拷贝数据（也许是第二次），然后调用 `Release`；在这种情况下 `JNI_ABORT` 确保没有第三个副本的机会。
 
-可以完成相同事情的更简单的代码：
+可以完成相同事情的更简单的代码如下：
 ```
     env->GetByteArrayRegion(array, 0, len, buffer);
 ```
@@ -173,17 +217,16 @@ JNI 提供了访问数组对象内容的函数。尽管每次只能访问一个�
  * `ReleaseStringCritical`
  * `ReleaseStringUTFChars`
 
-许多 JNI 调用可能抛出异常，但经常提供简单的方式用于失败检查。比如，如果 `NewString` 返回非空值，你不需要检查失败。然而，如果你调用了一个方法（使用像 `CallObjectMethod` 这样的函数），你必须总是检查异常，因为如果抛出了异常，返回值将不是有效的。
+许多 JNI 调用可能抛出异常，但也常提供简单的方式用于失败检查。比如，如果 `NewString` 返回非空值，你不需要检查失败。然而，如果你调用了一个方法（使用像 `CallObjectMethod` 这样的函数），你必须总是检查异常，因为如果抛出了异常，返回值将不是有效的。
 
 注意，由解释器代码抛出的异常无法展开本地层栈帧，且 Android 还不支持 C++ 异常。JNI `Throw` 和 `ThrowNew` 指令只是在当前线程中设置一个异常指针。一旦从本地层代码返回受控代码，异常将被注意到并被适当地处理。
 
-本地层代码可以通过调用 `ExceptionCheck` 或 `ExceptionOccurred` “捕获”异常，并通过 `ExceptionClear` 清除它。通常，丢弃异常而不处理它们可能导致问题。
+本地层代码可以通过调用 `ExceptionCheck` 或 `ExceptionOccurred` “捕获”异常，并通过 `ExceptionClear` 清除它。通常，丢弃异常而不处理它们可能产生一些问题。
 
 没有内置的函数管理 `Throwable` 对象本身，因此如果你想获取异常字符串，你将需要找到 `Throwable` 类，查找 `getMessage "()Ljava/lang/String;"` 的方法 ID，调用它，如果结果非空，则使用 `GetStringUTFChars` 获得一些你可以交给 `printf(3)` 或等价的函数的东西。
 
 ## 扩展检查
-
-JNI 执行非常少的错误检查。错误通常导致崩溃。Android 还提供了一个称为 `CheckJNI` 的模式，其中 JavaVM 和 JNIEnv 函数表指针被切换到在调用标准实现前执行一系列扩展检查的函数的表。
+JNI 执行非常少的错误检查。错误通常导致崩溃。Android 还提供了一个称为 `CheckJNI` 的模式，其中 JavaVM 和 JNIEnv 函数表指针被切换为，在调用标准实现前执行一系列扩展检查的函数的表。
 
 额外的检查包括：
 
@@ -191,8 +234,8 @@ JNI 执行非常少的错误检查。错误通常导致崩溃。Android 还提�
  * 坏指针：传递一个坏的 jarray/jclass/jobject/jstring 给 JNI 调用，或传递一个空指针作为不能为空的参数给 JNI 调用。
  * 类名：使用任何 “java/lang/String”形式的类名调用 JNI。
  * 临界调用：在一个 “critical”get 和它对应的 release 之间执行一个 JNI 调用。
- * 直接 ByteBuffers：给 `NewDirectByteBuffer` 传递坏的参数。
- * 异常：在有异常挂起的时候执行 JNI 调用。
+ * Direct ByteBuffers：给 `NewDirectByteBuffer` 传递坏的参数。
+ * 异常：在异常挂起的时候执行 JNI 调用。
  * JNIEnv*s：在错误的线程中使用 JNIEnv*s。
  * jfieldIDs：使用一个空的 jfieldIDs，或使用一个 jfieldID 给字段设置错误类型的值（比如，试图将一个 String 字段赋值为一个 StringBuilder），或使用静态字段的 jfieldID 来设置一个实例字段，反之亦然，或将一个类的 jfieldID 用于另一个类的实例。
   * jmethodIDs：当执行 `Call*Method` JNI 调用时使用了错误种类的 jmethodID：不正确的返回类型，静态/非静态不匹配，错误类型的 ‘this’（对于非静态调用）或错误的类（对于静态调用）。
@@ -207,24 +250,24 @@ JNI 执行非常少的错误检查。错误通常导致崩溃。Android 还提�
 
 如果你正在使用模拟器，CheckJNI 是默认开启的。
 
-如果你有一个经过 root 的设备，你可以使用下面的命令以启用 CheckJNI 模式重启运行时：
+如果你有一个经过 root 的设备，你可以使用下面的命令启用 CheckJNI 模式重启运行时：
 ```
 adb shell stop
 adb shell setprop dalvik.vm.checkjni true
 adb shell start
 ```
  
- 在所有这些情况中，你将在 logcat 输出中运行时启动时看到像这样的东西：
+在所有这些情况中，你将在 logcat 输出中运行时启动时看到像这样的东西：
  ```
  D AndroidRuntime: CheckJNI is ON
  ```
  
-  如果你有一个普通的设备，你可以使用下面的命令：
+如果你有一个普通的设备，你可以使用下面的命令：
 ```
 adb shell setprop debug.checkjni 1
 ```
 
-这不影响已经运行的应用，但自那之后启动的应用都将开启 CheckJNI。（将属性修改为其它值或简单地重启将再次禁用 CheckJNI。）在这种情况下，你将在你的 logcat 输出中下一次一个应用启动时看到像这样的东西：
+这不影响已经运行的应用，但自那之后启动的应用都将开启 CheckJNI。（将属性修改为其它值或简单地重启将再次禁用 CheckJNI。）在这种情况下，你将在你的 logcat 输出中下次启动一个应用时看到像这样的东西：
 ```
 D Late-enabling CheckJNI
 ```
@@ -232,10 +275,9 @@ D Late-enabling CheckJNI
 你还可以在你的应用的 manifest 中设置 `android:debuggable` 属性来只为你的应用开启 CheckJNI。注意 Android 构建工具将自动地为某一构建类型做这些。
 
 ## 本地库
-
 你可以通过标准的 `System.loadLibrary` 调用从共享库加载本地层代码。获取你本地层代码的首选方法是：
 
-* 在一个静态的类初始化器里调用 `System.loadLibrary`。（参考更早的例子，其中用于调用 `nativeClassInit` 的那个。）参数是“未修饰的”库名，比如要加载 "libfubar.so"，你应该传递 "fubar"。
+* 在一个静态的类初始化器里调用 `System.loadLibrary`。（参考前面的例子，其中用于调用 `nativeClassInit` 的那个。）参数是“未修饰的”库名，比如要加载 "libfubar.so"，你应该传递 "fubar"。
 * 提供一个本地层函数： `jint JNI_OnLoad(JavaVM* vm, void* reserved)`
 * 在 `JNI_OnLoad`，注册你所有的本地层方法。你应该声明那些方法为 "static"，使那些名称不占用设备的符号表空间。
 
@@ -255,18 +297,16 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 }
 ```
 
-你也可以用共享库的完整路径名来调用 `System.load`。对于Android 应用，你也许会发现从 context 对象获取应用程序私有数据存储区的完整路径非常有用。
+你也可以用共享库的完整路径名调用 `System.load`。对于Android 应用，你也许会发现从 context 对象获取应用程序私有数据存储区的完整路径的方法非常有用。
 
-这是建议采用的方法，但不是唯一的方法。无需显式的注册，你也不是必须提供 `JNI_OnLoad` 函数。你可以使用以特殊的方式命名的本地层方法的  “发现机制”来代替(详情参看 [JNI spec](http://java.sun.com/javase/6/docs/technotes/guides/jni/spec/design.html#wp615))，尽管这种方法更不尽如人意，如果方法签名错了的话你将无法知道直到方法第一次被实际调用。
+这是建议采用的方法，但不是唯一的方法。无需显式的注册，你也不是必须提供 `JNI_OnLoad` 函数。你可以使用以特殊的方式命名本地层方法的“发现机制”来代替 (详情参看 [JNI spec](http://java.sun.com/javase/6/docs/technotes/guides/jni/spec/design.html#wp615))，尽管这种方法更不尽如人意。如果方法签名错了的话，在方法第一次被实际调用之前，你都将无法获知这种情况。
 
 关于 `JNI_OnLoad` 另一点需要注意的是：你所作出的任何对于 `FindClass` 的调用发生在用于加载共享库的类加载器的上下文。通常，`FindClass` 使用与解释栈顶端的方法相关联的加载器，或者如果没有（由于线程只是被附接的）它使用“system”类加载器。这使得 `JNI_OnLoad` 成为查找和缓存类对象引用的适当场所。
 
 ## 64 位注意事项
-
-Android 当前主要运行于 32 位平台。理论上，可以为 64 位系统构建它，但那不是目前的目标。对于大部分来说，这不是你在与本地层代码交互时需要担忧的，但如果你计划将指向本地层结构的指针保存在对象的 integer 字段中它变得非常重要了。要支持使用 64 位指针的架构，**你需要在 `long` 字段中保存你的本地层指针而不是 `int` 中**。
+Android 当前主要运行于 32 位平台。理论上，可以为 64 位系统构建它，但那不是目前的目标。对于大多数部分来说，这不是你在与本地层代码交互时需要担忧的，但如果你计划将指向本地层结构的指针保存在对象的 integer 字段中，它就变得非常重要了。要支持使用 64 位指针的架构，**你需要在 `long` 字段中保存你的本地层指针而不是 `int` 中**。
 
 ## 不支持的功能/向后兼容性
-
 所有的 JNI 1.6 功能都支持，以下这些例外：
 
  * `DefineClass` 没有实现。 Android 不使用 Java 字节码或类文件，因此传递二进制类数据无法工作。
@@ -274,17 +314,17 @@ Android 当前主要运行于 32 位平台。理论上，可以为 64 位系统�
  为了与老版本 Android 保持向后兼容性，你可能需要意识到如下这些：
  
    * **本地层函数的动态查找**
-   直到 Android 2.0 (Eclair)， 在搜索方法名期间 '$' 字符不被适当地转为 "_00024"。为了绕过这个问题，需要显式地注册或将本地层方法移出内部类。
+直到 Android 2.0 (Eclair)， 在搜索方法名期间 '$' 字符都不被适当地转为 "_00024"。为了绕过这个问题，需要显式地注册或将本地层方法移出内部类。
    * **分离线程**
-   直到 Android 2.0 (Eclair)， 都无法使用 `pthread_key_create` 析够函数来避免 “线程必须在退出前分离”检查。（运行时也使用 pthread key 析够函数，因此查看谁首先被调用将有一个竞态。）
+直到 Android 2.0 (Eclair)， 都无法使用 `pthread_key_create` 析够函数来避免“线程必须在退出前分离”检查。（运行时也使用 pthread key 析够函数，因此查看谁首先被调用将有一个竞态。）
    * **弱全局引用**
-   直到 Android 2.0 (Eclair)， 弱全局引用都没有实现。更老的版本将猛地拒绝使用它们的尝试。你可以使用 Android 平台版本常量测试对它的支持。
-   直到 Android 4.0 (Ice Cream Sandwich)，弱全局引用只能传递给 `NewLocalRef`，`NewGlobalRef` 和 `DeleteWeakGlobalRef`。（规范强烈鼓励程序员在通过它们做任何事之前，创建到弱全局引用的硬引用，因此这不应该是限制。）
-   对于  Android 4.0 (Ice Cream Sandwich)，弱全局引用可以像任何其它 JNI 引用那样使用。
+直到 Android 2.0 (Eclair)， 弱全局引用都没有实现。更老的版本将直接地拒绝使用它们的尝试。你可以使用 Android 平台版本常量测试对它的支持。
+直到 Android 4.0 (Ice Cream Sandwich)，弱全局引用只能传递给 `NewLocalRef`，`NewGlobalRef` 和 `DeleteWeakGlobalRef`。（规范强烈鼓励程序员在通过它们做任何事之前，创建到弱全局引用的硬引用，因此这不应该是限制。）
+对于  Android 4.0 (Ice Cream Sandwich)，弱全局引用可以像任何其它 JNI 引用那样使用。
    * **局部引用**
    直到 Android 4.0 (Ice Cream Sandwich)，局部引用实际上是直接指针。Ice Cream Sandwich添加了间接指针以支持更好的垃圾回收，但这意味着很多 JNI 错误在旧版本上是不可检测的。参考 [ICS 中的 JNI 局部引用变化](http://android-developers.blogspot.com/2011/11/jni-local-reference-changes-in-ics.html) 了解更多详情。
    * **通过 `GetObjectRefType` 确定引用类型**
-   直到 Android 4.0 (Ice Cream Sandwich)，作为使用直接指针的结果（参考上文），正确地实现 `GetObjectRefType` 都是不可能的。相反我们使用一种启发式的方法，按顺序查找弱全局表，参数，局部表，和全局表。它第一次找到你的直接指针，它将报告你的引用具有它恰巧在检测的类型。这意味着，比如，如果你在一个全局 jclass 上调用 `GetObjectRefType`，碰巧与作为隐式参数传递给你的静态本地方法的 jclass 相同，你将获得 `JNILocalRefType` 而不是 `JNIGlobalRefType`。
+直到 Android 4.0 (Ice Cream Sandwich)，作为使用直接指针的结果（参考上文），正确地实现 `GetObjectRefType` 都是不可能的。相反我们使用一种启发式的方法，按顺序查找弱全局表，参数，局部表，和全局表。它第一次找到你的直接指针，它将报告你的引用具有它恰巧在检测的类型。这意味着，比如，如果你在一个全局 jclass 上调用 `GetObjectRefType`，碰巧与作为隐式参数传递给你的静态本地方法的 jclass 相同，你将获得 `JNILocalRefType` 而不是 `JNIGlobalRefType`。
    
 ## FAQ：为什么我遇到了 `UnsatisfiedLinkError`？
 当你使用本地层代码时，像下面这样的失败比较常见：
@@ -353,5 +393,7 @@ java.lang.UnsatisfiedLinkError: Library foo not found
   * 如果数据被最终传递给一个系统 API，它的形式必须是什么？（比如，如果数据最终被传递给接收 byte[] 的函数，在一个直接 `ByteBuffer` 中执行处理可能是不明智的。）
 
 如果没有清晰的赢家，使用直接字节缓冲区。对它们的支持是直接内建在 JNI 中的，且在未来的版本中性能应该有提升。
+
+### [打赏](https://www.wolfcstech.com/about/donate.html)
 
 [原文](https://developer.android.com/training/articles/perf-jni.html)
