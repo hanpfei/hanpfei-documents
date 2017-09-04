@@ -6,7 +6,6 @@ tags:
 - 音视频开发
 ---
 
-
 oRTP 是一个 RTP (Real-time Transport Protocol ([RFC 3550](https://www.ietf.org/rfc/rfc3550.txt))) 协议的库实现，它完全以 C 语言来实现，因此方便应用于各种不同的平台。本文分享用 oRTP 发送，以 Android 的 MediaCodec 编码出来的原始 H.264 码流，又称裸流的方法。
 <!--more-->
 # H.264 码流
