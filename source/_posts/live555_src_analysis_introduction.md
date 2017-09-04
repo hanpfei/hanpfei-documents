@@ -32,10 +32,6 @@ hanpfei0306@ThundeRobot:/media/data/osprojects$ cd live
 hanpfei0306@ThundeRobot:/media/data/osprojects/live$ ./genMakefiles linux-64bit
 hanpfei0306@ThundeRobot:/media/data/osprojects/live$ make
 cd liveMedia ; make
-make[1]: Entering directory '/media/data/osprojects/live/liveMedia'
-c++ -c -Iinclude -I../UsageEnvironment/include -I../groupsock/include -m64  -fPIC -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64 -Wall -DBSD=1 Media.cpp
-c++ -c -Iinclude -I../UsageEnvironment/include -I../groupsock/include -m64  -fPIC -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64 -Wall -DBSD=1 MediaSource.cpp
-c++ -c -Iinclude -I../UsageEnvironment/include -I../groupsock/include -m64  -fPIC -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64 -Wall -DBSD=1 FramedSource.cpp
 . . . . . .
 ```
 
