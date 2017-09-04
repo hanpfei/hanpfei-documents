@@ -635,9 +635,9 @@ RTPSink* H264VideoFileServerMediaSubsession::createNewRTPSink(
 ### [打赏](https://www.wolfcstech.com/about/donate.html)
 
 # live555 源码分析系列文章
-[live555 源码分析：简介](http://www.jianshu.com/p/b08729905a8c)
-[live555 源码分析：基础设施](http://www.jianshu.com/p/199048a9c959)
-[live555 源码分析：MediaSever](http://www.jianshu.com/p/1281f9d1642b)
-[Wireshark 抓包分析 RTSP/RTP/RTCP 基本工作过程](http://www.jianshu.com/p/409f20b7e813)
-[live555 源码分析：RTSPServer](http://www.jianshu.com/p/62387ac1fe41)
-[live555 源码分析： DESCRIBE 的处理](http://www.jianshu.com/p/7ca981ca4c9d)
+[live555 源码分析：简介](https://www.wolfcstech.com/2017/08/28/live555_src_analysis_introduction/)
+[live555 源码分析：基础设施](https://www.wolfcstech.com/2017/08/30/live555_src_analysis_infrasture/)
+[live555 源码分析：MediaSever](https://www.wolfcstech.com/2017/08/31/live555_src_analysis_mediaserver/)
+[Wireshark 抓包分析 RTSP/RTP/RTCP 基本工作过程](https://www.wolfcstech.com/2017/09/01/live555_src_analysis_rtsp_rtp_rtcp_wireshark/)
+[live555 源码分析：RTSPServer](https://www.wolfcstech.com/2017/09/03/live555_src_analysis_rtspserver/)
+[live555 源码分析： DESCRIBE 的处理](https://www.wolfcstech.com/2017/09/04/live555_src_analysis_describe/)
