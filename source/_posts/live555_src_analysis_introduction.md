@@ -190,6 +190,8 @@ proxyServer 目录下的是 "LIVE555 Proxy Server"，它是一个单播 RTSP 服
 
 ### [打赏](https://www.wolfcstech.com/about/donate.html)
 
+Done.
+
 # live555 源码分析系列文章
 [live555 源码分析：简介](https://www.wolfcstech.com/2017/08/28/live555_src_analysis_introduction/)
 [live555 源码分析：基础设施](https://www.wolfcstech.com/2017/08/30/live555_src_analysis_infrasture/)
@@ -197,5 +199,4 @@ proxyServer 目录下的是 "LIVE555 Proxy Server"，它是一个单播 RTSP 服
 [Wireshark 抓包分析 RTSP/RTP/RTCP 基本工作过程](https://www.wolfcstech.com/2017/09/01/live555_src_analysis_rtsp_rtp_rtcp_wireshark/)
 [live555 源码分析：RTSPServer](https://www.wolfcstech.com/2017/09/03/live555_src_analysis_rtspserver/)
 [live555 源码分析： DESCRIBE 的处理](https://www.wolfcstech.com/2017/09/04/live555_src_analysis_describe/)
-
-Done。
+[live555 源码分析： SETUP 的处理](https://www.wolfcstech.com/2017/09/05/live555_src_analysis_setup/)
