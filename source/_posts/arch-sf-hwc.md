@@ -58,8 +58,7 @@ Hardware Composer HAL (HWC) 在 Android 3.0 中被引入，并已经稳定发展
 # 虚拟显示器
 SurfaceFlinger 支持一个主显示器（比如手机或平板内置的东西），一个外部显示器（比如通过 HDMI 连接的电视机），以及一个或多个使组合后的输出在系统中可用的虚拟显示器。虚拟显示器可用于记录屏幕或通过网络发送。
 
-虚拟显示器可以共享主显示器相同的 layers 集合（layer 栈）或拥有它们自己的集合。虚拟显示器没有 VSYNC，因此主显示器的 VSYNC 用于触发所有显示器的组合
- (composition) 。
+虚拟显示器可以共享主显示器相同的 layers 集合（layer 栈）或拥有它们自己的集合。虚拟显示器没有 VSYNC，因此主显示器的 VSYNC 用于触发所有显示器的组合 (composition) 。
 
 在老版本的 Android 中，虚拟显示器总是通过 GLES 组合，而 Hardware Composer 只管理主显示器的组合。在 Android 4.4 中，Hardware Composer 获得了参与虚拟显示器组合的能力。
 
