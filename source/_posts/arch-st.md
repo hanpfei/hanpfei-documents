@@ -1,7 +1,7 @@
 ---
 title: SurfaceTexture
 date: 2017-07-22 18:05:49
-categories: Android开发
+categories: Android 图形系统
 tags:
 - Android开发
 - 图形图像
