@@ -1,7 +1,7 @@
 ---
 title: Android 模拟器下载、编译及调试
 date: 2017-09-11 19:05:49
-categories: Android 开发
+categories: Android开发
 tags:
 - Android开发
 ---
