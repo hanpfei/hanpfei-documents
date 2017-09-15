@@ -1142,3 +1142,8 @@ Android 的 OpenGL ES 图形系统涉及多个库，根据设备类型的不同�
 ### [打赏](https://www.wolfcstech.com/about/donate.html)
 
 Done.
+
+# Android OpenGL 图形系统分析系列文章
+[在 Android 中使用 OpenGL](https://www.wolfcstech.com/2017/09/13/opengl_on_android_with_sv/)
+[Android 图形驱动初始化](https://www.wolfcstech.com/2017/09/14/egl_init_drivers/)
+[EGL Context 创建](https://www.wolfcstech.com/2017/09/15/egl_context_creation/)
