@@ -775,13 +775,17 @@ void *Loader::load_driver(const char* kind,
     }
 ```
 
-对于模拟器的情况，即使用 GLES 软件渲染模拟的情况，EGL 和 OpenGL ES 库为 `/system/lib64/egl/libGLES_android.so` 或 `/system/lib/egl/libGLES_android.so`。如果是物理设备，对特定图形驱动库文件，EGL 库文件或 OpenGL ES 库文件，的查找则按照如下的顺序进行：
-1. `/vendor/lib64/egl` 或 `/vendor/lib/egl` 目录下文件名符合 `lib%s.so` 模式的库文件，比如 `/vendor/lib64/egl/libGLES.so`
-2. `/system/lib64/egl` 或 `/system/lib/egl` 目录下文件名符合 `lib%s.so` 模式的库文件，比如 `/system/lib64/egl/libGLES.so`
-3. `/vendor/lib64/egl` 或 `/vendor/lib/egl` 目录下文件名符合 `lib%s_*.so` 模式的库文件，比如对于 Pixel 设备的 `/vendor/lib64/egl/libEGL_adreno.so`
-4. `/system/lib64/egl` 或 `/system/lib/egl` 目录下文件名符合 `lib%s_*.so` 模式的库文件。
+`checkGlesEmulationStatus()` 函数，在不是运行于模拟器中时，返回 -1；在运行于模拟器中，但不支持 GPU 硬件模拟时返回 0；在运行于模拟器中，通过宿主机端的 OpenGL ES 实现来支持 GPU 硬件模拟时，返回 1；在运行于模拟器中，通过 Android 客户系统端的生产商驱动的 OpenGL ES 实现来支持 GPU 硬件模拟时，返回 2。对于运行环境的这种判断，主要依据两个系统属性，即 `ro.kernel.qemu` 和 `qemu.gles`。
 
-即 Android 会优先采用 /vendor/ 下设备供应商提供的图形驱动库。
+只有在 `checkGlesEmulationStatus()` 返回 0，即运行于模拟器，但不支持 OpenGL ES 的 GPU 硬件模拟时，EGL 和 OpenGL ES 库采用软件实现 `/system/lib64/egl/libGLES_android.so` 或 `/system/lib/egl/libGLES_android.so`。
+
+如果是物理设备，或者模拟器开启了 OpenGL ES 的 GPU 硬件模拟，对特定图形驱动库文件——EGL 库文件或 OpenGL ES 库文件——的查找按照如下的顺序进行：
+1. `/vendor/lib64/egl` 或 `/vendor/lib/egl` 目录下文件名符合 `lib%s.so` 模式，即 `/vendor` 下文件名完全匹配的库文件，比如 `/vendor/lib64/egl/libGLES.so`
+2. `/system/lib64/egl` 或 `/system/lib/egl` 目录下文件名符合 `lib%s.so` 模式，即 `/system` 下文件名完全匹配的库文件，比如 `/system/lib64/egl/libGLES.so`
+3. `/vendor/lib64/egl` 或 `/vendor/lib/egl` 目录下文件名符合 `lib%s_*.so` 模式，即 `/vendor` 下文件名前缀匹配的库文件，比如对于 Pixel 设备的 `/vendor/lib64/egl/libEGL_adreno.so`
+4. `/system/lib64/egl` 或 `/system/lib/egl` 目录下文件名符合 `lib%s_*.so` 模式，即 `/system` 下文件名前缀匹配的库文件。
+
+Android 会优先采用 `/vendor/` 下设备供应商提供的图形驱动库，优先采用库文件名完全匹配的图形驱动库。
 
 第二步，通过 `dlopen()` 加载库文件。
 ```
@@ -1131,13 +1135,19 @@ extern "C" {
 # Android OpenGL ES 图形库结构
 Android 的 OpenGL ES 图形系统涉及多个库，根据设备类型的不同，这些库有着不同的结构。
 
-对于模拟器，Android OpenGL ES 图形库结构如下：
+对于模拟器，没有开启 OpenGL ES 的 GPU 硬件模拟的情况，Android OpenGL ES 图形库结构如下：
 
-![](https://www.wolfcstech.com/images/1315506-31279bc299161d67.png)
+![](http://upload-images.jianshu.io/upload_images/1315506-31279bc299161d67.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+当为模拟器开启了 OpenGL ES 的 GPU 硬件模拟，实际的 EGL 和 OpenGL ES 实现库会采用由 `android-7.1.1_r22/device/generic/goldfish-opengl` 下的源码编译出来的几个库文件，即 `libGLESv2_emulation.so`、`libGLESv1_CM_emulation.so` 和 `libEGL_emulation.so`。此时，OpenGL ES 图形库结构如下：
+
+
+![2017-09-16 11-19-05屏幕截图.png](https://www.wolfcstech.com/images/1315506-2f2b3af4a60e835f.png)
+
 
 对于真实的物理 Android 设备，OpenGL ES 图形库结构如下：
 
-![](https://www.wolfcstech.com/images/1315506-5e70ae089b8f27f9.png)
+![](http://upload-images.jianshu.io/upload_images/1315506-5e70ae089b8f27f9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 ### [打赏](https://www.wolfcstech.com/about/donate.html)
 
