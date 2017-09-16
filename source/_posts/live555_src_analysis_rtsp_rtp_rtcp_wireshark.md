@@ -8,8 +8,7 @@ tags:
 - live555
 ---
 
-整体而言，RTSP 通常工作于可靠的传输协议 TCP 之上，就像 HTTP 那样，用于发起/结束流媒体传输，交换流媒体元信息。RTP 通常工作于 UDP
- 之上，用于传输实际的流媒体数据，其中的载荷格式因具体流媒体类型的不同而不同，通常有专门的 RFC 规范对其进行定义，如 H.264 编码格式视频数据的载荷格式在 [RFC 6184, RTP Payload Format for H.264 Video](https://tools.ietf.org/html/rfc6184) 中定义，其它流媒体数据类型有其它的规范进行定义。RTCP 同样通常工作于 UDP 之上，用于对 RTP 进行控制，流媒体数据的收发端在传输过程中相互发送 RTCP 数据包，将自己这一端检测到的 QoS 等信息传递给对方，使用 RTP/RTCP 协议的应用程序，利用这些信息对收发过程进行控制。RTP 和 RTCP 在传输过程中，工作于不同的端口上。
+整体而言，RTSP 通常工作于可靠的传输协议 TCP 之上，就像 HTTP 那样，用于发起/结束流媒体传输，交换流媒体元信息。RTP 通常工作于 UDP 之上，用于传输实际的流媒体数据，其中的载荷格式因具体流媒体类型的不同而不同，通常有专门的 RFC 规范对其进行定义，如 H.264 编码格式视频数据的载荷格式在 [RFC 6184, RTP Payload Format for H.264 Video](https://tools.ietf.org/html/rfc6184) 中定义，其它流媒体数据类型有其它的规范进行定义。RTCP 同样通常工作于 UDP 之上，用于对 RTP 进行控制，流媒体数据的收发端在传输过程中相互发送 RTCP 数据包，将自己这一端检测到的 QoS 等信息传递给对方，使用 RTP/RTCP 协议的应用程序，利用这些信息对收发过程进行控制。RTP 和 RTCP 在传输过程中，工作于不同的端口上。
 <!--more-->
 我们通过 Wireshark 抓包来看一下 RTSP/RTP/RTCP 的基本工作过程。我们启动 `live555MediaServer`，其工作目录下存有一些流媒体文件，其中包括 H.264 原始码流格式的文件 `raw_h264_stream.264`。启动  Wireshark 抓包。然后通过 `ffplay` 请求 `live555MediaServer` 并播放 `raw_h264_stream.264`：
 ```
