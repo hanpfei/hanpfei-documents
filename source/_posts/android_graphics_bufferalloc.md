@@ -1207,3 +1207,10 @@ lock 时，需要以 `Rect` 的形式给 `GraphicBufferMapper` 传入 lock 的�
 ### [打赏](https://www.wolfcstech.com/about/donate.html)
 
 Done.
+
+# Android OpenGL 图形系统分析系列文章
+[在 Android 中使用 OpenGL](https://www.wolfcstech.com/2017/09/13/opengl_on_android_with_sv/)
+[Android 图形驱动初始化](https://www.wolfcstech.com/2017/09/14/egl_init_drivers/)
+[EGL Context 创建](https://www.wolfcstech.com/2017/09/15/egl_context_creation/)
+[Android 图形系统之图形缓冲区分配](https://www.wolfcstech.com/2017/09/20/android_graphics_bufferalloc/)
+[Android 图形系统之gralloc](https://www.wolfcstech.com/2017/09/21/android_graphics_gralloc/)
