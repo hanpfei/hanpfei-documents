@@ -7,25 +7,50 @@ tags:
 - Java开发
 ---
 
-1、建立专有帐户
+# 建立专有帐户
 ```
-$ sudo useradd gerrit
+$ sudo useradd gerrit -m -s /bin/bash
 $ sudo passwd gerrit
 $ su gerrit
 ```
 <!--more-->
-2、配置 Java 环境
+# 配置 Java 环境
 
-3、从官网下载gerrit
+# 从官网下载gerrit
 
 https://www.gerritcodereview.com/
 
 当前最新版本为 2.14。
 
-4、安装gerrit
+# 安装 MySQL
+```
+$ sudo apt-get install mysql-server
+$ sudo apt-get install mysql-client
+$ sudo apt-get install libmysqlclient-dev
+```
+
+# 安装gerrit
+
+通过如下命令安装 Gerrit：
+```
+$ java -jar gerrit-2.14.war init -d review_site
+```
+
+按照提示一步步完成安装。
+
+有几个按转配置需要特别注意一下。
+
+关于 Gerrit 的 Git 仓库的保存地址：
+```
+*** Git Repositories
+*** 
+
+Location of Git repositories   [git]: GerritResource
+```
+
+这个选项用于配置 Gerrit 的 Git 仓库的保存地址。上面的配置将创建 `/home/gerrit/review_site/GerritResource` 目录用于保存 Gerrit 的 Git 仓库。
 
 关于数据库的配置：
-
 ```
 *** SQL Database
 *** 
@@ -172,12 +197,9 @@ Bye
 
 然后重新安装 Gerrit 即可。（新版本的 MySQL TIMESTAMP 默认值的问题需要手动配置一下。）
 
-5、建立存放代码的目录
-```
-$ mkdir /home/gerrit/GerritResource
-```
+安装完成后，Gerrit Server 将自动启动。
 
-6、配置gerrit
+# 配置gerrit
 ```
 $ vim review_site/etc/gerrit.config
 ```
@@ -218,18 +240,29 @@ $ vim review_site/etc/gerrit.config
         allowRemoteAdmin = true
 ```
 
-7、设置第一个 Gerrit 用户的帐号和密码
+按照如上内容配置完 Gerrit Server 之后，可以通过如下命令重新启动它以应用新的配置：
+```
+$ review_site/bin/gerrit.sh restart
+```
+
+# 设置第一个 Gerrit 用户的帐号和密码
 ```
 $ touch ./review_site/etc/passwd
 $ htpasswd -b ./review_site/etc/passwd admin admin
 Adding password for user admin
 ```
 
+`htpasswd` 命令是 `apache2-utils` 软件包中的一个工具。如果系统中还没有安装的话，通过如下命令进行安装：
+```
+$ sudo apt-get install apache2-utils
+```
+
 (后续再添加 Gerrit 用户可使用 `htpasswd -b ./review_site/etc/passwd UserName PassWord`) 
 
 对于 Gerrit 来说，第一个成功登录的用户具有特殊意义 —— 它会直接被赋予管理员权限。对于第一个账户，需要特别注意一下。
 
-8、开启 Gerrit 服务器
+# 开启 Gerrit 服务器
+Gerrit 服务器还可以通过如下的命令进行启动：
 ```
 $ review_site/bin/gerrit.sh start
 Starting Gerrit Code Review: FAILED
@@ -272,14 +305,14 @@ $ review_site/bin/gerrit.sh start
 Starting Gerrit Code Review: OK
 ```
 
-可以看到 Gerrit Server 成功启动了。此时通过浏览器，打开 `http://localhost:8080` 将可以看到如下这样的页面：
+可以看到 Gerrit Server 成功启动了。此时通过浏览器，打开 `http://review.virtcloudgame.com:8080` 将可以看到如下这样的页面：
 
-![Gerrit CodeReview](https://www.wolfcstech.com/images/1315506-ce5314beafa42d40.png)
+![2017-11-27 15-11-01屏幕截图.png](https://www.wolfcstech.com/images/1315506-27e86131e47160c1.png)
 
-9. 修改认证方式和反向代理
+# 修改认证方式和反向代理
 为了通过更为强大的 Web 服务器来对外提供服务，同时方便 Gerrit Server 的 HTTP 用户认证方式可以正常工作，需要设置反向代理。这里使用 nginx 作为 Web 服务器。
 
-首先更改 Gerrit 配置，使能代理；另外，使用反向代理后就可以直接使用 nginx 的 80 端口访问了，需要把 `canonicalWebUrl` 中的 8080 去掉：
+首先更改 Gerrit 配置，使能代理；另外，使用反向代理后就可以直接使用 nginx 的 80 端口访问了，需要把 `canonicalWebUrl` 中的 8080 去掉，Gerrit Server 监听的端口也改为 8081：
 ```
 [gerrit]
 	basePath = GerritResource
@@ -301,13 +334,11 @@ Stopping Gerrit Code Review: OK
 Starting Gerrit Code Review: OK
 ```
 
-上面的修改将使 Gerrit Server 监听在 8081 端口上，同上，将认证方式修改为 HTTP。再次在浏览器中打开 `http://review.virtcloudgame.com:8081`，出现如下报错：
+上面的修改将使 Gerrit Server 监听在 8081 端口上，同上，将认证方式修改为 HTTP。
 
-![2017-11-23 11-37-04屏幕截图.png](https://www.wolfcstech.com/images/1315506-4e296f73e08be690.png)
+Gerrit Server 强制要求使用反向代理，通过反向代理服务器提供的 `Authorization` 等 HTTP 头来获得用户认证信息。
 
-这是由于对 HTTP 认证来说，Gerrit Server 强制要求使用反向代理，通过反向代理服务器提供的 `Authorization` 等 HTTP 头来获得用户认证信息。
-
-修改 nginx 的配置文件 `/etc/nginx/nginx.conf`，在它的 `http` 块中加入如下内容：
+接着配置 nginx。修改 nginx 的配置文件 `/etc/nginx/nginx.conf`，在它的 `http` 块中加入如下内容：
 ```
         server {
 	  listen 80;
@@ -332,9 +363,9 @@ $ sudo nginx -s reload
 
 这样就可以直接通过 nginx 监听的 80 端口访问 Gerrit Server 了。
 
-![2017-11-23 11-41-07屏幕截图.png](https://www.wolfcstech.com/images/1315506-c616dba14c5b09ea.png)
+![2017-11-23 11-41-07屏幕截图.png](http://upload-images.jianshu.io/upload_images/1315506-c616dba14c5b09ea.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-10. Replication 配置
+# Replication 配置
 
 所谓的 replication，是 Gerrit 的一个插件，它可以自动地将 Gerrit Code Review 对它所管理的 Git 仓库创建的任何 changes push 到另外一个系统里。Gerrit 本身提供了两大功能：一是 Code Review；二是 Git 仓库。Replication 插件通常用于提供 changes 的镜像，或热备份。
 
@@ -342,10 +373,43 @@ $ sudo nginx -s reload
 
 配置 replication 将代码同步到 GitLab 的方法如下。
 
-如果通过 SSH 来从 Gerrit 同步代码到 GitLab，需要确保远程系统，也就是 GitLab 服务器的主机密钥已经在 Gerrit 用户的 `~/.ssh/known_hosts` 文件中了。最简单的添加主机密钥的方法是，在命令行中手动地连接一次远程系统：
+如果通过 SSH 来从 Gerrit 同步代码到 GitLab，需要确保远程系统，也就是 GitLab 服务器的主机密钥已经在 Gerrit 用户的 `~/.ssh/known_hosts` 文件中了。
+
+首先，如果还没有生成过 SSH key 的话，需要生成 SSH Key：
 ```
-$ sudo su -c 'ssh -p 22222 g.hz.netease.com echo' gerrit
+$ ssh-keygen -t rsa
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/gerrit/.ssh/id_rsa): 
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in /home/gerrit/.ssh/id_rsa.
+Your public key has been saved in /home/gerrit/.ssh/id_rsa.pub.
+The key fingerprint is:
+SHA256:idkrXgfm7oq+dNsWi9Q9ewDyZuQEYl8icA4ltq8o46U gerrit@admins-B85-HD3-A
+The key's randomart image is:
++---[RSA 2048]----+
+|  =oo            |
+| . *+ o .        |
+|  ...+ +         |
+|   .  o++.       |
+|    . oBSo       |
+| . .  .oBo+      |
+|+ ....o++o.+     |
+|o.o. +.*o.. .    |
+| E .+.+++  .     |
++----[SHA256]-----+
 ```
+
+然后将 SSK Key 的公钥，即 `~/.ssh/id_rsa.pub` 文件的内容，添加到 GitLab 中具有权限的用户的 SSH key 列表里。
+
+最简单的添加主机密钥的方法是，在命令行中手动地连接一次远程系统：
+```
+$ su -c 'ssh -p 22222 g.hz.netease.com echo' gerrit
+密码： 
+Permission denied (publickey).
+```
+
+上面的远程登录失败了，但不用管它，远程主机的密钥实际上已经添加进 `~/.ssh/id_rsa.pub` 文件里了。
 
 注意，如果 GitLab 的 SSH 服务不是在标准的 22 端口上提供的，需要通过 `-p` 参数给上面执行的 `ssh` 命令指定 SSH 服务的端口号。GitLab 的 SSH 服务监听的端口号，可以从项目的 URL 中看出来 —— SSH URL 中主机名后面的冒号之后的是端口号。
 
@@ -415,9 +479,9 @@ $ ssh -p 29418 localhost replication start
 
 replication 插件在执行过程中，产生的日志文件位于 `~/review_site/logs/replication_log`。当 replication 失败时，可以从这个文件中找到一点线索。如果 这个日志中提供的信息不足，还可以修改 replication 的代码，让它输出更多日志，编译它的代码，然后将生成的 jar 文件，替换 `~/review_site/plugins/replication.jar`，并重启 Gerrit Server。
 
-10. Gerrit 工程的创建
+# Gerrit 工程的创建
 用前面创建的 `admin` 用户登录，它将自动获得管理员权限，可以以这个用户创建工程。登录之后，选择 `Projects` -> `Create New Project`：
-![](https://www.wolfcstech.com/images/1315506-f1a3fd848fab6968.png)
+![](http://upload-images.jianshu.io/upload_images/1315506-f1a3fd848fab6968.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 在 `Project Name:` 一栏输入工程的名字，并点击 `Create Project` 按钮即可完成工程的创建。在 Gerrit 的配置文件 `review_site/etc/gerrit.config` 中，`basePath` 定义了这些工程的位置。
 
@@ -431,7 +495,7 @@ $ git clone --bare ssh://git@g.hz.netease.com:22222/cloudgame/cloudgame_tools.gi
 ```
 
 在工程的主页，可以找到 clone 工程的命令。直接复制命令，然后将工程 clone 到本地：
-![](https://www.wolfcstech.com/images/1315506-0105a12ab738c99a.png)
+![](http://upload-images.jianshu.io/upload_images/1315506-0105a12ab738c99a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 像下面这样 Clone Gerrit 上的工程：
 ```
@@ -470,7 +534,7 @@ To ssh://admin@review.virtcloudgame.com:29418/EventServer
 ```
 
 在 Gerrit 上将看到刚刚提交的代码：
-![2017-11-24 19-03-56屏幕截图.png](https://www.wolfcstech.com/images/1315506-74cf614902a345dc.png)
+![2017-11-24 19-03-56屏幕截图.png](http://upload-images.jianshu.io/upload_images/1315506-74cf614902a345dc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 Code Review 结束之后，Submit 代码，代码将被提交到 Gerrit 的 Git 仓库，同时被复制到 GitLab 的对应仓库中。
 
