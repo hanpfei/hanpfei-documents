@@ -368,7 +368,35 @@ $ sudo systemctl status snap.anbox.container-manager
 
 可以启动 Anbox 会话。
 
-当 Anbox 的容器管理服务起动时，它会挂载 Android 系统镜像，起动 LXC 容器，并在容器内起动 Android 系统。当启动 Anbox 会话时，将促使容器管理器与主机系统上的 ADB 服务建立连接。此时可以通过 `adb` 命令查看 Anbox 起动的 Android 系统的状况，如下面这样：
+当 Anbox 的容器管理服务起动时，它会监听一个 Unix 域 Socket，`/run/anbox-container.socket`。（这个地址在 `anbox/src/anbox/container/service.cpp` 文件的 `Service::create()` 函数中，从  `anbox::SystemConfiguration::container_socket_path()` 获得）。
+
+当启动 Anbox 应用，即会话管理器时，它会通过 Unix 域 Socket 与容器管理服务建立连接。容器管理服务接收到连接，且容器还没有启动时，它会挂载 Android 系统镜像，起动 LXC 容器，并在容器内起动 Android 系统。
+
+同时会话管理器与主机系统上的 ADB 服务建立连接。如：
+```
+$ ps -aux | grep anbox
+hanpfei+ 15883  3.3  1.0 3024640 175500 ?      Sl   19:01   0:34 /usr/bin/python3 /usr/bin/remarkable /home/hanpfei0306/data/MyProjects/hanpfei-documents/source/_posts/anbox_container_manager_service.md
+root     16732  0.1  0.0 569980 12288 ?        Ssl  19:17   0:00 /snap/anbox/x1/usr/bin/anbox container-manager --data-path=/var/snap/anbox/common/ --android-image=/snap/anbox/x1/android.img --daemon
+hanpfei+ 16765  4.5  0.2 335372 44676 ?        Sl   19:17   0:00 /snap/anbox/x1/usr/bin/anbox launch --package=org.anbox.appmgr --component=org.anbox.appmgr.AppViewActivity
+root     16794  0.0  0.0  36776  3692 ?        Ss   19:17   0:00 /snap/anbox/current/libexec/lxc/lxc-monitord /var/snap/anbox/common/containers 14
+hanpfei+ 16917  0.0  0.2 1281208 42556 ?       Sl   19:18   0:00 /snap/anbox/x1/usr/bin/anbox session-manager
+root     16931  0.0  0.0 576280  8216 ?        Ss   19:18   0:00 [lxc monitor] /var/snap/anbox/common/containers default
+100000   16940  0.0  0.0   7920  2540 ?        Ss   19:18   0:00 /system/bin/sh /anbox-init.sh
+100000   16999  0.0  0.0  16472  4068 ?        Sl   19:18   0:00 /system/bin/anboxd
+hanpfei+ 17087  0.0  0.0  19300   936 pts/2    R+   19:18   0:00 grep --color=auto anbox
+$ adb devices
+List of devices attached
+emulator-5558	device
+
+$ lsof -i | grep adb
+adb       30288 hanpfei0306    6u  IPv4 23788668      0t0  TCP localhost:5037 (LISTEN)
+adb       30288 hanpfei0306    7u  IPv4 27391368      0t0  TCP localhost:42048->localhost:5559 (ESTABLISHED)
+$ lsof -i | grep 42048
+anbox     16917 hanpfei0306   29u  IPv4 27385836      0t0  TCP localhost:5559->localhost:42048 (ESTABLISHED)
+adb       30288 hanpfei0306    7u  IPv4 27391368      0t0  TCP localhost:42048->localhost:5559 (ESTABLISHED)
+```
+
+此时可以通过 `adb` 命令查看 Anbox 起动的 Android 系统的状况，如下面这样：
 ```
 $ adb devices
 List of devices attached
@@ -722,8 +750,7 @@ case "$1" in
 esac
 ```
 
-在这个脚本中，起动容器管理服务时，调用 `anbox-bridge.sh start` 为
- Anbox 创建虚拟网卡，并调用 `anbox-wrapper.sh` 启动 anbox 二进制可执行程序。
+在这个脚本中，启动容器管理服务时，调用 `anbox-bridge.sh start` 脚本为  Anbox 创建虚拟网卡，并调用 `anbox-wrapper.sh` 启动 anbox 二进制可执行程序。脚本的执行依赖几个环境变量的设置。在脚本执行时，环境变量 `SNAP` 指向 `/snap/anbox/current`，环境变量 `SNAP_COMMON` 指向 `/var/snap/anbox/common`。
 
 `anbox-wrapper.sh` 也就是 anbox 源码库中的 `scripts/snap-wrapper.sh`，其内容如下：
 ```
