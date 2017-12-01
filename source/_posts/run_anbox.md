@@ -95,11 +95,25 @@ $ scripts/create-package.sh  \
 
 # 以自己构建的 android.img 运行 Anbox
 
-如果你已经在你的系统上安装了 Anbox，你需要先停掉它。如果你使用安装器脚本并 snap，你可以这样做：
+如果你已经在你的系统上安装了 Anbox，你需要先停掉它。在通过 Anbox 安装器脚本完成 Anbox 安装并 snap 之后，Anbox 会自动启动，查看主机的进程列表将看到如下内容：
 ```
-$ initctl stop anbox
+$ ps -aux | grep anbox
+root      7113  0.0  0.0 766588 12308 ?        Ssl  14:46   0:00 /snap/anbox/65/usr/bin/anbox container-manager --data-path=/var/snap/anbox/common/ --android-image=/snap/anbox/65/android.img --daemon
+hanpfei+  8327  7.2  1.5 2464708 252328 ?      Sl   14:49   0:01 /snap/anbox/65/usr/bin/anbox session-manager
+root      8339  0.0  0.0  36776  3616 ?        Ss   14:49   0:00 /snap/anbox/current/libexec/lxc/lxc-monitord /var/snap/anbox/common/containers 14
+root      8341  0.0  0.0 772888  8156 ?        Ss   14:49   0:00 [lxc monitor] /var/snap/anbox/common/containers default
+100000    8350  0.0  0.0   7920  5912 ?        Ss   14:49   0:00 /system/bin/sh /anbox-init.sh
+100000    8423  0.0  0.0  16728  9260 ?        Sl   14:49   0:00 /system/bin/anboxd
+110000    8877  0.8  0.5 1038888 95412 ?       Sl   14:49   0:00 org.anbox.appmgr
+hanpfei+  9094  0.0  0.0  19300   976 pts/21   S+   14:49   0:00 grep --color=auto anbox
+```
+
+此时，可以这样做来停掉 Anbox：
+```
 $ sudo systemctl stop snap.anbox.container-manager
 ```
+
+再次查看主机的进程列表，将无法再看到 Anbox 相关的进程。
 
 同时停掉它们是很重要的，容器管理器和会话管理器。
 
