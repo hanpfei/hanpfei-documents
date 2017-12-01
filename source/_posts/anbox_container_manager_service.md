@@ -368,8 +368,7 @@ $ sudo systemctl status snap.anbox.container-manager
 
 可以启动 Anbox 会话。
 
-当 Anbox 的容器管理服务起动时，它会挂载 Android 系统镜像，起动
- LXC 容器，并在容器内起动 Android 系统。当启动 Anbox 会话时，将促使容器管理器与主机系统上的 ADB 服务建立连接。此时可以通过 `adb` 命令查看 Anbox 起动的 Android 系统的状况，如下面这样：
+当 Anbox 的容器管理服务起动时，它会挂载 Android 系统镜像，起动 LXC 容器，并在容器内起动 Android 系统。当启动 Anbox 会话时，将促使容器管理器与主机系统上的 ADB 服务建立连接。此时可以通过 `adb` 命令查看 Anbox 起动的 Android 系统的状况，如下面这样：
 ```
 $ adb devices
 List of devices attached
