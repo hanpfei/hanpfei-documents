@@ -8,6 +8,7 @@ tags:
 
 # Anbox LXC 编译安装
 在命令行中，通过 `anbox` 命令直接启动 Anbox 的容器管理器时，它将动态链接系统中安装的 liblxc。由 Anbox 项目的 snapcraft.yaml 文件，可以看到在创建 Anbox 的 snap 时，LXC 编译相关的选项：
+<!--more-->
 ```
   lxc:
     source: https://github.com/lxc/lxc
