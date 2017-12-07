@@ -1,9 +1,9 @@
 ---
 title: Anbox 容器管理服务
 date: 2017-12-01 11:05:49
-categories: Android开发
+categories: 云计算
 tags:
-- Android开发
+- 云计算
 ---
 
 # Anbox 安装过程分析

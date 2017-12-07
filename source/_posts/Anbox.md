@@ -1,9 +1,9 @@
 ---
 title: Anbox
 date: 2017-11-28 13:05:49
-categories: Android开发
+categories: 云计算
 tags:
-- Android开发
+- 云计算
 - 翻译
 ---
 
