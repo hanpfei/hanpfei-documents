@@ -1,7 +1,7 @@
 ---
 title: Android 硬件 OpenGL ES 模拟设计概述
 date: 2017-09-16 13:05:49
-categories: Android 图形系统
+categories: 虚拟化
 tags:
 - Android开发
 - 图形图像
