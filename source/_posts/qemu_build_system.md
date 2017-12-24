@@ -1,9 +1,10 @@
 ---
 title: QEMU 构建系统架构
 date: 2017-07-20 15:35:49
-categories: Android开发
+categories: 虚拟化
 tags:
 - Android开发
+- 虚拟化
 - 翻译
 ---
 

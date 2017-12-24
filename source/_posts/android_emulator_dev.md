@@ -1,8 +1,9 @@
 ---
 title: Android 模拟器下载、编译及调试
 date: 2017-09-11 19:05:49
-categories: Android开发
+categories: 虚拟化
 tags:
+- 虚拟化
 - Android开发
 ---
 
