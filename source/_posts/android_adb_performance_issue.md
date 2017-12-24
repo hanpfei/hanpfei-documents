@@ -1,9 +1,9 @@
 ---
 title: 模拟器性能问题分析与解决
 date: 2017-11-21 20:05:49
-categories: Android开发
+categories: 虚拟化
 tags:
-- Android开发
+- 虚拟化
 ---
 
 # NUMA 机制的应用

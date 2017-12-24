@@ -1,9 +1,9 @@
 ---
 title: 运行 Anbox
 date: 2017-11-28 19:05:49
-categories: Android开发
+categories: 虚拟化
 tags:
-- Android开发
+- 虚拟化
 - 翻译
 ---
 

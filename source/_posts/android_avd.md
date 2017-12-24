@@ -1,8 +1,9 @@
 ---
 title: Android AVD
 date: 2017-11-21 19:05:49
-categories: Android开发
+categories: - 虚拟化
 tags:
+- 虚拟化
 - Android开发
 ---
 
