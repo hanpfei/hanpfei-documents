@@ -1,9 +1,9 @@
 ---
 title: Anbox
 date: 2017-11-28 13:05:49
-categories: 云计算
+categories: 虚拟化
 tags:
-- 云计算
+- 虚拟化
 - 翻译
 ---
 

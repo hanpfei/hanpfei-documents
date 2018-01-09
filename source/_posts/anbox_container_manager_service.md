@@ -1,9 +1,9 @@
 ---
 title: Anbox 容器管理服务
 date: 2017-12-01 11:05:49
-categories: 云计算
+categories: 虚拟化
 tags:
-- 云计算
+- 虚拟化
 ---
 
 # Anbox 安装过程分析

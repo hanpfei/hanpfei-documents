@@ -1,9 +1,9 @@
 ---
 title: LXC C API 使用
 date: 2017-12-05 11:05:49
-categories: 云计算
+categories: 虚拟化
 tags:
-- 云计算
+- 虚拟化
 ---
 
 LXC 提供了稳定的 C API 以及大量不同语言的绑定。LXC 版本中的 liblxc1 API 的接口可能会增加，但不会在不调用 liblxc2 的情况下删除或更改现有符号。

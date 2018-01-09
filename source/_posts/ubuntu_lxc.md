@@ -1,9 +1,9 @@
 ---
 title: Ubuntu LXC
 date: 2017-12-04 11:05:49
-categories: 云计算
+categories: 虚拟化
 tags:
-- 云计算
+- 虚拟化
 - 翻译
 ---
 
