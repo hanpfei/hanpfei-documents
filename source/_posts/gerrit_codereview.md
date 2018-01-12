@@ -1,9 +1,9 @@
 ---
 title: Gerrit代码审核服务器搭建全过程
 date: 2017-11-24 19:05:49
-categories: Java开发
+categories: 开发流程
 tags:
-- 后台开发
+- 开发流程
 - Java开发
 ---
 
