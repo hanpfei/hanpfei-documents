@@ -11,7 +11,7 @@
 ## 网络信息
 
 * **Email：** hanpfei@gmail.com
-* ** 豆瓣书单：** https://book.douban.com/people/3681478/
+* **豆瓣书单：** https://book.douban.com/people/3681478/
 * **微博：** http://weibo.com/p/1005051775675975
 * **GitHub：** https://github.com/hanpfei
 
