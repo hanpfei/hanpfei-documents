@@ -9,7 +9,7 @@ tags:
 一时兴起，搞了自己的开源项目或者是个人博客出来，虽然出发点常常并不是要利用这些得到多大的好处，而仅仅是出于一种保存曾经战斗过的地方的习惯，或者随手总结记录，以弥补随着年龄的增长而变得越来越差的记忆的不足，但如果自己搞得这些东西能被更多的人看到，能够帮助许许多多有需要的同学，并和全世界各地的广大开发者一起交流，那么对于写代码、写文档时孤寂的心倒也不失为一种很好的慰藉。将个人项目推广一下，为更多人所用，从个人角度而言，可以从中获得成就感，或者其它一些潜在的收益，从全社会而言，则是知识有了更多的沉淀，更多得人得到了帮助。
 <!--more-->
 
-![1.jpg](http://upload-images.jianshu.io/upload_images/1315506-15a25944cec8ed71.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![1.jpg](https://www.wolfcstech.com/images/1315506-15a25944cec8ed71.jpg)
 
 
 笔者目前维护着多个 hosting 在 GitHub 上的开源项目，和多个个人博客。“不要重复制造轮子” 的声音时时在耳边响起，笔者的大多数个人开源项目都是基于前人已有的一些工作成果来完成的。开天辟地的颠覆式创新是伟大的，而一点一滴的微小改进，对现有事物的微创新也一样是有价值的，说不定从一个个的微创新的积累之中，也能产生不错的作品，所谓由量变到质变，积小流以成江河，积跬步以致千里是也。
@@ -41,7 +41,7 @@ tags:
 # 开源项目的文档要尽可能齐全
 为了方便有需要的同学能够更快地上手我们的项目，文档需要尽可能的齐全。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-cb07f7d769b83e0a.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://www.wolfcstech.com/images/1315506-cb07f7d769b83e0a.jpg)
 
 [ht-candywebcache-android](https://github.com/NEYouFan/ht-candywebcache-android) 这个项目，在开源初期，只放了 Readme 文档以介绍项目的接入方法及基本用法。后来考虑到，还是应该帮助用户对我们的项目有更多更深的理解，于是以 Wiki 的形式放了设计文档，SDK 与服务器的通信协议文档，Diff 方式的详细说明文档等。
 
@@ -49,7 +49,7 @@ tags:
 
 # 在问答社区回答相关的问题
 
-![](http://upload-images.jianshu.io/upload_images/1315506-1f2a78658299259e.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://www.wolfcstech.com/images/1315506-1f2a78658299259e.jpg)
 
 为了使自己的项目得到更多的认识和关注，笔者曾尝试在如下的问答社区搜索或回答与项目有关的问题：
  * 在 [oschina 问答社区](https://www.oschina.net/question) 集中搜索并专门回答过关于 libcurl for android 的问题；
@@ -81,7 +81,7 @@ tags:
 
 此外，在自己注册的各个网站的个人资料中，写上自己的个人博客主页的地址，笔者的 [简书个人主页](https://www.jianshu.com/u/1109fa43aaf6)，[GitHub 主页](https://github.com/hanpfei)，[知乎主页](https://www.zhihu.com/people/han-peng-fei-49/activities)，这样可以为我们的网站引一些流量。通过百度的网站分析可以看到这一点。
 
-![](http://upload-images.jianshu.io/upload_images/1315506-80eeaaf985c80052.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://www.wolfcstech.com/images/1315506-80eeaaf985c80052.png)
 
 将我们的博文链接分享到 QQ 空间、微博、脉脉及加入的一些业内的技术交流 QQ 群也是个不错的注意。笔者感觉，微信朋友圈是一个比较私人的场合，博文的主题主要是技术相关的内容，因而笔者不常在微信朋友圈分享博文。
 
