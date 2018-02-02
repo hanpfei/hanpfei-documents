@@ -1,10 +1,12 @@
 ---
-title: 我在开源项目推广上所做的尝试
+title: 个人项目推广
 date: 2017-05-19 11:43:49
 categories: 随想杂谈
 tags:
 - 随想杂谈
 ---
+
+个人项目主要是指个人的一些开源项目和技术博客。
 
 我毕业的时候，进的是一家手机 IC 公司，即以 total solution 和华强北山寨机闻名世界的 MTK，在里面做 Android 应用开发和文本渲染 framework 的维护。IC 公司内部，技术氛围一般都很浓厚，MTK 也是这样。期间的 2012 年，开始在 oschina 写博客。尽管在学校的时候，在 China Unix 和 CSDN 上面，写过一些以 Linux kernel 和毕设相关主题的博客，但毕业之后就停掉了更新。2012 年的时候，算是重新把写博客给捡了起来。不过那个时候，写博客的主要目的是为了记录。小学的时候，老师就讲，好记忆不如烂笔头嘛 —— 将编程学习过程中的想法记录下来，方便自己后面有需要的时候查阅。以 IC 公司整个开发部门闷骚的风格，当时也从没有前辈提醒过运营的重要性，要去学习运营。
 
@@ -69,4 +71,8 @@ tags:
 
 # 互推
 
-想到这一点，主要是看到 [stormzhang](http://stormzhang.com/)，[hukai](http://hukai.me/)，及 [Trinea](http://www.trinea.cn/) 他们几个的博客，相互为对方在自己的站点内提供外部链接。
+想到这一点，主要是看到 [stormzhang](http://stormzhang.com/)，[hukai](http://hukai.me/)，及 [Trinea](http://www.trinea.cn/) 他们几个的博客，相互为对方在自己的站点内提供外部链接。在 Trinea 的[个人主页](http://www.codekk.com/gays) 上还提供了他的邮箱地址，可以联系他互换友链。
+
+[用于内推和招人的开源项目](http://b.codekk.com/detail/Trinea/%E7%94%A8%E4%BA%8E%E5%86%85%E6%8E%A8%E5%92%8C%E6%8B%9B%E4%BA%BA%E7%9A%84%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE) 这个项目，可以为我们发布职位招聘信息提供一些方便。
+
+[掘金](https://juejin.im/timeline) 这个网站，当前在 http://alexa.chinaz.com 查到的全球综合排名是 9275 位，日均访问 IP 10W 左右，日均 PV 25W 左右。这个网站本身目前的流量还是比较可观的。掘金为我们提供了一个 “分享链接” 的功能，通过这个功能，我们可以把我们的项目主页、博客主页或者文章链接发布出去。
