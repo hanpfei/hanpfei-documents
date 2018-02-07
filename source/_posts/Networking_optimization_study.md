@@ -6,7 +6,7 @@ tags:
 ---
 
 [携程App的网络性能优化实践](http://www.infoq.com/cn/articles/how-ctrip-improves-app-networking-performance)
-
+<!--more-->
 [2016年携程App网络服务通道治理和性能优化实践](http://mp.weixin.qq.com/s?__biz=MzA3ODg4MDk0Ng==&mid=2651112505&idx=1&sn=70b6a46e92c372a09edc7050379bd158&scene=1&srcid=0803zfDgG6KTseJwK3UA16Z5&from=singlemessage&isappinstalled=0#wechat_redirect)
 
 [蘑菇街App Chromium网络栈实践](http://www.infoq.com/cn/articles/mogujie-app-chromium-network-layer)

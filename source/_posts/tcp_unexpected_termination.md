@@ -8,7 +8,10 @@ tags:
 ---
 
 
-TCP 的异常终止是相对于正常释放 TCP 连接的过程而言的，我们都知道，TCP 连接的建立是通过三次握手完成的，而 TCP 正常释放连接是通过四次挥手来完成，但是有些情况下，TCP 在交互过程中会出现一些意想不到的情况，导致 TCP 无法按照正常的四次挥手来释放连接，如果此时不通过其他的方式来释放 TCP 连接的话，这个 TCP 连接将会一直存在，占用系统的部分资源。在这种情况下，我们就需要有一种能够释放 TCP 连接的机制，这种机制就是 TCP 的 Reset 报文。Reset 报文是指 TCP 报头的标志字段中的 Reset 位设置为一的报文，如下图所示：
+TCP 的异常终止是相对于正常释放 TCP 连接的过程而言的，我们都知道，TCP 连接的建立是通过三次握手完成的，而 TCP 正常释放连接是通过四次挥手来完成，但是有些情况下，TCP 在交互过程中会出现一些意想不到的情况，导致 TCP 无法按照正常的四次挥手来释放连接。如果此时不通过其他方式释放 TCP 连接的话，这个 TCP 连接将会一直存在，并占用系统的部分资源。
+<!--more-->
+
+在TCP异常终止的情况下，我们就需要有一种能够释放 TCP 连接的机制，这种机制就是 TCP 的 Reset 报文。Reset 报文是指 TCP 报头的标志字段中的 Reset 位设置为一的报文，如下图所示：
 
 ![](https://www.wolfcstech.com/images/1315506-9dcac36fb9aede73.png)
 
@@ -314,9 +317,6 @@ java.net.ProtocolException: unexpected end of stream
 ```
 
 在 Android 客户端从 HTTP 接收数据时， HTTP 服务器意外挂掉，HTTPS 和 HTTP 请求，抛出了异常 **`java.net.ProtocolException: unexpected end of stream`** ，而 HTTP/2 请求，则抛出了异常 **`okhttp3.internal.http2.StreamResetException: stream was reset: CANCEL`**。对于这三种请求，在 HTTP 服务器结束退出时，都没有来得及发送 ***[FIN, ACK]*** 结束 TCP 连接，***[FIN, ACK]*** 均是首先由 Android 客户端发出。
-
-
-
 
 这分为两种情况，一是发送数据的一方意外崩溃，接收数据的一方看到了什么？二是接收数据的一方意外崩溃，发送数据的一方又看到了什么？
 
