@@ -6,8 +6,7 @@ tags:
 - 图形图像
 ---
 
-[Harfbuzz]([http://harfbuzz.org/](http://harfbuzz.org/)
-) 是一个 [OpenType](http://www.microsoft.com/typography/otspec/) 文本整形引擎。当前的 Harfbuzz 代码库，之前被称为 harfbuzz-ng，版本号为 1.x.x，它是稳定的且处于活跃的维护之中。Harfbuzz 的使用非常广泛，在最新版本的  Firefox，GNOME，ChromeOS，Chrome，LibreOffice，XeTeX，Android，和 KDE 等项目中都有应用。Harfbuzz 的代码可以在 [这里](https://cgit.freedesktop.org/harfbuzz/) 下载，也可以通过 [GitHub](https://github.com/behdad/harfbuzz) 访问。
+[Harfbuzz]([http://harfbuzz.org/](http://harfbuzz.org/) 是一个 [OpenType](http://www.microsoft.com/typography/otspec/) 文本整形引擎。当前的 Harfbuzz 代码库，之前被称为 harfbuzz-ng，版本号为 1.x.x，它是稳定的且处于活跃的维护之中。Harfbuzz 的使用非常广泛，在最新版本的  Firefox，GNOME，ChromeOS，Chrome，LibreOffice，XeTeX，Android，和 KDE 等项目中都有应用。Harfbuzz 的代码可以在 [这里](https://cgit.freedesktop.org/harfbuzz/) 下载，也可以通过 [GitHub](https://github.com/behdad/harfbuzz) 访问。
 <!--more-->
 老的 HarfBuzz 代码库，现在被称为 harfbuzz-old，它从  [FreeType](http://freetype.org/)，[Pango](http://pango.org/)，和 [Qt](http://qt-project.org/) 派上而来，可以在 [这里](http://cgit.freedesktop.org/harfbuzz.old/) 下载。老的 HarfBuzz 代码库目前已经不再维护了。
 
