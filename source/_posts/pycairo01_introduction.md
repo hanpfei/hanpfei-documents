@@ -1,9 +1,9 @@
 ---
 title: PyCairo简介
 date: 2018-01-12 13:46:49
-categories: 计算机图形
+categories: 图形图像
 tags:
-- 计算机图形
+- 图形图像
 - Python
 - 翻译
 ---
