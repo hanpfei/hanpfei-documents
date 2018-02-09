@@ -9,7 +9,7 @@ tags:
 ---
 
 PyCairo 支持多种不同的后端。后端是可以显示 PyCairo 产生的图形的地方。我们将使用 PyCairo 创建一幅 PNG 图像，一个 PDF 文件，一个 SVG 文件，并在一个 GTK 窗口中绘制图形。
-
+<!--more-->
 # PNG 图像
 
 在第一个例子中，我们将创建一幅 PNG 图像。
