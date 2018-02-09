@@ -56,8 +56,7 @@ PyCairo 有一些基本的方法可以用来绘制简单的形状。
 ```
 我们使用 `scale()` 和 `arc()` 方法创建椭圆形。
 
-![](https://www.wolfcstech.com/images/1315506-c32cd1f4133e865e.jpg)
-图：基本形状
+![图：基本形状](https://www.wolfcstech.com/images/1315506-c32cd1f4133e865e.jpg)
 
 其它形状可以通过组合基本元素创建。
 ```
@@ -169,8 +168,7 @@ if __name__ == "__main__":
 ```
 变形的三角形是两条直线和一条曲线的简单组合。
 
-![](https://www.wolfcstech.com/images/1315506-7bc788ee74435d2e.jpg)
-图：复杂形状
+![图：复杂形状](https://www.wolfcstech.com/images/1315506-7bc788ee74435d2e.jpg)
 
 # 填充
 
@@ -204,8 +202,7 @@ if __name__ == "__main__":
 ```
 `set_source_rgb()` 方法设置 source 为一个不透明的颜色。参数为红，绿，蓝亮度值。通过调用 `fill()` 方法，source 被用于填充矩形内部。
 
-![](https://www.wolfcstech.com/images/1315506-972744c99b520206.jpg)
-图：纯色
+![图：纯色](https://www.wolfcstech.com/images/1315506-972744c99b520206.jpg)
 
 ## 模式
 
@@ -323,7 +320,7 @@ if __name__ == "__main__":
 
 代码的执行效果如下：
 
-![205908_1Ir8_919237.jpg](https://www.wolfcstech.com/images/1315506-3765ad8d07ec3ed1.jpg)
+![图：模式](https://www.wolfcstech.com/images/1315506-3765ad8d07ec3ed1.jpg)
 
 本章讨论了 PyCairo 的形状和填充。
 
