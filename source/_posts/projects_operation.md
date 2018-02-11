@@ -89,6 +89,21 @@ tags:
 
 [掘金](https://juejin.im/timeline) 这个网站，当前在 http://alexa.chinaz.com 查到的全球综合排名是 9275 位，日均访问 IP 10W 左右，日均 PV 25W 左右。这个网站本身目前的流量还是比较可观的。掘金为我们提供了一个 **分享链接** 的功能，通过这个功能，我们可以把我们的项目主页、博客主页或者文章链接发布出去。
 
+除了 [掘金](https://juejin.im/timeline) 之外，还有如下这些网站，我们也可以将我们的项目自荐过去：
+
+| 网站名称    | 全球综合排名     | 日均访问 IP | 日均 PV |
+|:--------|-------------|-------------|-------------:|
+| [极客头条](http://geek.csdn.net/)  | 55 | 950 W | 4500 W |
+| [36krNEXT](http://next.36kr.com/posts)  | 2032 | 32 W | 85 W |
+| [开发者头条](http://toutiao.io/)  | 25308 | 2.6 W | 6.8 W |
+| [Mindstore](http://mindstore.io/)  | 89150 | - | - |
+| [掘金](https://juejin.im/timeline)  | 9275 | 10 W | 25 W |
+
+其中 [极客头条](http://geek.csdn.net/) 是 CSDN 的一个频道，[36krNEXT](http://next.36kr.com/posts) 是 36氪 的一个频道，alexa.chinaz.com 能只查到主站的访问量，因而所列出的访问量也是主站的访问量。
+
 [用于内推和招人的开源项目](http://b.codekk.com/detail/Trinea/%E7%94%A8%E4%BA%8E%E5%86%85%E6%8E%A8%E5%92%8C%E6%8B%9B%E4%BA%BA%E7%9A%84%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE) 这个项目，可以为我们发布职位招聘信息提供一些方便。
+
+参考文档：
+[个人项目如何推广可以获得大量的受众](https://www.yunyingpai.com/market/147.html)
 
 Done.
