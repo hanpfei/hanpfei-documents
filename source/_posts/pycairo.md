@@ -31,3 +31,6 @@ PyCairo 是一个用来与 Cairo 库一起工作的 Python 模块。它是到 Ca
 
  [Cairo 图形学教程](http://zetcode.com/gfx/cairo/) 基于 C 编程语言来说明Cairo 库。
 
+[原文](http://zetcode.com/gfx/pycairo/)
+
+Done.
