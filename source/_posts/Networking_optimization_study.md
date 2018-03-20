@@ -35,3 +35,15 @@ tags:
 [阿里无线11.11：手机淘宝移动端接入网关基础架构演进之路](http://www.infoq.com/cn/articles/taobao-mobile-terminal-access-gateway-infrastructure)
 
 [Facebook wangle](https://www.slideshare.net/vorfeedchen/facebook-cwangle)
+
+### [从 HTTP2 到 QUIC——QQ 空间 Web 加速实践](http://www.infoq.com/cn/presentations/from-http2-to-quic-qq-space-web-acceleration?utm_campaign=rightbar_v2&utm_source=infoq&utm_medium=presentations_link&utm_content=link_text)
+
+### [QQ空间已在生产环境中使用QUIC协议](http://www.infoq.com/cn/news/2017/10/qzone-quic-practise)
+
+QQ 空间已经在生产环境中应用了 QUIC 协议。在 Server 端，是由腾讯的安全云网关团队提供的支持，但 Server 端 QUIC 协议的具体实现方式，信息不是很明确。在用户端，分 PC 端和移动端两种场景，主要是在 PC 端用了 QUIC，理由是移动端支持 QUIC 的还比较少。这个意思似乎是，在用户端对 QUIC 协议的支持，主要是借助于浏览器实现的，特别是 Chrome/Chromium 浏览器。QQ 空间团队在落地 QUIC 协议的过程中，做了什么呢？主要是在 QUIC 协议性能不好时，切换到其它协议么？
+
+### [QUIC在微博中的落地思考](http://www.infoq.com/cn/news/2018/03/weibo-quic)
+
+微博在移动端应用了 QUIC 协议。从分享中，不难了解到，服务端采用开源的 Caddy Web 服务器来提供支持，但不是很清楚，是否有做一些特别的优化。而客户端，则是基于 Chromium 浏览器的网络库来实现的，分享中讲得很明白，从微博 APK 中 `/lib/armeabi/` 目录下的 `libcronet.so` 也能看出来。
+
+从具体的应用效果来看，QUIC 在弱网环境下相比 TCP 有所提升，针对 CDN、流式传输等一些特殊场景也会有一些提升效果；总体上效果不是那么明显，甚至在一些场景下表现还不如 TCP。
