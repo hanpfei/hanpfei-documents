@@ -47,3 +47,8 @@ QQ 空间已经在生产环境中应用了 QUIC 协议。在 Server 端，是由
 微博在移动端应用了 QUIC 协议。从分享中，不难了解到，服务端采用开源的 Caddy Web 服务器来提供支持，但不是很清楚，是否有做一些特别的优化。而客户端，则是基于 Chromium 浏览器的网络库来实现的，分享中讲得很明白，从微博 APK 中 `/lib/armeabi/` 目录下的 `libcronet.so` 也能看出来。
 
 从具体的应用效果来看，QUIC 在弱网环境下相比 TCP 有所提升，针对 CDN、流式传输等一些特殊场景也会有一些提升效果；总体上效果不是那么明显，甚至在一些场景下表现还不如 TCP。
+
+### [An overview of TLS 1.3 and Q&A](https://blog.cloudflare.com/tls-1-3-overview-and-q-and-a/)
+
+### [TLS 1.3 - Enhanced Performance, Hardened Security](https://www.cloudflare.com/learning-resources/tls-1-3/)
+
