@@ -17,8 +17,7 @@ tags:
 
 # [1. 简介](http://httpwg.org/specs/rfc7540.html#intro)
 
-超文本传输协议(HTTP)是一个取得了广泛成功的协议。然而，HTTP/1.1使用底层传输模块([[RFC7230]
-](http://httpwg.org/specs/rfc7540.html#RFC7230)，[Section 6](http://httpwg.org/specs/rfc7230.html#connection.management))的方式具有一些特性，那对今天的应用的整体性能产生了负面的影响。
+超文本传输协议(HTTP)是一个取得了广泛成功的协议。然而，HTTP/1.1使用底层传输模块([[RFC7230]](http://httpwg.org/specs/rfc7540.html#RFC7230)， [Section 6](http://httpwg.org/specs/rfc7230.html#connection.management))的方式具有一些特性，那对今天的应用的整体性能产生了负面的影响。
 
 特别地，同一时间在一个给定的TCP连接上，HTTP/1.1只允许发起一个请求。虽然HTTP/1.1加入了请求管线，但这只是部分地解决了请求并发执行的问题，且依然会被队头阻塞问题困扰。因此，那些需要发起大量请求的HTTP/1.0和HTTP/1.1客户端会通过与同一个服务器建立多个连接的方式来实现并发从而降低延迟。
 
@@ -39,22 +38,23 @@ HTTP/2中基本的协议单元是一个帧([Section4.1](http://httpwg.org/specs/
 
 Flow控制和优先级确保高效地使用多路复用的流是可能的。Flow控制([Section5.2](http://httpwg.org/specs/rfc7540.html#FlowControl))帮助确保只有能被接收者使用的数据才被传输。优先级([Section5.3](http://httpwg.org/specs/rfc7540.html#StreamPriority))确保有限的资源可以被首先导到最终要的流。
 
-HTTP/2添加了一种新的交互模式，服务器可以借以向一个客户端推送响应([Section8.2](http://httpwg.org/specs/rfc7540.html#PushResources))。服务器推送允许一个服务器推测性地发送服务器预期客户端可能需要的数据给一个客户端，权衡比较网络流量的消耗和一个潜在延迟的增加。服务器通过合成一个请求来做到这一点，该请求以一个[PUSH_PROMISE](http://httpwg.org/specs/rfc7540.html#PUSH_PROMISE)来发送。然后服务器可以为合成的请求在另一个流上发送一个响应
+HTTP/2添加了一种新的交互模式，服务器可以借以向一个客户端推送响应([Section8.2](http://httpwg.org/specs/rfc7540.html#PushResources))。服务器推送允许一个服务器推测性地发送服务器预期客户端可能需要的数据给一个客户端，权衡比较网络流量的消耗和一个潜在延迟的增加。服务器通过合成一个请求来做到这一点，该请求以一个[PUSH_PROMISE](http://httpwg.org/specs/rfc7540.html#PUSH_PROMISE)来发送。然后服务器可以为合成的请求在另一个流上发送一个响应。
 
 由于一个连接中HTTP首部字段可能包含大量冗余数据，包含它们的帧被压缩([Section4.3](http://httpwg.org/specs/rfc7540.html#HeaderBlock))。这对于常见情况下的请求大小具有特别有利的影响，它允许多个请求被压缩为一个包。
 
 ## [2.1 文档组织](http://httpwg.org/specs/rfc7540.html#rfc.section.2.1)
 
 HTTP/2规范被分为了四个部分：
-* 启动HTTP/2 ([Section3](http://httpwg.org/specs/rfc7540.html#starting))描述了一个HTTP/2连接是如何初始化的。 
-* 帧([Section4](http://httpwg.org/specs/rfc7540.html#FramingLayer))和流([Section5](http://httpwg.org/specs/rfc7540.html#StreamsLayer))层描述了HTTP/2帧被结构化并构成多路复用的流的方式。
-* 帧([Section6](http://httpwg.org/specs/rfc7540.html#FrameTypes))和错误([Section7](http://httpwg.org/specs/rfc7540.html#ErrorCodes))定义包括了HTTP/2中使用的帧类型和错误类型的细节。
-* HTTP映射([Section8](http://httpwg.org/specs/rfc7540.html#HTTPLayer))和额外的需求([Section9](http://httpwg.org/specs/rfc7540.html#HttpExtra))描述了HTTP语义如何使用帧和流来表述。
+
+ * 启动HTTP/2 ([Section3](http://httpwg.org/specs/rfc7540.html#starting))描述了一个HTTP/2连接是如何初始化的。 
+ * 帧([Section4](http://httpwg.org/specs/rfc7540.html#FramingLayer))和流([Section5](http://httpwg.org/specs/rfc7540.html#StreamsLayer))层描述了HTTP/2帧被结构化并构成多路复用的流的方式。
+ * 帧([Section6](http://httpwg.org/specs/rfc7540.html#FrameTypes))和错误([Section7](http://httpwg.org/specs/rfc7540.html#ErrorCodes))定义包括了HTTP/2中使用的帧类型和错误类型的细节。
+ * HTTP映射([Section8](http://httpwg.org/specs/rfc7540.html#HTTPLayer))和额外的需求([Section9](http://httpwg.org/specs/rfc7540.html#HttpExtra))描述了HTTP语义如何使用帧和流来表述。
 
 尽管帧和流层的一些概念与HTTP是隔离的，但这份规范不定义一个完整的通用帧层。帧和流层被裁剪为满足HTTP协议和服务器推送的需要。
 
 ## [2.2 约定和术语](http://httpwg.org/specs/rfc7540.html#rfc.section.2.2)
-这份文档中关键字"MUST"，"MUST NOT"，"REQUIRED"，"SHALL"，"SHALL NOT"，"SHOULD"，"SHOULD NOT"，"RECOMMENDED"，"MAY"，和"OPTIONAL"的解释在[RFC 2119](http://httpwg.org/specs/rfc7540.html#RFC2119)[RFC2119]中描述。
+这份文档中关键字"MUST"， "MUST NOT"， "REQUIRED"， "SHALL"， "SHALL NOT"， "SHOULD"， "SHOULD NOT"， "RECOMMENDED"， "MAY"， 和 "OPTIONAL" 的解释在[RFC 2119](http://httpwg.org/specs/rfc7540.html#RFC2119)[RFC2119]中描述。
 
 所有的数字值以网络子节序。值是无符号的除非特别指明。字面值以十进制或在适当的时候以16进制提供。十六进制字面值以0x为前缀以与十进制字面值进行区分。
 
@@ -82,15 +82,12 @@ HTTP/2规范被分为了四个部分：
 
 **流错误(stream error)**：关于独立的HTTP/2流的错误。
 
-最后，术语"网关(gateway)"，"intermediary"，"代理(proxy)"，和"隧道(tunnel)"在[[RFC7230]
-](http://httpwg.org/specs/rfc7540.html#RFC7230)的[Section 2.3](http://httpwg.org/specs/rfc7230.html#intermediaries)中定义。Intermediaries在不同的时间客户端和服务器的角色都扮演。
+最后，术语"网关(gateway)"，"intermediary"，"代理(proxy)"，和"隧道(tunnel)"在 [[RFC7230]](http://httpwg.org/specs/rfc7540.html#RFC7230) 的 [Section 2.3](http://httpwg.org/specs/rfc7230.html#intermediaries) 中定义。Intermediaries在不同的时间客户端和服务器的角色都扮演。
 
-术语"载荷体(payload body)"在[[RFC7230]
-](http://httpwg.org/specs/rfc7540.html#RFC7230)的[Section 3.3](http://httpwg.org/specs/rfc7230.html#message.body)中定义。
+术语"载荷体(payload body)"在 [[RFC7230]](http://httpwg.org/specs/rfc7540.html#RFC7230) 的 [Section 3.3](http://httpwg.org/specs/rfc7230.html#message.body) 中定义。
 
 # [3. 启动 HTTP/2](http://httpwg.org/specs/rfc7540.html#starting)
-一个HTTP/2连接是一个运行于一个TCP连接([[TCP]
-](http://httpwg.org/specs/rfc7540.html#TCP))之上的应用层协议。客户端是TCP连接的发起者。
+一个HTTP/2连接是一个运行于一个TCP连接([[TCP]](http://httpwg.org/specs/rfc7540.html#TCP))之上的应用层协议。客户端是TCP连接的发起者。
 
 HTTP/2使用了与HTTP/1.1所使用的相同的"http"和"https" URI schemes。HTTP/2共享了相同的默认端口号："http" URIs的是80，"https" URIs的是443。作为结果，HTTP/2的实现在为处理诸如 http://example.org/foo 或 https://example.com/bar 这样的URIs的目标资源的请求时，需要首先发现upstream server(客户端希望建立连接的中间对端)是支持HTTP/2的。
 
@@ -99,17 +96,18 @@ HTTP/2使用了与HTTP/1.1所使用的相同的"http"和"https" URI schemes。HT
 ## [3.1 HTTP/2 版本识别](http://httpwg.org/specs/rfc7540.html#versioning)
 
 这份文档中定义的协议具有两个标识符。
+
 * 字符串"h2"标识HTTP/2使用了[传输层安全 (TLS)](http://httpwg.org/specs/rfc7540.html#TLS12)[TLS12]的协议。这个标识符在[TLS 应用层协议协商(ALPN)扩展](http://httpwg.org/specs/rfc7540.html#TLS-ALPN)[TLS-ALPN]字段中使用，及任何运行于TLS之上的HTTP/2被标识的地方。
 字符串"h2"被序列化为两个字节值序列的ALPN协议标识符：0x68，0x32。
+
 * 字符串"h2c"标识了HTTP/2运行于明文TCP之上的协议。这个标识符被用于HTTP/1.1 Upgrade首部字段，及任何运行于TCP之上的HTTP/2被标识的地方。
 字符串"h2c"是从ALPN标识符空间中预分配的，但描述了一个不使用TLS的协议。
 
 协商"h2"或"h2c"暗含了对这份文档中描述的传输方式，安全，分帧，和消息语义的使用。
 
-## [3.2 启动"http" URIs的HTTP/2](http://httpwg.org/specs/rfc7540.html#discover-http)
+## [3.2 启动"http" URIs 的HTTP/2](http://httpwg.org/specs/rfc7540.html#discover-http)
 
-一个客户端为一个"http" URI创建一个请求，而又没有先验的关于是否支持HTTP/2的知识，则在下一跳使用HTTP Upgrade机制([[RFC7230]
-](http://httpwg.org/specs/rfc7540.html#RFC7230)的[Section 6.7](http://httpwg.org/specs/rfc7230.html#header.upgrade))。客户端通过创建一个其中包含了值为"h2c" token的Upgrade首部字段的HTTP/1.1请求来做到这一点。这样一个HTTP/1.1请求**必须(MUST)**精确地包含一个HTTP2-Settings([Section3.2.1](http://httpwg.org/specs/rfc7540.html#Http2SettingsHeader))首部字段。
+一个客户端为一个"http" URI创建一个请求，而又没有先验的关于是否支持HTTP/2的知识，则在下一跳使用HTTP Upgrade机制([[RFC7230]](http://httpwg.org/specs/rfc7540.html#RFC7230)的[Section 6.7](http://httpwg.org/specs/rfc7230.html#header.upgrade))。客户端通过创建一个其中包含了值为"h2c" token的Upgrade首部字段的HTTP/1.1请求来做到这一点。这样一个HTTP/1.1请求**必须(MUST)**精确地包含一个HTTP2-Settings([Section3.2.1](http://httpwg.org/specs/rfc7540.html#Http2SettingsHeader))首部字段。
 
 比如：
 ```
@@ -155,12 +153,9 @@ HTTP2-Settings    = token68
 ```
 如果没有这个首部字段，或这个首部字段出现了多次，服务器**必须不(MUST NOT)**升级到HTTP/2连接。服务器**必须不(MUST NOT)**发送这个首部字段。
 
-`HTTP2-Settings`首部字段的内容是[SETTINGS](http://httpwg.org/specs/rfc7540.html#SETTINGS)帧([Section6.5](http://httpwg.org/specs/rfc7540.html#SETTINGS))的载荷，它被编码为一个base64url字符串(即, [[RFC4648]
-](http://httpwg.org/specs/rfc7540.html#RFC4648)的[Section 5](https://tools.ietf.org/html/rfc4648#section-5)中描述的URL和文件名安全的Base64编码，但省去了尾部的'='字符)。token68的[ABNF](http://httpwg.org/specs/rfc7540.html#RFC5234)[RFC5234]产品在[[RFC7235]
-](http://httpwg.org/specs/rfc7540.html#RFC7235)的[Section 2.1](http://httpwg.org/specs/rfc7235.html#challenge.and.response)中定义。
+`HTTP2-Settings`首部字段的内容是[SETTINGS](http://httpwg.org/specs/rfc7540.html#SETTINGS)帧([Section6.5](http://httpwg.org/specs/rfc7540.html#SETTINGS))的载荷，它被编码为一个base64url字符串(即, [[RFC4648]](http://httpwg.org/specs/rfc7540.html#RFC4648)的[Section 5](https://tools.ietf.org/html/rfc4648#section-5)中描述的URL和文件名安全的Base64编码，但省去了尾部的'='字符)。token68的[ABNF](http://httpwg.org/specs/rfc7540.html#RFC5234)[RFC5234]产品在[[RFC7235]](http://httpwg.org/specs/rfc7540.html#RFC7235)的[Section 2.1](http://httpwg.org/specs/rfc7235.html#challenge.and.response)中定义。
 
-由于upgrade仅仅是为了应用于直接连接，一个客户端发送了`HTTP2-Settings`首部字段**必须(MUST)**也在Connection首部字段中将`HTTP2-Settings`作为一个连接选项发送，以防止它被转发(参见[[RFC7230]
-](http://httpwg.org/specs/rfc7540.html#RFC7230)的[Section 6.1](http://httpwg.org/specs/rfc7230.html#header.connection))。
+由于upgrade仅仅是为了应用于直接连接，一个客户端发送了`HTTP2-Settings`首部字段**必须(MUST)**也在Connection首部字段中将`HTTP2-Settings`作为一个连接选项发送，以防止它被转发(参见[[RFC7230]](http://httpwg.org/specs/rfc7540.html#RFC7230)的[Section 6.1](http://httpwg.org/specs/rfc7230.html#header.connection))。
 
 服务器像其它[SETTINGS](http://httpwg.org/specs/rfc7540.html#SETTINGS)帧那样解码并解释这些值。不一定要显式地确认这些设置([Section6.5.3](http://httpwg.org/specs/rfc7540.html#SettingsSync))，因为101响应可作为隐式的确认。在upgrade请求中提供这些值，给客户端提供了一个机会，在从服务器接收任何帧之前提供参数。
 
@@ -174,8 +169,7 @@ TLS之上的HTTP/2使用"h2"协议标识符。客户端**必须不(MUST NOT)**�
 
 ## [3.4 以先验知识启动HTTP/2](http://httpwg.org/specs/rfc7540.html#known-http)
 
-客户端可以通过其它的方式来了解特定服务器支持HTTP/2的情况。比如，*[[ALT-SVC]
-](http://httpwg.org/specs/rfc7540.html#ALT-SVC)*描述了一种机制来广告这种能力。
+客户端可以通过其它的方式来了解特定服务器支持HTTP/2的情况。比如，*[[ALT-SVC]](http://httpwg.org/specs/rfc7540.html#ALT-SVC)*描述了一种机制来广告这种能力。
 
 客户端**必须(MUST)**发送连接preface ([Section3.5](http://httpwg.org/specs/rfc7540.html#ConnectionHeader))，它还**可以(MAY)**立即向这个服务器发送HTTP/2帧；服务器可以通过连接preface的出现来识别这些连接。这只影响明文TCP之上的HTTP/2连接的建立；支持TLS之上的HTTP/2的实现**必须(MUST)**使用[TLS中的协议协商](http://httpwg.org/specs/rfc7540.html#TLS-ALPN)[TLS-ALPN]。
 
@@ -192,8 +186,7 @@ TLS之上的HTTP/2使用"h2"协议标识符。客户端**必须不(MUST NOT)**�
 ```
 即，连接preface以字符串PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n)开始。这个序列后面**必须(MUST)**跟着一个[SETTINGS](http://httpwg.org/specs/rfc7540.html#SETTINGS)帧([Section6.5](http://httpwg.org/specs/rfc7540.html#SETTINGS))，它**可能(MAY)**是空的。客户端一收到101(Switching Protocols)响应(表示一个成功的升级)就立即发送客户端连接preface，或作为一个TLS连接的第一个数据字节。如果以服务器对协议的支持情况的先验知识来启动一个HTTP/2连接，客户端连接preface在连接建立时立即发送。
 
-**注意：**选中客户端连接preface以使得大部分的HTTP/1.1或HTTP/1.0服务器和intermediaries不会尝试去处理更多的帧。注意这没有解决[[TALKING]
-](http://httpwg.org/specs/rfc7540.html#TALKING)中提出的问题。
+**注意：**选中客户端连接preface以使得大部分的HTTP/1.1或HTTP/1.0服务器和intermediaries不会尝试去处理更多的帧。注意这没有解决[[TALKING]](http://httpwg.org/specs/rfc7540.html#TALKING)中提出的问题。
 
 服务器连接preface由一个潜在的空[SETTINGS](http://httpwg.org/specs/rfc7540.html#SETTINGS)帧([Section6.5](http://httpwg.org/specs/rfc7540.html#SETTINGS))组成，它**必须(MUST)**是服务器在HTTP/2连接中发送的第一帧。
 
@@ -221,7 +214,9 @@ TLS之上的HTTP/2使用"h2"协议标识符。客户端**必须不(MUST NOT)**�
  +---------------------------------------------------------------+
 ```
 图 1：帧格式
+
 帧首部的字段定义如下：
+
 * **长度(Length)**：帧载荷的长度，以一个无符号24位整数表示。**必须不(MUST NOT)**能发送大于2^14(16,384)的值，除非接收者已经为[SETTINGS_MAX_FRAME_SIZE](http://httpwg.org/specs/rfc7540.html#SETTINGS_MAX_FRAME_SIZE)设置了更大的值。
 9字节的帧首部不包含在这个值之内。
 
@@ -247,7 +242,6 @@ TLS之上的HTTP/2使用"h2"协议标识符。客户端**必须不(MUST NOT)**�
 
 终端没有义务用完帧中的所有的可用空间。响应能力可以通过使用比允许的最大大小小的帧来提升。在发送时间敏感的帧时发送大帧可能导致延时（比如[RST_STREAM](http://httpwg.org/specs/rfc7540.html#RST_STREAM)，[WINDOW_UPDATE](http://httpwg.org/specs/rfc7540.html#WINDOW_UPDATE)，或[PRIORITY](http://httpwg.org/specs/rfc7540.html#PRIORITY)），如果传输由于一个大的帧而阻塞，则可能会影响性能。
 
-
 ## [4.3 首部压缩和解压](http://httpwg.org/specs/rfc7540.html#HeaderBlock)
 如同在HTTP/1中那样，HTTP/2的一个首部字段是一个名字伴随一个或多个关联的值。HTTP请求和响应消息中会使用首部字段，服务器推送操作(参见[Section8.2](http://httpwg.org/specs/rfc7540.html#PushResources))中也会使用。
 
@@ -258,7 +252,9 @@ TLS之上的HTTP/2使用"h2"协议标识符。客户端**必须不(MUST NOT)**�
 接收终端通过连接首部块的片段来重新组装首部块，然后解压缩首部块并重建首部列表。
 
 一个完整的首部块由这些组成：
+
 * 一个单独的[HEADERS](http://httpwg.org/specs/rfc7540.html#HEADERS)或[PUSH_PROMISE](http://httpwg.org/specs/rfc7540.html#PUSH_PROMISE)帧，其中设置了END_HEADERS标记，或
+
 * 一个[HEADERS](http://httpwg.org/specs/rfc7540.html#HEADERS)或[PUSH_PROMISE](http://httpwg.org/specs/rfc7540.html#PUSH_PROMISE)帧，其中END_HEADERS被清除，及一个或多个[CONTINUATION](http://httpwg.org/specs/rfc7540.html#CONTINUATION)帧，其中最后一个[CONTINUATION](http://httpwg.org/specs/rfc7540.html#CONTINUATION)帧设置了END_HEADERS标记
 
 首部压缩是有状态的。压缩上下文和解压上下文被用于整个连接。首部块中的解码错误**必须(MUST)**被作为类型[COMPRESSION_ERROR](http://httpwg.org/specs/rfc7540.html#COMPRESSION_ERROR)的连接错误([Section5.4.1](http://httpwg.org/specs/rfc7540.html#ConnectionErrorHandler))。
@@ -267,15 +263,18 @@ TLS之上的HTTP/2使用"h2"协议标识符。客户端**必须不(MUST NOT)**�
 
 首部块字段只能作为[HEADERS](http://httpwg.org/specs/rfc7540.html#HEADERS)，[PUSH_PROMISE](http://httpwg.org/specs/rfc7540.html#PUSH_PROMISE)，或[CONTINUATION](http://httpwg.org/specs/rfc7540.html#CONTINUATION)帧的载荷来发送，因为这些帧携带的数据可以修改由接收者维护的压缩上下文。一个接收了[HEADERS](http://httpwg.org/specs/rfc7540.html#HEADERS)，[PUSH_PROMISE](http://httpwg.org/specs/rfc7540.html#PUSH_PROMISE)，或[CONTINUATION](http://httpwg.org/specs/rfc7540.html#CONTINUATION)帧的终端需要重新装配首部块，并执行解压缩，即使帧将被丢弃。如果一个接收者不解压缩首部块，而出现了一个类型为[COMPRESSION_ERROR](http://httpwg.org/specs/rfc7540.html#COMPRESSION_ERROR)的连接错误，则它**必须(MUST)**终止连接。
 
-http://httpwg.org/specs/rfc7540.html#rfc.section.2.2
-
 # 5. 流和多路复用
 
 “流”是一个HTTP/2连接内在客户端和服务器间独立的双向的交换的帧序列。流具有一些重要的特性：
+
 * 单个的HTTP/2连接可以包含多个并发打开的流，各个终端多个流的帧可以交叉。
+
 * 流可以单方面地建立和使用，或由客户端或服务器共享。
+
 * 流可以被任何一端关闭。
+
 * 流中帧的发送顺序是值得注意的。接收者以它们收到帧的顺序处理。特别的，[HEADERS](http://httpwg.org/specs/rfc7540.html#HEADERS)帧和[DATA](http://httpwg.org/specs/rfc7540.html#DATA)帧在语义上是非常重要的。
+
 * 流由一个整数标识。流标识符由发起流的一端来赋值。
 
 ## 5.1 流状态
@@ -332,9 +331,9 @@ http://httpwg.org/specs/rfc7540.html#rfc.section.2.2
 流具有如下的这些状态：
 
 **idle:**
-
 所有的流以"idle"状态开始。
 下面的状态是以这个状态为起始状态的有效目的状态：
+
 * 发送或接收一个[HEADERS](http://httpwg.org/specs/rfc7540.html#HEADERS)帧使这个流进入"open"状态。选择流标识符的方法如[Section 5.1.1](http://httpwg.org/specs/rfc7540.html#StreamIdentifiers) 中所述。相同的[HEADERS](http://httpwg.org/specs/rfc7540.html#HEADERS)帧也可能使一个流立即进入"half-closed"状态。
 * 在另一个流上发送一个[PUSH_PROMISE](http://httpwg.org/specs/rfc7540.html#PUSH_PROMISE)帧保留被标识的idle流以备后用。保留的流的流状态转变为"reserved (local)"。
 * 在另一个流上接收一个[PUSH_PROMISE](http://httpwg.org/specs/rfc7540.html#PUSH_PROMISE)帧保留一个被标识的idle流以备后用。保留的流的流状态转变为"reserved (remote)"。
@@ -346,6 +345,7 @@ http://httpwg.org/specs/rfc7540.html#rfc.section.2.2
 
 处于"reserved (local)"状态的流都已经通过发送[PUSH_PROMISE](http://httpwg.org/specs/rfc7540.html#PUSH_PROMISE)做了保证。[PUSH_PROMISE](http://httpwg.org/specs/rfc7540.html#PUSH_PROMISE)帧通过将流与一个远方的对端节点初始化的已打开的流关联，来保留一个idle流(参见[Section 8.2](http://httpwg.org/specs/rfc7540.html#PushResources))。
 这种状态，只有如下的这些转换是可能的：
+
 * 终端可以发送一个[HEADERS](http://httpwg.org/specs/rfc7540.html#HEADERS)帧。这使得流打开并进入"half-closed (remote)"状态。
 * 或者终端可以发送一个[RST_STREAM](http://httpwg.org/specs/rfc7540.html#RST_STREAM)帧，来使流进入"closed"状态。这将释放流的保留状态。
 
@@ -358,6 +358,7 @@ http://httpwg.org/specs/rfc7540.html#rfc.section.2.2
 处于"reserved (remote)"状态的流是已经由远端的端点保留的流。
 
 这种状态下只有如下的状态转换可能发生：
+
 * 接收到[HEADERS](http://httpwg.org/specs/rfc7540.html#HEADERS)帧使得流进入"half-closed (local)"状态。
 * 某一端可以发送一个[RST_STREAM](http://httpwg.org/specs/rfc7540.html#RST_STREAM)帧使得流进入"closed"状态。这将释放流的保留状态。
 
@@ -441,6 +442,7 @@ HTTP/2通过使用WINDOW_UPDATE帧来提供flow control ([Section 6.9](https://h
 
 ### 5.2.1 Flow-Control原理
 HTTP/2流的flow control旨在允许在不改变协议的情况下使用多个flow-control算法。HTTP/2 flow control具有如下的特性：
+
 1. Flow control是特定于连接的。每种flow control类型都是处于一个single hop的两个端点之间的，而不是整个端到端的路径。
 2. Flow control是基于WINDOW_UPDATE帧的。接收者广告它们准备在流中和在整个连接中接收的字节数。这是一种credit-based方案。
 3. Flow control的方向是接收者提供的整体控制。一个接收者 **可能(MAY)** 选择为每个流或整个连接设置任何想要的窗口大小。一个发送者 **必须(MUST)** 尊重接收者应用的flow-control限制。作为接收者的客户端，服务器，和intermediaries都独立地广告它们的flow-control限制，同时在作为发送者时要服从它们发送时的对端设置的flow-control限制。
@@ -457,8 +459,7 @@ Flow control是为保护在资源受限的条件下操作的终端而定义的�
 
 无需这种能力的部署可以广告一个最大的flow-control 窗口大小(2^31-1)，并且可以通过在收到任何数据时发送一个WINDOW_UPDATE帧来维护这个窗口。这将有效地为那个接收者禁用flow control。相反地，发送者要总是受制于接收者广告的flow-control窗口。
 
-资源受限条件下的部署（比如，内存）可以通过flow control来限制一个对端可以消耗的内存数量。然而请注意，如果在不了解带宽－延迟(参见 [[RFC7323]
-](https://http2.github.io/http2-spec/#RFC7323))的情况下启用flow control，则可能导致对于可用的网络资源次优的使用。
+资源受限条件下的部署（比如，内存）可以通过flow control来限制一个对端可以消耗的内存数量。然而请注意，如果在不了解带宽－延迟(参见 [[RFC7323]](https://http2.github.io/http2-spec/#RFC7323))的情况下启用flow control，则可能导致对于可用的网络资源次优的使用。
 
 即使对当前的带宽－延迟有了充分的了解，flow-control的实现也可能是非常困难的。当使用flow control时，接收者 **必须(MUST)** 及时地从TCP的接收缓冲区中读取。当决定性的帧，比如 [WINDOW_UPDATE](https://http2.github.io/http2-spec/#WINDOW_UPDATE)没有被读取并起作用时，这个操作失败的话可能会导致一个死锁。
 
@@ -473,7 +474,6 @@ Flow control是为保护在资源受限的条件下操作的终端而定义的�
 显式的为流设置优先级被输入一个优先级进程。它不保证一个流相对于其它流任何特定的处理或传输顺序。一个终端不能强迫它的对端使用优先级来以一个特定的顺序处理并发的流。因而优先级的表达只是一个建议。
 
 消息中优先级信息可以省略。默认的值先于显式的提供的值([Section 5.3.5](https://http2.github.io/http2-spec/#pri-default))使用。
-
 
 ### 5.3.1 流依赖
 
@@ -566,6 +566,7 @@ Flow control是为保护在资源受限的条件下操作的终端而定义的�
 ## 5.4 错误处理
 
 HTTP/2分帧允许两类错误：
+
 * 一种错误条件描述了整个连接都是不可用的，这是连接错误。
 * 单独的流中的错误是流错误。
 
@@ -577,8 +578,7 @@ HTTP/2分帧允许两类错误：
 
 遇到了一个连接错误的终端 **应该(SHOULD)** 首先发送一个带有从对端成功接收的最后一个流的流标识符的[GOAWAY](https://http2.github.io/http2-spec/#GOAWAY)帧([Section 6.8](https://http2.github.io/http2-spec/#GOAWAY))。[GOAWAY](https://http2.github.io/http2-spec/#GOAWAY)帧包含了指示连接为什么终止的错误码。在为错误情况发送给了[GOAWAY](https://http2.github.io/http2-spec/#GOAWAY)帧之后，终端 **必须(MUST)** 关闭TCP连接。
 
-[GOAWAY](https://http2.github.io/http2-spec/#GOAWAY)可能没有被接收端可靠的接收到([[RFC7230]
-](https://http2.github.io/http2-spec/#RFC7230)，[Section 6.6](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#persistent.tear-down)描述了立即的连接关闭是如何导致数据丢失的)。在连接错误的事件中，[GOAWAY](https://http2.github.io/http2-spec/#GOAWAY)只是提供了最好的努力尝试与对端就为什么连接被终止进行沟通。
+[GOAWAY](https://http2.github.io/http2-spec/#GOAWAY)可能没有被接收端可靠的接收到([[RFC7230]](https://http2.github.io/http2-spec/#RFC7230)，[Section 6.6](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#persistent.tear-down)描述了立即的连接关闭是如何导致数据丢失的)。在连接错误的事件中，[GOAWAY](https://http2.github.io/http2-spec/#GOAWAY)只是提供了最好的努力尝试与对端就为什么连接被终止进行沟通。
 
 终端可以在任何时候结束一个连接。特别的，一个终端 **可以(MAY)** 选择将一个流错误作为一个连接错误。终端 **应该(SHOULD)** 在结束一个连接时发送一个[GOAWAY](https://http2.github.io/http2-spec/#GOAWAY)帧，提供发生那种状况的信息。
 
@@ -634,7 +634,6 @@ DATA帧也 **可以(MAY)** 包含填充字节。填充字节可以被加进DATA�
  +---------------------------------------------------------------+
 ```
 图 6：DATA帧载荷
-
 
 DATA帧包含如下的字段：
 
@@ -785,7 +784,7 @@ RST_STREAM帧 (type=0x3)可以用于立即终止一个流。发送RST_STREAM来�
  |                        Error Code (32)                        |
  +---------------------------------------------------------------+
 ```
-Figure 9: RST_STREAM帧载荷
+图 9: RST_STREAM帧载荷
 
 RST_STREAM帧包含了一个单独的无符号32位整型值的错误码([Section 7](https://http2.github.io/http2-spec/#ErrorCodes))。错误码指明了为什么要终止流。
 
@@ -837,8 +836,7 @@ SETTINGS帧的载荷由零个或多个参数组成，每个参数由一个无符
 已定义了如下的参数：
 
 **SETTINGS_HEADER_TABLE_SIZE (0x1):**
-允许发送者通知远端，用于解码首部块的首部压缩表的最大大小，以字节位单位。编码器可以可以选择任何等于或小于这个值的大小，通过使用首部块内信号特有的首部压缩格式(参考[[COMPRESSION]
-](https://http2.github.io/http2-spec/#COMPRESSION))。初始值是4,096字节。
+允许发送者通知远端，用于解码首部块的首部压缩表的最大大小，以字节位单位。编码器可以可以选择任何等于或小于这个值的大小，通过使用首部块内信号特有的首部压缩格式(参考[[COMPRESSION]](https://http2.github.io/http2-spec/#COMPRESSION))。初始值是4,096字节。
 
 **SETTINGS_ENABLE_PUSH (0x2):**
 这个设置项可被用于禁用服务端推送([Section 8.2](https://http2.github.io/http2-spec/#PushResources))。一个终端如果收到了这个设置项，且值为0，则它 **一定不能(MUST NOT)** 发送[PUSH_PROMISE](https://http2.github.io/http2-spec/#PUSH_PROMISE)帧。一个已经将这个参数设置为了0，且已经收到了对这个设置项的确认的终端，则在收到一个[PUSH_PROMISE](https://http2.github.io/http2-spec/#PUSH_PROMISE)帧时， **必须(MUST)** 将其作为一个类型是[PROTOCOL_ERROR](https://http2.github.io/http2-spec/#PROTOCOL_ERROR)的连接错误([Section 5.4.1](https://http2.github.io/http2-spec/#ConnectionErrorHandler))。
@@ -1118,7 +1116,6 @@ CONTINUATION帧的前面必须是END_HEADERS标记没有设置的[HEADERS](https
 
 错误码共享一个共同的码空间。一些错误码只应用于流或整个连接，而在其它上下文中没有定义语义。
 
-
 当前定义了如下错误码：
 
 NO_ERROR (0x0):相关的情况不是发生了一个错误的结果。比如，[GOAWAY](https://http2.github.io/http2-spec/#GOAWAY)可能包含这个码来指示优雅的关闭一个连接。
@@ -1126,7 +1123,6 @@ NO_ERROR (0x0):相关的情况不是发生了一个错误的结果。比如，[G
 PROTOCOL_ERROR (0x1): 终端探测到一个不明确的协议错误。这个错误在没有更明确的错误码可用时使用。
 
 INTERNAL_ERROR (0x2): 终端遇到了一个不预期的内部错误。
-
 
 FLOW_CONTROL_ERROR (0x3): 终端探测到它的对端节点违反了流控协议。
 
@@ -1157,13 +1153,7 @@ HTTP_1_1_REQUIRED (0xd): 终端需要用HTTP/1.1来替换HTTP/2。
 
 HTTP/2被期待着尽可能与当前使用的HTTP兼容。这意味着，从应用程序的视角来看，大部分的协议的功能不能变。为了实现这一点，而保留了所有的请求和响应的语义，尽管携带这些语义的语法已经变了。
 
-因而，HTTP/1.1的规范和要求，Semantics and Content [[RFC7231]
-](https://http2.github.io/http2-spec/#RFC7231)，Conditional Requests [[RFC7232]
-](https://http2.github.io/http2-spec/#RFC7232)，Range Requests [[RFC7233]
-](https://http2.github.io/http2-spec/#RFC7233)，Caching [[RFC7234]
-](https://http2.github.io/http2-spec/#RFC7234)，和Authentication [[RFC7235]
-](https://http2.github.io/http2-spec/#RFC7235)依然适用于HTTP/2。选中的HTTP/1.1 Message Syntax and Routing [[RFC7230]
-](https://http2.github.io/http2-spec/#RFC7230)的部分，比如HTTP和HTTPS URI schemes，也适用于HTTP/2，但是对于这个协议，那些语义的表达则在下面的小节定义。
+因而，HTTP/1.1的规范和要求，Semantics and Content [[RFC7231]](https://http2.github.io/http2-spec/#RFC7231)，Conditional Requests [[RFC7232]](https://http2.github.io/http2-spec/#RFC7232)，Range Requests [[RFC7233]](https://http2.github.io/http2-spec/#RFC7233)，Caching [[RFC7234]](https://http2.github.io/http2-spec/#RFC7234)，和Authentication [[RFC7235]](https://http2.github.io/http2-spec/#RFC7235)依然适用于HTTP/2。选中的HTTP/1.1 Message Syntax and Routing [[RFC7230]](https://http2.github.io/http2-spec/#RFC7230)的部分，比如HTTP和HTTPS URI schemes，也适用于HTTP/2，但是对于这个协议，那些语义的表达则在下面的小节定义。
 
 ## [8.1 HTTP 请求/响应 交换](https://http2.github.io/http2-spec/#HttpSequence)
 
@@ -1171,25 +1161,19 @@ HTTP/2被期待着尽可能与当前使用的HTTP兼容。这意味着，从应�
 
 一个HTTP消息 (请求或响应)的组成为：
 
-1. 仅适用于响应，0个或多个[HEADERS](https://http2.github.io/http2-spec/#HEADERS)帧 (每个后面都跟着0个或多个[CONTINUATION](https://http2.github.io/http2-spec/#CONTINUATION)帧)包含信息性的 (1xx) HTTP响应的消息头(参见[[RFC7230]
-](https://http2.github.io/http2-spec/#RFC7230)，[Section 3.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#header.fields)和[[RFC7231]
-](https://http2.github.io/http2-spec/#RFC7231)，[Section 6.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#status.1xx))。
+1. 仅适用于响应，0个或多个[HEADERS](https://http2.github.io/http2-spec/#HEADERS)帧 (每个后面都跟着0个或多个[CONTINUATION](https://http2.github.io/http2-spec/#CONTINUATION)帧)包含信息性的 (1xx) HTTP响应的消息头(参见[[RFC7230]](https://http2.github.io/http2-spec/#RFC7230)，[Section 3.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#header.fields)和[[RFC7231]](https://http2.github.io/http2-spec/#RFC7231)，[Section 6.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#status.1xx))。
 
-2. 一个[HEADERS](https://http2.github.io/http2-spec/#HEADERS)帧 (每个后面都跟着0个或多个[CONTINUATION](https://http2.github.io/http2-spec/#CONTINUATION)帧)包含消息首部 (参见[[RFC7230]
-](https://http2.github.io/http2-spec/#RFC7230)，[Section 3.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#header.fields))
+2. 一个[HEADERS](https://http2.github.io/http2-spec/#HEADERS)帧 (每个后面都跟着0个或多个[CONTINUATION](https://http2.github.io/http2-spec/#CONTINUATION)帧)包含消息首部 (参见[[RFC7230]](https://http2.github.io/http2-spec/#RFC7230)，[Section 3.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#header.fields))
 
-3. 0个或多个[DATA](https://http2.github.io/http2-spec/#DATA)帧包含载荷体 (参见[[RFC7230]
-](https://http2.github.io/http2-spec/#RFC7230)，[Section 3.3](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#message.body))，以及
+3. 0个或多个[DATA](https://http2.github.io/http2-spec/#DATA)帧包含载荷体 (参见[[RFC7230]](https://http2.github.io/http2-spec/#RFC7230)，[Section 3.3](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#message.body))，以及
 
-4. 可选的，一个[HEADERS](https://http2.github.io/http2-spec/#HEADERS)帧 (每个后面都跟着0个或多个[CONTINUATION](https://http2.github.io/http2-spec/#CONTINUATION)帧)包含尾部，如果存在的话(参见[[RFC7230]
-](https://http2.github.io/http2-spec/#RFC7230)，[Section 4.1.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#chunked.trailer.part))
+4. 可选的，一个[HEADERS](https://http2.github.io/http2-spec/#HEADERS)帧 (每个后面都跟着0个或多个[CONTINUATION](https://http2.github.io/http2-spec/#CONTINUATION)帧)包含尾部，如果存在的话(参见[[RFC7230]](https://http2.github.io/http2-spec/#RFC7230)，[Section 4.1.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#chunked.trailer.part))
 
 序列的最后一帧携带END_STREAM标记，注意一个携带了END_STREAM标记的[HEADERS](https://http2.github.io/http2-spec/#HEADERS)帧后面可以跟多个[CONTINUATION](https://http2.github.io/http2-spec/#CONTINUATION)帧来携带首部块的其余部分。
 
 [HEADERS](https://http2.github.io/http2-spec/#HEADERS)帧和它后面跟着的任何[CONTINUATION](https://http2.github.io/http2-spec/#CONTINUATION)帧之间 **必须不(MUST NOT)** 能出现任何其它帧(来自于任何流)。
 
-HTTP/2使用DATA帧来携带携带消息载荷。在HTTP/2中 **必须不(MUST NOT)** 能使用在[[RFC7230]
-](https://http2.github.io/http2-spec/#RFC7230)的[Section 4.1](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#chunked.encoding)定义的分块传输编码。
+HTTP/2使用DATA帧来携带携带消息载荷。在HTTP/2中 **必须不(MUST NOT)** 能使用在[[RFC7230]](https://http2.github.io/http2-spec/#RFC7230)的[Section 4.1](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#chunked.encoding)定义的分块传输编码。
 
 首部尾字段 (trailing header fields)由一个首部块携带，首部块也会终止流。这样的一个首部块一个[HEADERS](https://http2.github.io/http2-spec/#HEADERS)帧起始，后跟0个或多个[CONTINUATION](https://http2.github.io/http2-spec/#CONTINUATION)帧，其中[HEADERS](https://http2.github.io/http2-spec/#HEADERS)帧携带了END_STREAM标记。第一个首部块之后没有终止流的首部块不是HTTP请求或响应的一部分。
 
@@ -1201,8 +1185,7 @@ HTTP/2使用DATA帧来携带携带消息载荷。在HTTP/2中 **必须不(MUST N
 
 ### [8.1.1 从HTTP/2升级](https://http2.github.io/http2-spec/#informational-responses)
 
-HTTP/2移除了对101 (Switching Protocols) 信息性状态码([[RFC7231]
-](https://http2.github.io/http2-spec/#RFC7231)，[Section 6.2.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#status.101))的支持。
+HTTP/2移除了对101 (Switching Protocols) 信息性状态码([[RFC7231]](https://http2.github.io/http2-spec/#RFC7231)，[Section 6.2.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#status.101))的支持。
 
 101 (Switching Protocols)的语义不再适用于多路复用的协议。HTTP/2使用的替代协议能够使用相同的语义来协商使用(参见[Section 3](https://http2.github.io/http2-spec/#starting))。
 
@@ -1214,8 +1197,7 @@ HTTP首部字段以一系列键-值对的形式携带信息。要获得已注册
 
 #### [8.1.2.1 伪首部字段](https://http2.github.io/http2-spec/#PseudoHeaderFields)
 
-尽管 HTTP/1.x 使用消息起始行(参见[[RFC7230]
-](https://http2.github.io/http2-spec/#RFC7230)，[Section 3.1](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#start.line))来携带目标URI，请求的method，和响应的状态码，而HTTP/2则使用以':'字符 (ASCII 0x3a)起始的特殊的伪首部字段来达到这一目的。
+尽管 HTTP/1.x 使用消息起始行(参见[[RFC7230]](https://http2.github.io/http2-spec/#RFC7230)，[Section 3.1](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#start.line))来携带目标URI，请求的method，和响应的状态码，而HTTP/2则使用以':'字符 (ASCII 0x3a)起始的特殊的伪首部字段来达到这一目的。
 
 伪首部字段不是HTTP首部字段。终端 **一定不能(MUST NOT)** 产生这份文档中定义的之外的伪首部字段。
 
@@ -1236,22 +1218,16 @@ HTTP/2不使用Connection首部字段来指明 连接特有(connection-specific)
 #### [8.1.2.3 请求的伪首部字段](https://http2.github.io/http2-spec/#HttpRequest)
 
 下面的伪首部字段是为HTTP/2请求定义的：
-* `:method` 伪首部字段包含HTTP method([[RFC7231]
-](https://http2.github.io/http2-spec/#RFC7231)，[Section 4](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#methods))
+* `:method` 伪首部字段包含HTTP method([[RFC7231]](https://http2.github.io/http2-spec/#RFC7231)，[Section 4](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#methods))
 
 
-* `:scheme` 伪首部字段包含了目标URI ([[RFC3986]
-](https://http2.github.io/http2-spec/#RFC3986)，[Section 3.1](https://tools.ietf.org/html/rfc3986#section-3.1)) 的scheme部分。
+* `:scheme` 伪首部字段包含了目标URI ([[RFC3986]](https://http2.github.io/http2-spec/#RFC3986)，[Section 3.1](https://tools.ietf.org/html/rfc3986#section-3.1)) 的scheme部分。
 
 `:scheme` 不限于http和https schemed URIs。一个代理或网关可以为非HTTP schemes转换请求，以便于使用HTTP来与非HTTP服务交互。
 
-* `:authority` 伪首部字段包含了目标URI ([[RFC3986]
-](https://http2.github.io/http2-spec/#RFC3986)，[Section 3.1](https://tools.ietf.org/html/rfc3986#section-3.1)) 的认证部分。`authority`  **一定不能(MUST NOT)** 给http或https schemed URIs包含废弃的`userinfo`子组件。要确保HTTP/1.1请求行可以被精确地重现，当从 一个有着 以origin或asterisk的形式 (参见 [[RFC7230]
-](https://http2.github.io/http2-spec/#RFC7230)，[Section 5.3](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#request-target)) 的请求目标的HTTP/1.1请求转换时，这个伪首部字段 **必须(MUST)** 被省略。直接产生HTTP/2请求的客户端 **应该(SHOULD)** 使用`:authority` 伪首部字段，而不是Host首部字段。如果请求中没有Host首部字段的话，则将HTTP/2请求转换为HTTP/1.1的中继 **必须(MUST)** 通过复制`:authority`伪首部字段的值来创建一个。
+* `:authority` 伪首部字段包含了目标URI ([[RFC3986]](https://http2.github.io/http2-spec/#RFC3986)，[Section 3.1](https://tools.ietf.org/html/rfc3986#section-3.1)) 的认证部分。`authority`  **一定不能(MUST NOT)** 给http或https schemed URIs包含废弃的`userinfo`子组件。要确保HTTP/1.1请求行可以被精确地重现，当从 一个有着 以origin或asterisk的形式 (参见 [[RFC7230]](https://http2.github.io/http2-spec/#RFC7230)，[Section 5.3](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#request-target)) 的请求目标的HTTP/1.1请求转换时，这个伪首部字段 **必须(MUST)** 被省略。直接产生HTTP/2请求的客户端 **应该(SHOULD)** 使用`:authority` 伪首部字段，而不是Host首部字段。如果请求中没有Host首部字段的话，则将HTTP/2请求转换为HTTP/1.1的中继 **必须(MUST)** 通过复制`:authority`伪首部字段的值来创建一个。
 
-* `:path` 伪首部字段包含了目标URI (完整的路径和一个可选的'?'字符及其后面接着的query) 的path和query部分(参见[[RFC3986]
-](https://http2.github.io/http2-spec/#RFC3986)的 Sections [3.3](https://tools.ietf.org/html/rfc3986#section-3.3)和[3.4](https://tools.ietf.org/html/rfc3986#section-3.4))。星号形式的请求包含了值为'*'的`:path`伪首部字段。对于http和https URI，这个伪首部字段 **一定不能(MUST NOT)** 是空的。不包含一个path组件的http和https URIs **必须(MUST)** 包含一个'/'值。这条规则的例外是不包含path组件的http或https URI的OPTIONS请求；这些**必须(MUST)** 包含一个值为'*'的`:path`伪首部字段(参见[[RFC7230]
-](https://http2.github.io/http2-spec/#RFC7230)，[Section 5.3.4](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#asterisk-form))。
+* `:path` 伪首部字段包含了目标URI (完整的路径和一个可选的'?'字符及其后面接着的query) 的path和query部分(参见[[RFC3986]](https://http2.github.io/http2-spec/#RFC3986)的 Sections [3.3](https://tools.ietf.org/html/rfc3986#section-3.3)和[3.4](https://tools.ietf.org/html/rfc3986#section-3.4))。星号形式的请求包含了值为'*'的`:path`伪首部字段。对于http和https URI，这个伪首部字段 **一定不能(MUST NOT)** 是空的。不包含一个path组件的http和https URIs **必须(MUST)** 包含一个'/'值。这条规则的例外是不包含path组件的http或https URI的OPTIONS请求；这些**必须(MUST)** 包含一个值为'*'的`:path`伪首部字段(参见[[RFC7230]](https://http2.github.io/http2-spec/#RFC7230)，[Section 5.3.4](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#asterisk-form))。
 
 所有的HTTP/2请求 **必须(MUST)** 为`:method`，`:scheme`和`:path`伪首部字段包含且只包含一个有效值，除非它是一个CONNECT请求 ([Section 8.3](https://http2.github.io/http2-spec/#CONNECT))。一个省略了必须的伪首部字段的HTTP请求是损坏的([Section 8.1.2.6](https://http2.github.io/http2-spec/#malformed))。
 
@@ -1259,15 +1235,13 @@ HTTP/2没有定义一种方式来携带版本标识符，如同HTTP/1.1的请求
 
 #### [8.1.2.4 响应的伪首部字段](https://http2.github.io/http2-spec/#HttpResponse)
 
-对于HTTP/2响应，`:status`伪首部字段被定义来携带HTTP状态码字段(参见 [[RFC7231]
-](https://http2.github.io/http2-spec/#RFC7231)，[Section 6](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#status.codes))。这个伪首部字段 **必须(MUST)** 被包含在所有的响应中；否则，响应是损坏的 ([Section 8.1.2.6](https://http2.github.io/http2-spec/#malformed))。
+对于HTTP/2响应，`:status`伪首部字段被定义来携带HTTP状态码字段(参见 [[RFC7231]](https://http2.github.io/http2-spec/#RFC7231)，[Section 6](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#status.codes))。这个伪首部字段 **必须(MUST)** 被包含在所有的响应中；否则，响应是损坏的 ([Section 8.1.2.6](https://http2.github.io/http2-spec/#malformed))。
 
 HTTP/2没有定义一种携带HTTP/1.1的状态行中包含的版本或原因描述的方式。
 
 #### [8.1.2.5 压缩Cookie首部字段](https://http2.github.io/http2-spec/#CompressCookie)
 
-[Cookie首部字段](https://http2.github.io/http2-spec/#COOKIE) [COOKIE]使用分号(";")来分割cookie-pairs (或 "crumbs")。这个首部字段不遵守HTTP中 列表结构规则 (参见[[RFC7230]
-](https://http2.github.io/http2-spec/#RFC7230)，[Section 3.2.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#field.order))，那使得cookie-pairs无法被分成不同的名值对。在只有单独的cookie-pairs更新时，这将大大地降低压缩效率
+[Cookie首部字段](https://http2.github.io/http2-spec/#COOKIE) [COOKIE]使用分号(";")来分割cookie-pairs (或 "crumbs")。这个首部字段不遵守HTTP中 列表结构规则 (参见[[RFC7230]](https://http2.github.io/http2-spec/#RFC7230)，[Section 3.2.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#field.order))，那使得cookie-pairs无法被分成不同的名值对。在只有单独的cookie-pairs更新时，这将大大地降低压缩效率
 
 要达到更好的压缩效率，Cookie首部字段 **可以(MAY)** 被分割为分开的首部字段，每个包含一个或多个cookie-pairs。如果解压后有多个Cookie首部字段，则这些首部字段 **必须(MUST)** 在被传递给非HTTP/2上下文，如一个HTTP/1.1连接，或一个普通的HTTP服务应用 之前，使用值为0x3B，0x20的2-字节分隔符 (ASCII字符串"; ") 连接为一个单独字节串。
 
@@ -1285,8 +1259,7 @@ HTTP/2没有定义一种携带HTTP/1.1的状态行中包含的版本或原因描
 
 一个损坏的请求或响应，是那种其它方面依然是一个有效的HTTP/2序列，但由于出现了无关的帧，禁用的首部字段，缺失了必要的首部字段，或包含了大写的首部字段名而变得无效的请求或响应。
 
-一个包含载荷体的请求或响应可以包含一个content-length首部字段。如果content-length首部字段的值不等于构成了载荷体的[DATA](https://http2.github.io/http2-spec/#DATA)帧载荷的长度和的请求或响应也是损坏的。被定义为不含有载荷的响应，在 [[RFC7230]
-](https://http2.github.io/http2-spec/#RFC7230)，[Section 3.3.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#header.content-length) 中描述，可以具有一个非零的content-length首部字段，尽管在 [DATA](https://http2.github.io/http2-spec/#DATA) 帧不包含内容。
+一个包含载荷体的请求或响应可以包含一个content-length首部字段。如果content-length首部字段的值不等于构成了载荷体的[DATA](https://http2.github.io/http2-spec/#DATA)帧载荷的长度和的请求或响应也是损坏的。被定义为不含有载荷的响应，在 [[RFC7230]](https://http2.github.io/http2-spec/#RFC7230)，[Section 3.3.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#header.content-length) 中描述，可以具有一个非零的content-length首部字段，尽管在 [DATA](https://http2.github.io/http2-spec/#DATA) 帧不包含内容。
 
 处理HTTP请求或响应的中继 (例如，任何不扮演隧道角色的中继) **一定不能(MUST NOT)** 转发损坏的请求或响应。探测到的损坏的请求或响应 **必须(MUST)** 被作为一个类型是 [PROTOCOL_ERROR](https://http2.github.io/http2-spec/#PROTOCOL_ERROR) 的流错误 ([Section 5.4.2](https://http2.github.io/http2-spec/#StreamErrorHandler))对待。
 
@@ -1409,13 +1382,9 @@ HTTP/2使服务器可以抢先地发送 (或推送) 与客户端之前初始化�
 
 客户端可以请求禁用服务器推送，尽管会为每个独立的hop协商。[SETTINGS_ENABLE_PUSH](https://http2.github.io/http2-spec/#SETTINGS_ENABLE_PUSH)设置项可以被设置为0以表明服务器推送被禁用。
 
-Promised请求 **必须(MUST)** 是可缓存的 (参见[[RFC7231]
-](https://http2.github.io/http2-spec/#RFC7231)，[Section 4.2.3](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#cacheable.methods))， **必须(MUST)** 是安全的(参见 [[RFC7231]
-](https://http2.github.io/http2-spec/#RFC7231)，[Section 4.2.1](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#safe.methods))， **一定不能(MUST NOT)** 包含请求体。客户端接收到一个promised请求，但请求不能被缓存，不知道是否安全，或者出现了请求体，必须通过一个类型为[PROTOCOL_ERROR](https://http2.github.io/http2-spec/#PROTOCOL_ERROR)的流错误([Section 5.4.2](https://http2.github.io/http2-spec/#StreamErrorHandler))来重置promised流。注意如果客户端无法确认一个新定义的method是安全的，则这可能导致promised流被重置。
+Promised请求 **必须(MUST)** 是可缓存的 (参见[[RFC7231]](https://http2.github.io/http2-spec/#RFC7231)，[Section 4.2.3](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#cacheable.methods))， **必须(MUST)** 是安全的(参见 [[RFC7231]](https://http2.github.io/http2-spec/#RFC7231)，[Section 4.2.1](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#safe.methods))， **一定不能(MUST NOT)** 包含请求体。客户端接收到一个promised请求，但请求不能被缓存，不知道是否安全，或者出现了请求体，必须通过一个类型为[PROTOCOL_ERROR](https://http2.github.io/http2-spec/#PROTOCOL_ERROR)的流错误([Section 5.4.2](https://http2.github.io/http2-spec/#StreamErrorHandler))来重置promised流。注意如果客户端无法确认一个新定义的method是安全的，则这可能导致promised流被重置。
 
-推送的可缓存的响应 (参见[[RFC7234]
-](https://http2.github.io/http2-spec/#RFC7234)，[Section 3](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7234.html#response.cacheability)) 可以被客户端保存，如果它实现了一个HTTP缓存的话。推送的响应被认为在原始的服务器上已经被成功地验证过 (比如，如果出现了"no-cache"缓存响应指示([[RFC7234]
-](https://http2.github.io/http2-spec/#RFC7234)，[Section 5.2.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7234.html#cache-response-directive))) 了，尽管由promised流ID标识的流依然是打开的。
+推送的可缓存的响应 (参见[[RFC7234]](https://http2.github.io/http2-spec/#RFC7234)，[Section 3](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7234.html#response.cacheability)) 可以被客户端保存，如果它实现了一个HTTP缓存的话。推送的响应被认为在原始的服务器上已经被成功地验证过 (比如，如果出现了"no-cache"缓存响应指示([[RFC7234]](https://http2.github.io/http2-spec/#RFC7234)，[Section 5.2.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7234.html#cache-response-directive))) 了，尽管由promised流ID标识的流依然是打开的。
 
 不能缓存的推送的响应 **一定不能(MUST NOT)** 被任何HTTP缓存保存。它们 **可以(MAY)** 单独提供给应用。
 
@@ -1469,8 +1438,7 @@ Promised请求 **必须(MUST)** 是可缓存的 (参见[[RFC7231]
 
 不符合这些限制的CONNECT请求是损坏的([Section 8.1.2.6](https://http2.github.io/http2-spec/#malformed))。
 
-支持CONNECT的代理建立一个与由`:authority`伪首部字段确定的服务器的[TCP connection](https://http2.github.io/http2-spec/#TCP) [TCP]。一旦这个连接被成功地建立了，代理给客户端发送一个 [HEADERS](https://http2.github.io/http2-spec/#HEADERS) 帧，其中包含了2xx系列状态码，如同 [[RFC7231]
-](https://http2.github.io/http2-spec/#RFC7231)，[Section 4.3.6](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#CONNECT) 中定义的那样。
+支持CONNECT的代理建立一个与由`:authority`伪首部字段确定的服务器的[TCP connection](https://http2.github.io/http2-spec/#TCP) [TCP]。一旦这个连接被成功地建立了，代理给客户端发送一个 [HEADERS](https://http2.github.io/http2-spec/#HEADERS) 帧，其中包含了2xx系列状态码，如同 [[RFC7231]](https://http2.github.io/http2-spec/#RFC7231)，[Section 4.3.6](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#CONNECT) 中定义的那样。
 
 在每个端点发送了初始的 [HEADERS](https://http2.github.io/http2-spec/#HEADERS) 帧之后，数据对应的所有后续 [DATA](https://http2.github.io/http2-spec/#DATA) 帧在那个TCP连接上发送。客户端发送的所有 [DATA](https://http2.github.io/http2-spec/#DATA) 帧的载荷由代理传输给TCP服务器；从TCP服务器接收的数据由代理汇集为 [DATA](https://http2.github.io/http2-spec/#DATA) 帧。 [DATA](https://http2.github.io/http2-spec/#DATA) 和流管理帧([RST_STREAM](https://http2.github.io/http2-spec/#RST_STREAM)，[WINDOW_UPDATE](https://http2.github.io/http2-spec/#WINDOW_UPDATE)，和 [PRIORITY](https://http2.github.io/http2-spec/#PRIORITY))之外的其它类型帧 **一定不能(MUST NOT)** 在一个已连接的流上发送，而在出现时 **必须(MUST)** 被当作一个流错误 ([Section 5.4.2](https://http2.github.io/http2-spec/#StreamErrorHandler))。
 
@@ -1624,8 +1592,7 @@ CONNECT方法可以被用于创建代理上不成比例的负载，因为相对�
 
 当以与攻击者控制的数据相同的上下文压缩时，压缩可以使得攻击恢复机密数据。HTTP/2启用了首部字段压缩([Section 4.3](https://http2.github.io/http2-spec/#HeaderBlock))；下面的担忧同样适用于HTTP压缩 内容编码 ([[RFC7231]](https://http2.github.io/http2-spec/#RFC7231)，[Section 3.1.2.1](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#content.codings)) 的使用。
 
-有一些关于压缩的攻击利用了web的特性 (例如，[[BREACH]
-](https://http2.github.io/http2-spec/#BREACH))。攻击者引起了多个包含不同纯文本的请求，然后观察每个最终的加密文本的长度，当关于密文的一个猜测正确时这揭示了一个更短的长度。
+有一些关于压缩的攻击利用了web的特性 (例如，[[BREACH]](https://http2.github.io/http2-spec/#BREACH))。攻击者引起了多个包含不同纯文本的请求，然后观察每个最终的加密文本的长度，当关于密文的一个猜测正确时这揭示了一个更短的长度。
 
 基于一个安全通道通信的实现 **一定不能(MUST NOT)** 压缩同时包含机密的和攻击者控制的数据的内容，除非为每个数据源使用不同的压缩字典。如果数据源无法被可靠的确定，则 **一定不能(MUST NOT)** 使用压缩。通用的流压缩，比如TLS提供的， **一定不能(MUST NOT)** 被用在HTTP/2中 (参见 [Section 9.2](https://http2.github.io/http2-spec/#TLSUsage)) 。
 
@@ -1634,8 +1601,7 @@ CONNECT方法可以被用于创建代理上不成比例的负载，因为相对�
 
 ## [10.7 填充的使用](https://http2.github.io/http2-spec/#padding)
 
-HTTP/2中的填充并不打算替代通用的填充，比如可能由 [TLS](https://http2.github.io/http2-spec/#TLS12) [TLS12]提供的填充。
-冗余填充甚至可能会适得其反。正确的应用程序可能依赖被填充的数据的特定知识。
+HTTP/2中的填充并不打算替代通用的填充，比如可能由 [TLS](https://http2.github.io/http2-spec/#TLS12) [TLS12]提供的填充。冗余填充甚至可能会适得其反。正确的应用程序可能依赖被填充的数据的特定知识。
 
 要减少依赖压缩的攻击，相对于填充而言，禁用或限制压缩可能是一个更适当的对策。
 
@@ -1657,8 +1623,7 @@ HTTP/2对于使用单个TCP连接的偏好，允许获得一个站点上用户�
 
 # [11. IANA 注意事项](https://http2.github.io/http2-spec/#iana)
 
-一个用于识别HTTP/2的字符串进入了由 [[TLS-ALPN]
-](https://http2.github.io/http2-spec/#TLS-ALPN) 建立的 "应用层协议协商 (ALPN) 协议IDs" 注册表
+一个用于识别HTTP/2的字符串进入了由 [[TLS-ALPN]](https://http2.github.io/http2-spec/#TLS-ALPN) 建立的 "应用层协议协商 (ALPN) 协议IDs" 注册表
 
 本文档为帧类型，设置项，和错误码建立了一个注册表。这些新的注册表项出现在新的"Hypertext Transfer Protocol version 2 (HTTP/2) Parameters"一节。
 
@@ -1666,11 +1631,9 @@ HTTP/2对于使用单个TCP连接的偏好，允许获得一个站点上用户�
 
 为了在HTTP中使用，本文档还注册了PRI方法，以避免与连接前言 (connection preface)  ([Section 3.5](https://http2.github.io/http2-spec/#ConnectionHeader))冲突
 
-
 ## [11.1 HTTP/2 识别字符串的注册 ](https://http2.github.io/http2-spec/#iana-alpn)
 
-本文档为HTTP/2的识别 (参见 [Section 3.3](https://http2.github.io/http2-spec/#discover-https)) 而向由 [[TLS-ALPN]
-](https://http2.github.io/http2-spec/#TLS-ALPN) 建立的 "应用层协议协商 (ALPN) 协议IDs" 注册表中建立了两个注册项。
+本文档为HTTP/2的识别 (参见 [Section 3.3](https://http2.github.io/http2-spec/#discover-https)) 而向由 [[TLS-ALPN]](https://http2.github.io/http2-spec/#TLS-ALPN) 建立的 "应用层协议协商 (ALPN) 协议IDs" 注册表中建立了两个注册项。
 
 当在TLS之上使用HTTP/2时，用"h2"来标识HTTP/2：
 
@@ -1795,8 +1758,7 @@ HTTP/2对于使用单个TCP连接的偏好，允许获得一个站点上用户�
 
 ## [11.6 PRI 方法注册](https://http2.github.io/http2-spec/#rfc.section.11.6)
 
-这一节向"HTTP方法注册表" ([[RFC7231]
-](https://http2.github.io/http2-spec/#RFC7231)，[Section 8.1](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#method.registry))中注册了PRI方法。
+这一节向"HTTP方法注册表" ([[RFC7231]](https://http2.github.io/http2-spec/#RFC7231)，[Section 8.1](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#method.registry))中注册了PRI方法。
 
 方法名：PRI
 
@@ -1810,8 +1772,7 @@ HTTP/2对于使用单个TCP连接的偏好，允许获得一个站点上用户�
 
 ## [11.7 421 (Misdirected Request) HTTP状态码](https://http2.github.io/http2-spec/#iana-MisdirectedRequest)
 
-本文档向 "HTTP状态码" 注册表 ([[RFC7231]
-](https://http2.github.io/http2-spec/#RFC7231)，[Section 8.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#status.code.registry))中注册了 421 (Misdirected Request) HTTP状态码。
+本文档向 "HTTP状态码" 注册表 ([[RFC7231]](https://http2.github.io/http2-spec/#RFC7231)，[Section 8.2](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7231.html#status.code.registry))中注册了 421 (Misdirected Request) HTTP状态码。
 
 状态码：421
 
@@ -1821,8 +1782,7 @@ HTTP/2对于使用单个TCP连接的偏好，允许获得一个站点上用户�
 
 ## [11.8  h2c 升级 Token](https://http2.github.io/http2-spec/#iana-h2c)
 
-本文档向"HTTP升级Tokens"注册表中 ([[RFC7230]
-](https://http2.github.io/http2-spec/#RFC7230)，[Section 8.6](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#upgrade.token.registry))中注册了 "h2c"升级token。
+本文档向"HTTP升级Tokens"注册表中 ([[RFC7230]](https://http2.github.io/http2-spec/#RFC7230)，[Section 8.6](https://svn.tools.ietf.org/svn/wg/httpbis/specs/rfc7230.html#upgrade.token.registry))中注册了 "h2c"升级token。
 
 值：h2c
 
@@ -2211,7 +2171,6 @@ HTTP/2实现 **可以(MAY)** 将以下面的TLS 1.2 加密套件中的任何一�
 
 **Note:** This list was assembled from the set of registered TLS cipher suites at the time of writing. This list includes those cipher suites that do not offer an ephemeral key exchange and those that are based on the TLS null, stream, or block cipher type (as defined in [Section 6.2.3](https://tools.ietf.org/html/rfc5246#section-6.2.3) of [[TLS12]
 ](https://http2.github.io/http2-spec/#TLS12)). Additional cipher suites with these properties could be defined; these would not be explicitly prohibited.
-
 
 # Acknowledgements
 This document includes substantial input from the following individuals:
