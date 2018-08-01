@@ -1,5 +1,5 @@
 ---
-title: ZooKeeper：入门：用 ZooKeeper 协调分布式应用程序
+title: ZooKeeper 入门：用 ZooKeeper 协调分布式应用程序
 date: 2018-07-30 19:37:49
 categories: 后台开发
 tags:
