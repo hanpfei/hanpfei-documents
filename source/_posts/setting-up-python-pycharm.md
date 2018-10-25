@@ -66,6 +66,12 @@ chmod +x myproject.git/hooks/post-receive
 
 ![clone-repo.png](https://www.wolfcstech.com/images/1315506-ac8a1124ff628c94.png)
 
+除了在 PyCharm 的 Welcome 界面外，还可以在 PyCharm 的主界面选择菜单选项 *VCS* > *Checkout from version control* > *Git*，打开与上面完全一样的对话框。如下图：
+
+![807193-20161121150956612-1541582462.png](https://www.wolfcstech.com/images/1315506-2adf88bd756630e2.png)
+
+然后按照与上面的说明一致的方法输入相关信息。
+
 如果一切正常，你应该已经在一个新的 PyCharm 窗口中打开了你的空工程。如果 ‘testing’ 对话框在屏幕上保持了很长时间，那可能是因为你的 PyCharm 密码存储需要你的 PyCharm master 密码。取消 checkout，键入 master 密码，并再次尝试。
 
 ## 添加一些代码
@@ -108,6 +114,11 @@ python3 run_motor.py
 使用 Python 内建的包管理器 [pip](https://en.wikipedia.org/wiki/Pip_(package_manager)) 在你的计算机上安装 ev3dev-python 库。
 ```
 pip3 install python-ev3dev
+```
+
+使用 pip 安装包的时候，注意一下系统中当前配置的 Python 版本。如果 PyCharm 中选择的解释器是 Python3，而系统中配置的当前 Python 解释器的版本为 Python2.7，则上面的命令无法为 PyCharm 所使用的 Python 解释器安装适当的 ev3dev 包，ev3dev 会被安装到 Python2.7 的包目录下，且只能被 Python 2.7 引用到。可通过如下命令强制为 Python3 安装 ev3dev 包：
+```
+$ sudo python3 /usr/local/bin/pip3 install python-ev3dev
 ```
 
 安装了库之后，红色的波浪线将消失，并且  ev3dev-python 命令的自动补全将会工作（非常方便）。
