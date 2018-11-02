@@ -744,6 +744,61 @@ my_ev3.send_direct_cmd(ops, local_mem=8)
 
 它真的启动了程序 `/home/root/lms2012/apps/Motor Control/Motor Control.rbf`。
 
+译者注：
+
+ * 关于操作命令的参数和返回值。要传递参数时，将参数值直接附加到操作命令的后面，并进行适当的编码即可。对于操作命令的返回值，EV3 的直接命令虚拟机的处理方式，非常类似与传出参数。即需要针对每一个返回值，传入一个指针，告诉操作命令把返回值放在指针所指向的位置。EV3 中有两种类型的指针，分别是全局内存指针和局部内存指针。两者的主要差异在于，全局内存中的数据，在命令执行之后，我们的程序可以全部通过读操作，从 EV3 设备中读取出来，而局部内存则不会。全局内存和局部内存的分配，则是通过直接命令的头部，告诉 EV3 中的直接命令虚拟机各为它们分配多少字节。保存返回值内容的内存的指针的具体值，需要开发者自己根据传出参数的类型长度进行手动计算。因此，EV3 的直接命令的操作命令，没有我们写代码时一般意义上的那种函数或方法，或者可以说，EV3 的操作命令的原型都是下面这样的：
+```
+void opXXX_cmdYYY(arg1, arg2, arg3, ..., *ret1, *ret2, ...)
+```
+
+如上面，这里的小程序，指定通过局部内存 `LVX(0)` / `LVX(4)` 接收操作命令 `opFile`/`LOAD_IMAGE` 的返回值。上面那段程序，也可以写为通过全局内存来接收操作命令 `opFile`/`LOAD_IMAGE` 的返回值，如：
+```
+    def start_program(self, exe_file_path: str):
+        ops = b''.join([
+            opFile,
+            cmdFile_LoadImage,
+            PRGID_USER,
+            LCS(exe_file_path),
+            GVX(0),
+            GVX(4)
+        ])
+
+        ret = self.send_direct_cmd(ops=ops, global_mem=8)
+
+        ops = b''.join([
+            opProgram_Start,
+            PRGID_USER,
+            GVX(0),
+            GVX(4),
+            debugMode_Normal
+        ])
+        ret = self.send_direct_cmd(ops = ops)
+```
+
+上面这段代码使用全局内存接收操作命令 `opFile`/`LOAD_IMAGE` 的返回值。第一个 `send_direct_cmd()` 调用的返回值 `ret` 中包含了操作命令 `opFile`/`LOAD_IMAGE` 的返回值。但注意操作 `opProgram_Start` 的说明。直接把操作命令 `opFile`/`LOAD_IMAGE` 的返回值传给 `opProgram_Start` 是不行的，如下面这样：
+```
+    def start_program(self, exe_file_path: str):
+        ops = b''.join([
+            opFile,
+            cmdFile_LoadImage,
+            PRGID_USER,
+            LCS(exe_file_path),
+            GVX(0),
+            GVX(4)
+        ])
+
+        ret = self.send_direct_cmd(ops=ops, global_mem=8)
+
+        ops = b''.join([
+            opProgram_Start,
+            PRGID_USER,
+            ret[5:],
+            debugMode_Normal
+        ])
+        ret = self.send_direct_cmd(ops = ops)
+```
+以这种直接传值的方式，程序无法如预期执行。
+
 # 模拟按钮按下
 
 在这个例子中，我们通过模拟如下的按钮按下事件关闭 EV3 brick：
