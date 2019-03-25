@@ -8,7 +8,7 @@ tags:
 ---
 
 QUIC (Quick UDP Internet Connections，快速 UDP 网络连接) 是一个新的默认加密的互联网传输协议，它提供了大量改进用于加速 HTTP 流量并使它更安全，以实现最终在 Web 上替换 TCP 和 TLS 的目标。这篇博文中我们将概述 QUIC 的一些关键特性，及它们如何使 Web 受益，以及在支持这个基础的新协议上的一些挑战。
-
+<!--more-->
 ![QUIC-Badge-Dark-RGB-Horiz](https://www.wolfcstech.com/images/1315506-31ecbef4d0bd517e.png)
 
 事实上有两个协议，它们共享相同的名字： “Google QUIC”（简称 “gQUIC”）是 Google 的工程师在几年前设计的最初的协议，它在经过了几年的实验之后，现在已经被 [IETF](https://ietf.org/) (Internet Engineering Task Force，互联网工程任务组) 采纳为标准。
