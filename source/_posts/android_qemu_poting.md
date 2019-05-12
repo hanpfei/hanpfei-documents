@@ -11,7 +11,29 @@ Android QEMU 模拟器是我们日常 Android 开发中一个非常有力的工�
 Android QEMU 模拟器的玩法很多，某些场景下会有将 Android QEMU 模拟器移植到不同的主机 CPU 架构上的需要，特别是 ARM64 平台。当前已经出现了不少 ARM64 的服务器硬件平台，可以运行完整的 Ubuntu Linux 等系统。大多数 Android 终端采用 ARM 低功耗处理器，Android 系统运行于 ARM 平台，因而大多数 Android 应用对于 ARM 平台的支持会更好一点。ARM 目标 Android 系统运行于我们日常的 X86 开发机的模拟器上时，性能都非常差。在 ARM64 平台上运行 ARM 版模拟器，同时开启 KVM，则可以获得 Android QEMU 非常好的运行性能。（KVM/ARM 虚拟化技术的更多信息，可参考[ KVM/ARM: AN OPEN-SOURCE ARM VIRTUALIZATION SYSTEM]([http://systems.cs.columbia.edu/projects/kvm-arm/](http://systems.cs.columbia.edu/projects/kvm-arm/)
 )）ARM64 服务器 + ARM 版模拟器 + KVM 也就顺利成章地成为许多有趣的场景的技术基础。
 
-本文以 ARM64 平台为例介绍把 Android QEMU 模拟器移植到 ARM64 Ubuntu Linux 平台的过程，其中 Code base 为 2019 年 3 月拉取，qemu 所用的 branch 为 emu-2.3-release。移植过程主要分为几个步骤，分别是配置编译，运行时问题，和 nowindow 及新功能。其中配置编译又分为配置脚本成功执行，预编译库的编译移植，和构建配置文件的移植修改。
+本文以 ARM64 平台为例介绍把 Android QEMU 模拟器移植到 ARM64 Ubuntu Linux 平台的过程，其中 Code base 为 2019 年 3 月拉取，qemu 所用的 branch 为 emu-2.3-release。移植过程主要分为几个步骤：
+ - 配置编译
+    * 配置脚本成功执行
+    * 预编译库的编译移植。在 Android QEMU 模拟器的源码库中有编译安装这些库的脚本，但可能需要有针对性地对脚本做些移植。具体需要移植的库主要包括如下这些：
+        -  Zlib
+        -  Libpng
+        -  Libxml2
+        -  LibCURL
+        -  LibANGLEtranslation
+        -  Protobuf
+        -  Breakpad
+        -  Qt
+        -  e2fsprogs
+        -  ffmpeg
+        -  x264
+    * 构建配置文件的移植修改，主要指 mk 文件
+ - 运行时问题。代码里面有一些与特定硬件平台相关的代码，需要专门针对 ARM 平台做一些适配
+ - nowindow 及功能扩充。对于某些需要运行模拟器的机器，显示模拟器的窗口可能不太方便，因而需要将模拟器中窗口显示的部分拆除掉。功能扩充则指的是，某些运行模拟器的机器，渲染能力比较弱，则可以将模拟器中虚拟 Android 系统相关的逻辑和图形渲染相关的逻辑分开在不同的机器上运行。
+
+解决了上面的重重困难之后，Android QEMU 模拟器应用程序本身总算是具备了运行的条件。但要真正让 Android QEMU 模拟器运行起来，还缺少一项关键的东西，那就是 AVD。有了 AVD，Android QEMU 模拟器应用程序才能知道要虚拟什么样的 Android 系统。AVD 的创建，就像我们平常在 X86 的开发机器上所做的那样，需要通过 Android SDK 来完成。除了 AVD，我们日常 Android 开发工具中必不可少的一些工具，如 adb 等也需要能够运行起来，这也离不开 Android SDK。但 Android SDK 不能用我们平常用的那个 X86 的版本，而需要用专门为 ARM 平台移植的版本。在上面的移植步骤之后增加一个关键的步骤：
+  - Android SDK 的移植
+
+本文主要关注 Android QEMU 模拟器应用程序本身的配置编译问题。
 
 # 1. 编译问题
 
