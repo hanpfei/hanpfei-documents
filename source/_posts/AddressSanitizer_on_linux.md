@@ -675,3 +675,4 @@ int *u = (int*)((char*)x + 6);
  * [sanitizers](https://github.com/google/sanitizers)
  * [AddressSanitizerExampleHeapOutOfBounds](https://github.com/google/sanitizers/wiki/AddressSanitizerExampleHeapOutOfBounds)
  * [AddressSanitizerCallStack](https://github.com/google/sanitizers/wiki/AddressSanitizerCallStack)
+ * [LLVM Debian/Ubuntu nightly packages](http://apt.llvm.org/)
