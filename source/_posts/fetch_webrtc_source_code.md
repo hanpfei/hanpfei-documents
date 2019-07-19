@@ -353,10 +353,65 @@ entries = {
 }
 ```
 
-笔者基于 `.gclient_entries` 文件的内容，写了一个简单脚本下载并迁移其中的 Git repo，内容如下：
+笔者基于 `.gclient_entries` 文件的内容，写了一个简单的脚本，下载并迁移 WebRTC 依赖的这些 Git repo，脚本文件的如下：
 ```
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
+import os
+import re
+
+def parse_gclient_entries(gclient_entries_file_path):
+    webrtc_repos = []
+    if not os.path.isfile(gclient_entries_file_path):
+        print("File does not exist: " + gclient_entries_file_path)
+        return webrtc_repos
+
+    git_direct_pattern = re.compile(r".+: '(.+\.git)',$")
+    git_dep_repo_pattern = re.compile(r".+: '(.+)@.+',$")
+
+    gclient_entries_file_handle = open(gclient_entries_file_path)
+    lines = gclient_entries_file_handle.readlines()
+    for line in lines:
+        line = line.strip()
+        matcher = git_direct_pattern.match(line)
+        if not matcher:
+            matcher = git_dep_repo_pattern.match(line)
+        if matcher:
+            repo_path = matcher.group(1)
+            webrtc_repos.append(repo_path)
+
+    return webrtc_repos[31:34]
+
+
+def clone_repo(repo_path):
+    pathelem = repo_path.split("/");
+    folder_name = pathelem[len(pathelem) - 1]
+    if not folder_name.endswith(".git"):
+        folder_name = folder_name + ".git"
+
+    print("Clone " + repo_path)
+    clone_cmd = "git clone --bare " + repo_path
+    os.system(clone_cmd)
+
+    if not os.path.isdir(folder_name):
+        print("Clone repo failed: " + repo_path)
+        return
+
+    cwd_path = os.getcwd()
+    os.chdir(folder_name)
+    push_mirror_cmd = "git push --mirror git@github.com:asdfghjjklllllaaa/" + folder_name
+    os.system(push_mirror_cmd)
+    os.chdir(cwd_path)
+
+
+if __name__ == '__main__':
+    webrtc_repos = parse_gclient_entries("/media/data/webrtc/.gclient_entries")
+    for repo_path in webrtc_repos:
+       clone_repo(repo_path)
 ```
-这个脚本能工作的基础是，在 GitHub 上已经为它们创建了空 repo。
+这个脚本能工作的基础是，在 GitHub 上已经为它们创建了空 repo。这个脚本解析`.gclient_entries` 文件的内容，从中提取 git repo 的地址，把它们 clone 到本地，然后在推送到 github 上对应的 repo 中去。
+
+不过，完美的解决方案，应该是解析 `DEPS` 文件的内容，而不是 `.gclient_entries` 文件的内容。
 
 Done.
