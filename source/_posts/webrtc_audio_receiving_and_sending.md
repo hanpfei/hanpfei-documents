@@ -1,12 +1,12 @@
 ---
-title: WebRTC Audio 接收端关键过程
+title: WebRTC Audio 接收和发送的关键过程
 date: 2019-07-20 23:05:49
 categories: 音视频开发
 tags:
 - 音视频开发
 ---
 
-本文基于 WebRTC 中的示例应用 peerconnection_client 分析 WebRTC Audio 接收端的关键过程。
+本文基于 WebRTC 中的示例应用 peerconnection_client 分析 WebRTC Audio 接收和发送的关键过程。首先是发送的过程，然后是接收的过程。
 <!--more-->
 # 创建 webrtc::AudioState
 
@@ -355,3 +355,164 @@ AudioDeviceGeneric::InitStatus AudioDeviceLinuxPulse::Init() {
 WebRTC 中对于音频，是即解码即播放的，播放和解码在同一个线程中完成，此外从解码到播放，还将完成回声消除，混音等处理。
 
 上面创建 `WebRtcAudioReceiveStream`，并接收到音频数据包，是这里能够从 mixer 拿到数据并播放的基础。
+
+# webrtc::AudioSendStream 的创建
+webrtc::AudioSendStream 的创建由应用程序发起：
+```
+#0  cricket::BaseChannel::SetLocalContent(cricket::MediaContentDescription const*, webrtc::SdpType, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >*) () at webrtc/src/pc/channel.cc:290
+#1  PushdownMediaDescription () at webrtc/src/pc/peer_connection.cc:5699
+#2  UpdateSessionState () at webrtc/src/pc/peer_connection.cc:5668
+#3  ApplyLocalDescription () at webrtc/src/pc/peer_connection.cc:2356
+#4  SetLocalDescription () at webrtc/src/pc/peer_connection.cc:2187
+#10 Conductor::OnSuccess(webrtc::SessionDescriptionInterface*) () at webrtc/src/examples/peerconnection/client/conductor.cc:544
+#11 OnMessage () at webrtc/src/pc/webrtc_session_description_factory.cc:299
+#12 Dispatch () at webrtc/src/rtc_base/message_queue.cc:513
+#13 ProcessMessages () at webrtc/src/rtc_base/thread.cc:527
+#14 rtc::Thread::Run() () at webrtc/src/rtc_base/thread.cc:351
+#15 main () at webrtc/src/examples/peerconnection/client/linux/main.cc:111
+```
+
+`webrtc/src/pc/channel.cc` 文件里的 `BaseChannel::SetLocalContent()` 将 MediaContentDescription 抛进 worker_thread 中进一步处理：
+```
+bool BaseChannel::SetLocalContent(const MediaContentDescription* content,
+                                  SdpType type,
+                                  std::string* error_desc) {
+  TRACE_EVENT0("webrtc", "BaseChannel::SetLocalContent");
+  return InvokeOnWorker<bool>(
+      RTC_FROM_HERE,
+      Bind(&BaseChannel::SetLocalContent_w, this, content, type, error_desc));
+}
+```
+
+webrtc::AudioSendStream 最终在 Call 中创建：
+```
+#0  CreateAudioSendStream () at webrtc/src/call/call.cc:707
+#1  WebRtcAudioSendStream () at webrtc/src/media/engine/webrtc_voice_engine.cc:735
+#2  AddSendStream () at webrtc/src/media/engine/webrtc_voice_engine.cc:1803
+#3  UpdateLocalStreams_w () at webrtc/src/pc/channel.cc:671
+#4  SetLocalContent_w () at webrtc/src/pc/channel.cc:906
+```
+
+# 音频数据的发送
+
+如前面看到的，AudioDevice 组件被初始化时，在启动播放线程的同时，还会启动一个录制线程。录制线程捕获录制的音频数据，一路传递进行处理：
+```
+#0  ProcessAndEncodeAudio () at webrtc/src/audio/channel_send.cc:1101
+#1  SendAudioData () at webrtc/src/audio/audio_send_stream.cc:365
+#2  RecordedDataIsAvailable () at webrtc/src/audio/audio_transport_impl.cc:164
+#3  DeliverRecordedData () at webrtc/src/modules/audio_device/audio_device_buffer.cc:269
+#4  webrtc::AudioDeviceLinuxPulse::ProcessRecordedData(signed char*, unsigned int, unsigned int) ()
+    at webrtc/src/modules/audio_device/linux/audio_device_pulse_linux.cc:1971
+#5  webrtc::AudioDeviceLinuxPulse::ReadRecordedData(void const*, unsigned long) ()
+    at webrtc/src/modules/audio_device/linux/audio_device_pulse_linux.cc:1918
+#6  RecThreadProcess () at webrtc/src/modules/audio_device/linux/audio_device_pulse_linux.cc:2229
+#7  webrtc::AudioDeviceLinuxPulse::RecThreadFunc(void*) () at webrtc/src/modules/audio_device/linux/audio_device_pulse_linux.cc:1990
+```
+
+AudioDevice 将录制的音频数据一直传递到 webrtc/src/audio/channel_send.cc 文件里的 `ChannelSend::ProcessAndEncodeAudio()`：
+```
+void ChannelSend::ProcessAndEncodeAudio(
+    std::unique_ptr<AudioFrame> audio_frame) {
+  RTC_DCHECK_RUNS_SERIALIZED(&audio_thread_race_checker_);
+  struct ProcessAndEncodeAudio {
+    void operator()() {
+      RTC_DCHECK_RUN_ON(&channel->encoder_queue_);
+      if (!channel->encoder_queue_is_active_) {
+        return;
+      }
+      channel->ProcessAndEncodeAudioOnTaskQueue(audio_frame.get());
+    }
+    std::unique_ptr<AudioFrame> audio_frame;
+    ChannelSend* const channel;
+  };
+  // Profile time between when the audio frame is added to the task queue and
+  // when the task is actually executed.
+  audio_frame->UpdateProfileTimeStamp();
+  encoder_queue_.PostTask(ProcessAndEncodeAudio{std::move(audio_frame), this});
+}
+```
+
+在该函数中，录制获得的 AudioFrame 被抛进编码的线程中的 task 进行编码，封装为 RTP 包，并送进 `PacedSender`，`PacedSender` 将 RTP 包放进 queue 中：
+```
+#0  InsertPacket () at webrtc/src/modules/pacing/paced_sender.cc:200
+#1  non-virtual thunk to webrtc::PacedSender::InsertPacket(webrtc::RtpPacketSender::Priority, unsigned int, unsigned short, long, unsigned long, bool) ()
+#2  webrtc::voe::(anonymous namespace)::RtpPacketSenderProxy::InsertPacket(webrtc::RtpPacketSender::Priority, unsigned int, unsigned short, long, unsigned long, bool) () at webrtc/src/audio/channel_send.cc:391
+#3  SendToNetwork () at webrtc/src/modules/rtp_rtcp/source/rtp_sender.cc:963
+#4  webrtc::RTPSenderAudio::LogAndSendToNetwork(std::__1::unique_ptr<webrtc::RtpPacketToSend, std::__1::default_delete<webrtc::RtpPacketToSend> >, webrtc::StorageType) () at webrtc/src/modules/rtp_rtcp/source/rtp_sender_audio.cc:363
+#5  SendAudio () at webrtc/src/modules/rtp_rtcp/source/rtp_sender_audio.cc:260
+#6  SendRtpAudio () at webrtc/src/audio/channel_send.cc:568
+#7  SendData () at webrtc/src/audio/channel_send.cc:497
+#8  Encode () at webrtc/src/modules/audio_coding/acm2/audio_coding_module.cc:385
+#9  webrtc::(anonymous namespace)::AudioCodingModuleImpl::Add10MsData(webrtc::AudioFrame const&) ()
+    at webrtc/src/modules/audio_coding/acm2/audio_coding_module.cc:430
+#10 ProcessAndEncodeAudioOnTaskQueue () at webrtc/src/audio/channel_send.cc:1152
+```
+
+`PacedSender` 中的另一个线程从 queue 中拿到 RTP 包并发送：
+```
+#0  SendPacket () at webrtc/src/pc/channel.cc:397
+#1  cricket::BaseChannel::SendPacket(rtc::CopyOnWriteBuffer*, rtc::PacketOptions const&) () at webrtc/src/pc/channel.cc:328
+#2  cricket::MediaChannel::DoSendPacket(rtc::CopyOnWriteBuffer*, bool, rtc::PacketOptions const&) () at webrtc/src/media/base/media_channel.h:328
+#3  cricket::MediaChannel::SendPacket(rtc::CopyOnWriteBuffer*, rtc::PacketOptions const&) () at webrtc/src/media/base/media_channel.h:249
+#4  cricket::WebRtcVideoChannel::SendRtp(unsigned char const*, unsigned long, webrtc::PacketOptions const&) () at webrtc/src/media/engine/webrtc_video_engine.cc:1690
+#5  SendPacketToNetwork () at webrtc/src/modules/rtp_rtcp/source/rtp_sender.cc:550
+#6  PrepareAndSendPacket () at webrtc/src/modules/rtp_rtcp/source/rtp_sender.cc:791
+#7  webrtc::RTPSender::TimeToSendPacket(unsigned int, unsigned short, long, bool, webrtc::PacedPacketInfo const&) () at webrtc/src/modules/rtp_rtcp/source/rtp_sender.cc:604
+#8  webrtc::ModuleRtpRtcpImpl::TimeToSendPacket(unsigned int, unsigned short, long, bool, webrtc::PacedPacketInfo const&) () at webrtc/src/modules/rtp_rtcp/source/rtp_rtcp_impl.cc:415
+#9  webrtc::PacketRouter::TimeToSendPacket(unsigned int, unsigned short, long, bool, webrtc::PacedPacketInfo const&) ()
+    at webrtc/src/modules/pacing/packet_router.cc:123
+#10 Process () at webrtc/src/modules/pacing/paced_sender.cc:390
+```
+RTP 包被 `PacedSender` 一直递到 webrtc/src/pc/channel.cc 文件里定义的 `BaseChannel::SendPacket()`。`BaseChannel::SendPacket()` 将包抛进网络发送线程中发送：
+```
+bool BaseChannel::SendPacket(bool rtcp,
+                             rtc::CopyOnWriteBuffer* packet,
+                             const rtc::PacketOptions& options) {
+  // Until all the code is migrated to use RtpPacketType instead of bool.
+  RtpPacketType packet_type = rtcp ? RtpPacketType::kRtcp : RtpPacketType::kRtp;
+  // SendPacket gets called from MediaEngine, on a pacer or an encoder thread.
+  // If the thread is not our network thread, we will post to our network
+  // so that the real work happens on our network. This avoids us having to
+  // synchronize access to all the pieces of the send path, including
+  // SRTP and the inner workings of the transport channels.
+  // The only downside is that we can't return a proper failure code if
+  // needed. Since UDP is unreliable anyway, this should be a non-issue.
+  if (!network_thread_->IsCurrent()) {
+    // Avoid a copy by transferring the ownership of the packet data.
+    int message_id = rtcp ? MSG_SEND_RTCP_PACKET : MSG_SEND_RTP_PACKET;
+    SendPacketMessageData* data = new SendPacketMessageData;
+    data->packet = std::move(*packet);
+    data->options = options;
+    network_thread_->Post(RTC_FROM_HERE, this, message_id, data);
+    return true;
+  }
+```
+
+网络发送线程将数据包通过系统 socket 发送到网络：
+```
+#0  rtc::PhysicalSocket::DoSendTo(int, char const*, int, int, sockaddr const*, unsigned int) () at webrtc/src/rtc_base/physical_socket_server.cc:479
+#1  SendTo () at webrtc/src/rtc_base/physical_socket_server.cc:344
+#2  rtc::AsyncUDPSocket::SendTo(void const*, unsigned long, rtc::SocketAddress const&, rtc::PacketOptions const&) () at webrtc/src/rtc_base/async_udp_socket.cc:84
+#3  SendTo () at webrtc/src/p2p/base/stun_port.cc:301
+#4  Send () at webrtc/src/p2p/base/connection.cc:1162
+#5  SendPacket () at webrtc/src/p2p/base/p2p_transport_channel.cc:1473
+#6  SendPacket () at webrtc/src/p2p/base/dtls_transport.cc:409
+#7  SendPacket () at webrtc/src/pc/rtp_transport.cc:147
+#8  SendRtpPacket () at webrtc/src/pc/srtp_transport.cc:173
+#9  SendPacket () at webrtc/src/pc/channel.cc:457
+#10 OnMessage () at webrtc/src/pc/channel.cc:757
+```
+
+webrtc/src/rtc_base/physical_socket_server.cc 文件里定义的 `PhysicalSocket::DoSendTo()` 函数将数据包通过系统的 socket 发送到网络上：
+```
+int PhysicalSocket::DoSendTo(SOCKET socket,
+                             const char* buf,
+                             int len,
+                             int flags,
+                             const struct sockaddr* dest_addr,
+                             socklen_t addrlen) {
+  return ::sendto(socket, buf, len, flags, dest_addr, addrlen);
+}
+```
+
+
