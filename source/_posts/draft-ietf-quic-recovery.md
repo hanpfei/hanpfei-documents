@@ -77,9 +77,13 @@ QUIC 包可以包含不同类型的多个帧。恢复机制确保需要可靠递
 ### A.1.1 发送数据包字段
 
  packet_number：发送的数据包的包号。
+
  ack_eliciting：用于表示一个包是否是 ACK 诱发包的布尔值。如果为真，则预期将收到一个确认，尽管对端可能延迟发送包含它的 ACK 帧直到 MaxAckDelay。
+
  in_flight：用于表示包是否被计入 in flight 值的布尔值。
+
  sent_bytes：包中发送的字节数，不包括 UDP 或 IP 头部，但包含 QUIC 帧头部。
+
  time_sent：发送包的时间。
 
 ## A.2 重要的常量
@@ -87,9 +91,13 @@ QUIC 包可以包含不同类型的多个帧。恢复机制确保需要可靠递
 丢包恢复中使用的常量基于 RFCs，论文，和常见实践的结合。一些可能需要改变或协商以便更好地适应各种环境。
 
  kPacketThreshold：包阈值丢失探测认为一个包丢失前最大的重排序包个数。RECOMMENDED （建议）值取 3。
+
  kTimeThreshold：时间阈值丢失探测认为一个包丢失前最大的重排序时间。以RTT 系数的方式指定。RECOMMENDED （建议）值取 9/8。
+
  kGranularity：计时器粒度。这是一个系统相关的值。然而，实现 SHOULD（应该）使用一个不小于 1 ms 的值。
+
  kInitialRtt：在取得一个 RTT 采样前使用的 RTT。RECOMMENDED （建议）值取 500ms。
+
  kPacketNumberSpace：列举三种包号空间的枚举。
 ```
   enum kPacketNumberSpace {
