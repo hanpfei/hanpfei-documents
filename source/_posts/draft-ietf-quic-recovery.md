@@ -366,7 +366,31 @@ DetectLostPackets(pn_space):
 
 ## B.1 重要的常量
 
+拥塞控制中使用的常量是基于 RFCs，论文，和习惯做法确定的。其中的一些可能需要修改或协商，以更好地适用于各种各样的环境。
+
+kMaxDatagramSize：发送者的最大载荷大小。不包括 UDP 头和 IP 头。最大包大小用于计算初始的和最小的拥塞窗口。RECOMMENDED（建议）值取 1200。
+
+kInitialWindow：初始在途数据量的默认限制，以字节为单位。取自 [[RFC6928]](https://quicwg.org/base-drafts/draft-ietf-quic-recovery.html#RFC6928)，但考虑到 8 字节的 UDP 头和 20 字节的 TCP 头可轻微增加。RECOMMENDED（建议）值取 10 * kMaxDatagramSize 和 max(2* kMaxDatagramSize, 14720)) 两者中小的那个。
+
+kMinimumWindow：最小的拥塞窗口字节数。RECOMMENDED（建议）值取 2 * kMaxDatagramSize。
+
+kLossReductionFactor：当探测到一个新的丢包事件时减小拥塞窗口。RECOMMENDED（建议）值取 0.5。
+
+kPersistentCongestionThreshold：持续拥塞的建立时间，以 PTO 的倍数指定。这个阈值的原理是，让一个发送者使用初始 PTOs 积极地探索，像 TCP 通过 Tail Loss Probe (TLP) [[TLP]](https://quicwg.org/base-drafts/draft-ietf-quic-recovery.html#TLP) [[RACK]](https://quicwg.org/base-drafts/draft-ietf-quic-recovery.html#RACK) 做的那样，在建立持久拥塞之前，像 TCP 通过 Retransmission Timeout (RTO) [[RFC5681]](https://quicwg.org/base-drafts/draft-ietf-quic-recovery.html#RFC5681) 做的那样。RECOMMENDED（建议）kPersistentCongestionThreshold 的值取 3，它接近于等于 TCP 中一个 RTO 前有两个 TLPs。
+
 ## B.2 重要的变量
+
+实现拥塞控制机制所需的变量在本节描述。
+
+ecn_ce_counters[kPacketNumberSpace]：对端在一个 ACK 帧中报告的包号空间中的 ECN-CE 计数器的最高值。这个值用于探测报告的 ECN-CE 计数的增量。
+
+bytes_in_flight：所有已经发送的包含至少一个 ack 诱发帧或 PADDING 帧，但还没有被确认或声明丢失的包的总字节大小。这个大小不包括 IP 或 UDP 头，但是包括 QUIC 和 AEAD 头。只包含 ACK 帧的包不计入 bytes_in_flight，以确保拥塞控制不妨碍拥塞反馈。
+
+congestion_window：可以发送的在途字节的最大大小。
+
+congestion_recovery_start_time：QUIC 由于丢包或 ECN 首次探测到拥塞的时间，导致它进入拥塞恢复状态。当这个时间之后发送的包被确认时，QUIC 退出拥塞恢复状态。
+
+ssthresh：慢启动阈值的字节数。当拥塞窗口低于 ssthresh 时，模式为慢启动，且窗口随着确认的字节数而增长。
 
 ## B.3 初始化
 
