@@ -667,6 +667,147 @@ int *u = (int*)((char*)x + 6);
 
 `free` 用阴影值对整个区域下毒，并把内存块放入一个隔离区（这样在一定时间内这个内存块将不会再次被 malloc 返回）。
 
+## 二进制兼容性
+
+二进制兼容性问题指的是，分别用 GCC 和 clang 编译的不同工程，它们之间存在依赖，或要一起使用时出现的问题。如本人遇到的场景，有一个用 clang 编译的动态链接库 A，有一个 GCC 编译的动态链接库 B，还有一个用 GCC 编译的 C/C++ 应用程序 C。它们之间的依赖关系为，B 依赖于 A，C 依赖于 A 和 B。其中只有编译 A 时，开启了 ASAN 以检查内存问题。
+
+上述场景中，在用 CMake 通过 G++ 编译链接 C 应用程序时报出了如下的错误：
+```
+[100%] Linking CXX executable AgoraSDKDemoApp
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_report_store4’未定义的引用
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_poison_cxx_array_cookie’未定义的引用
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_report_exp_store2’未定义的引用
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_stack_free_7’未定义的引用
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_report_exp_load_n’未定义的引用
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_load4’未定义的引用
+```
+
+看上去是由于没有链接 ASAN 库的原因。通过为 G++ 加上对 ASAN 库的链接依赖（`-lasan`），再看一下。
+
+这次的错误少了许多，但链接还是失败了：
+```
+$ make
+[  5%] Linking CXX shared library libAgoraSDKWrapper.so
+[ 80%] Built target AgoraSDKWrapper
+[ 85%] Linking CXX executable AgoraSDKDemoDlApp
+[ 90%] Built target AgoraSDKDemoDlApp
+[ 95%] Linking CXX executable AgoraSDKDemoApp
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_unregister_elf_globals’未定义的引用
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_register_elf_globals’未定义的引用
+collect2: error: ld returned 1 exit status
+CMakeFiles/AgoraSDKDemoApp.dir/build.make:95: recipe for target 'AgoraSDKDemoApp' failed
+make[2]: *** [AgoraSDKDemoApp] Error 1
+CMakeFiles/Makefile2:141: recipe for target 'CMakeFiles/AgoraSDKDemoApp.dir/all' failed
+make[1]: *** [CMakeFiles/AgoraSDKDemoApp.dir/all] Error 2
+Makefile:83: recipe for target 'all' failed
+make: *** [all] Error 2
+```
+
+为 B 和 C 工程的编译加上编译标记 `-fsanitize=address`，再次用 g++ 编译：
+```
+[100%] Linking CXX executable AgoraSDKDemoApp
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_unregister_elf_globals’未定义的引用
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_register_elf_globals’未定义的引用
+collect2: error: ld returned 1 exit status
+CMakeFiles/AgoraSDKDemoApp.dir/build.make:95: recipe for target 'AgoraSDKDemoApp' failed
+make[2]: *** [AgoraSDKDemoApp] Error 1
+CMakeFiles/Makefile2:141: recipe for target 'CMakeFiles/AgoraSDKDemoApp.dir/all' failed
+make[1]: *** [CMakeFiles/AgoraSDKDemoApp.dir/all] Error 2
+Makefile:83: recipe for target 'all' failed
+make: *** [all] Error 2
+```
+错误还是一样的。
+
+为 g++ 添加 `-v` 参数，查看编译过程的详细信息，可以看到最后链接时执行的命令如下：
+```
+Configured with: ../src/configure -v --with-pkgversion='Ubuntu 7.4.0-1ubuntu1~18.04.1' --with-bugurl=file:///usr/share/doc/gcc-7/README.Bugs --enable-languages=c,ada,c++,go,brig,d,fortran,objc,obj-c++ --prefix=/usr --with-gcc-major-version-only --program-suffix=-7 --program-prefix=x86_64-linux-gnu- --enable-shared --enable-linker-build-id --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --libdir=/usr/lib --enable-nls --with-sysroot=/ --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --with-default-libstdcxx-abi=new --enable-gnu-unique-object --disable-vtable-verify --enable-libmpx --enable-plugin --enable-default-pie --with-system-zlib --with-target-system-zlib --enable-objc-gc=auto --enable-multiarch --disable-werror --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --enable-multilib --with-tune=generic --enable-offload-targets=nvptx-none --without-cuda-driver --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu
+Thread model: posix
+gcc version 7.4.0 (Ubuntu 7.4.0-1ubuntu1~18.04.1) 
+COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/
+LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../:/lib/:/usr/lib/
+COLLECT_GCC_OPTIONS='-std=c++11' '-fsanitize=address' '-v' '-g' '-o' 'AgoraSDKDemoApp' '-L/usr/local/lib' '-L/usr/local/lib64' '-L/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk' '-shared-libgcc' '-mtune=generic' '-march=x86-64'
+ /usr/lib/gcc/x86_64-linux-gnu/7/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper -plugin-opt=-fresolution=/tmp/cczW5GpK.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o AgoraSDKDemoApp /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o -L/usr/local/lib -L/usr/local/lib64 -L/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk -L/usr/lib/gcc/x86_64-linux-gnu/7 -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/7/../../.. /usr/lib/gcc/x86_64-linux-gnu/7/libasan_preinit.o --push-state --no-as-needed -lasan --pop-state CMakeFiles/AgoraSDKDemoApp.dir/AgoraSDKDemoApp/src/main.cpp.o -rpath /usr/local/lib:/usr/local/lib64:/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk:/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/build -logg -lpthread -lopusfile -lopus -lagora_rtc_sdk -lpthread libAgoraSDKWrapper.so -lagora_rtc_sdk -logg -lpthread -lopusfile -lopus -lagora_rtc_sdk -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_unregister_elf_globals’未定义的引用
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_register_elf_globals’未定义的引用
+collect2: error: ld returned 1 exit status
+CMakeFiles/AgoraSDKDemoApp.dir/build.make:95: recipe for target 'AgoraSDKDemoApp' failed
+make[2]: *** [AgoraSDKDemoApp] Error 1
+CMakeFiles/Makefile2:141: recipe for target 'CMakeFiles/AgoraSDKDemoApp.dir/all' failed
+make[1]: *** [CMakeFiles/AgoraSDKDemoApp.dir/all] Error 2
+Makefile:83: recipe for target 'all' failed
+make: *** [all] Error 2
+```
+
+通过 `readelf -s -W` 查看 g++ 链接的 asan 动态链接库中的符号：
+```
+$ readelf -s -W /usr/lib/x86_64-linux-gnu/libasan.so.4 | grep asan_register
+   206: 0000000000036cb0    21 FUNC    GLOBAL DEFAULT   12 __asan_register_globals
+   279: 0000000000037200    44 FUNC    GLOBAL DEFAULT   12 __asan_register_image_globals
+```
+
+确实没有看到上面报错信息中提到的 `__asan_unregister_elf_globals` 和 `__asan_register_elf_globals` 这两个符号。
+
+不用 g++ 编译 B 和 C 工程，改用 clang，去掉对 ASAN 库的依赖：
+```
+1 warning generated.
+[ 90%] Linking CXX executable AgoraSDKDemoDlApp
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_report_store4’未定义的引用
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_poison_cxx_array_cookie’未定义的引用
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_report_exp_store2’未定义的引用
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_stack_free_7’未定义的引用
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_report_exp_load_n’未定义的引用
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_load4’未定义的引用
+```
+
+遇到了和用 g++ 编译时遇到的同样的找不到 ASAN 的符号的问题。加上对 ASAN 库的依赖：
+```
+[ 85%] Linking CXX executable AgoraSDKDemoDlApp
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_unregister_elf_globals’未定义的引用
+/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk/libagora_rtc_sdk.so：对‘__asan_register_elf_globals’未定义的引用
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+CMakeFiles/AgoraSDKDemoDlApp.dir/build.make:95: recipe for target 'AgoraSDKDemoDlApp' failed
+```
+
+遇到了和用 g++ 编译时遇到的相同的问题。为 B 和 C 工程的编译加上编译标记 `-fsanitize=address`，再次用 clang 编译，终于编译通过。然而在运行时却遇到了问题：
+```
+$ build/AgoraSDKDemoDlApp  -m 1 -h
+==33058==Your application is linked against incompatible ASan runtimes.
+```
+
+用 clang 编译时，去掉对 ASAN 库的依赖。再次编译运行，终于 OK。给 clang++ 加上 `-v` 参数，可以看到最终的链接过程如下：
+```
+[100%] Linking CXX executable AgoraSDKDemoApp
+clang version 7.1.0-svn353565-1~exp1~20190406090509.61 (branches/release_70)
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/7
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/7.4.0
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/8
+Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/7
+Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/7.4.0
+Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/8
+Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/7.4.0
+Candidate multilib: .;@m64
+Selected multilib: .;@m64
+ "/usr/bin/ld" -z relro --hash-style=gnu --build-id --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o AgoraSDKDemoApp /usr/bin/../lib/gcc/x86_64-linux-gnu/7.4.0/../../../x86_64-linux-gnu/crt1.o /usr/bin/../lib/gcc/x86_64-linux-gnu/7.4.0/../../../x86_64-linux-gnu/crti.o /usr/bin/../lib/gcc/x86_64-linux-gnu/7.4.0/crtbegin.o -L/usr/local/lib -L/usr/local/lib64 -L/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk -L/usr/bin/../lib/gcc/x86_64-linux-gnu/7.4.0 -L/usr/bin/../lib/gcc/x86_64-linux-gnu/7.4.0/../../../x86_64-linux-gnu -L/lib/x86_64-linux-gnu -L/lib/../lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/bin/../lib/gcc/x86_64-linux-gnu/7.4.0/../../.. -L/usr/lib/llvm-7/bin/../lib -L/lib -L/usr/lib --whole-archive /usr/lib/llvm-7/lib/clang/7.1.0/lib/linux/libclang_rt.asan-x86_64.a --no-whole-archive --dynamic-list=/usr/lib/llvm-7/lib/clang/7.1.0/lib/linux/libclang_rt.asan-x86_64.a.syms --whole-archive /usr/lib/llvm-7/lib/clang/7.1.0/lib/linux/libclang_rt.asan_cxx-x86_64.a --no-whole-archive --dynamic-list=/usr/lib/llvm-7/lib/clang/7.1.0/lib/linux/libclang_rt.asan_cxx-x86_64.a.syms CMakeFiles/AgoraSDKDemoApp.dir/AgoraSDKDemoApp/src/main.cpp.o -rpath /usr/local/lib:/usr/local/lib64:/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/libs/agora_media_sdk:/home/hanpfei/dev_data/home/hanpfei/data/CorpProjects/media_sdk_script/media_sdk3/app/linux/AgoraSDKDemo/build -logg -lpthread -lopusfile -lopus -lagora_rtc_sdk -lpthread libAgoraSDKWrapper.so -lagora_rtc_sdk -logg -lpthread -lopusfile -lopus -lagora_rtc_sdk -lstdc++ -lm --no-as-needed -lpthread -lrt -lm -ldl -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/bin/../lib/gcc/x86_64-linux-gnu/7.4.0/crtend.o /usr/bin/../lib/gcc/x86_64-linux-gnu/7.4.0/../../../x86_64-linux-gnu/crtn.o
+[100%] Built target AgoraSDKDemoApp
+```
+
+clang 链接了 `/usr/lib/llvm-7/lib/clang/7.1.0/lib/linux/libclang_rt.asan-x86_64.a`。
+
+总结一下，有一个用 clang 编译，且开启了 ASAN debug 的库，在用 g++ 编译依赖该库的库和应用时遇到链接问题，尝试的几种方法的实际结果：
+
+ - 1. g++ 直接编译 ===> 失败，找不到所有的 ASAN 符号
+ - 2. g++ + 链接 asan 库 ===> 失败，找不到符号 `__asan_unregister_elf_globals` 和 `__asan_register_elf_globals`。
+ - 3. g++ + `-fsanitize=address` 标记 ===> 失败，和链接 asan 库遇到相同的链接错误。
+ - 4. clang++ 直接编译 ===> 失败，与 1 中遇到的相同的错误。
+ - 5. clang++ + 链接 asan 库 ===> 失败，与 2 中遇到的相同的错误。
+ - 6. clang++ + 链接 asan 库 + `-fsanitize=address` 标记 ===> 编译成功，但运行失败。
+ - **7. clang++ + `-fsanitize=address` 标记 ===> 编译成功，运行成功，PASS**。
+
+因而，需要用 clang++ + `-fsanitize=address` 标记编译。
+
 ### 参考文档
  * [Clang AddressSanitizer](http://clang.llvm.org/docs/AddressSanitizer.html)
  * [AddressSanitizerAlgorithm](https://github.com/google/sanitizers/wiki/AddressSanitizerAlgorithm)
