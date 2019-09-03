@@ -804,7 +804,7 @@ clang 链接了 `/usr/lib/llvm-7/lib/clang/7.1.0/lib/linux/libclang_rt.asan-x86_
  - 4. clang++ 直接编译 ===> 失败，与 1 中遇到的相同的错误。
  - 5. clang++ + 链接 asan 库 ===> 失败，与 2 中遇到的相同的错误。
  - 6. clang++ + 链接 asan 库 + `-fsanitize=address` 标记 ===> 编译成功，但运行失败。
- - **7. clang++ + `-fsanitize=address` 标记 ===> 编译成功，运行成功，PASS**。
+ - 7. **clang++ + `-fsanitize=address` 标记 ===> 编译成功，运行成功，PASS**。
 
 因而，需要用 clang++ + `-fsanitize=address` 标记编译。
 
