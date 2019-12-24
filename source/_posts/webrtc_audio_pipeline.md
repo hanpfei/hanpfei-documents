@@ -214,7 +214,7 @@ class AudioTransportImpl : public AudioTransport {
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(AudioTransportImpl);
 };
 }  // namespace webrtc
-``` 
+```
 
 `AudioTransportImpl` 实现的 `AudioTransport` 接口的要求的操作：将录制的音频数据送出去，及获取播放的音频数据。
 
