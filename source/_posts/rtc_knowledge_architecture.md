@@ -59,16 +59,20 @@ ffmpeg，x264，openh264，fdkaac，live555 等项目的开源和应用，使一
 
 音视频的采集和播放渲染，通常是与终端系统平台紧密相关的。实时音视频系统通常借助于终端系统平台提供的 API 和能力来完成这一功能。如对于音频的采集和播放，Android 有 AudioTrack、OpenSLES 和 AAudio，Linux 有 ALSA 和 Pulse 等，iOS、Mac 和 Windows 系统也都各有自己的音频采集和播放 API。对于视频的采集，通常不同的系统平台也都有各自访问摄像头的 API，和完成屏幕录制的 API。对于视频的播放和渲染，则需要借助于不同系统平台提供的图形和渲染接口来实现，如 OpenGL ES。
 
-音频数据的处理，需要完成回声消除，降噪，自动增益控制，和变声之类的各种不同的音效。WebRTC 的代码中包含了大量用于完成音频数据处理的内容。
+音频数据的处理，需要完成回声消除 AEC、降噪 ANS 和自动增益控制 AGC，AEC 和 ANS 在做什么可能比较容易理解，AGC 在字面上含义可能不那么直观。AGC 用于对录制的声音做一些自动的放大或缩小，以使得声音的接收者听到的声音大小不会有剧烈的变动，比如说话者说话的声音比较小，AGC 会做一些放大，是声音的接收者也能听得清。此外，抗丢包也是音频数据处理的重要内容。数据包在网络中传输时丢失是再正常不过的事了，不像通用的可靠传输协议如 TCP 和 QUIC 那样，对时效性要求不是那么高，且需要对数据的传输可靠性做很强的保证，在 RTC 这种对时效性要求极高的场景中，一般通过音频数据处理来解决，比如传输 3 个包，第1个和第3个收到了，但第二个丢失了，音频数据处理会通过一些软件算法，补上第二帧数据的内容，尽管声音可能会有一定的失真，但用户体验还是会好很多。WebRTC 的代码中包含了大量用于完成音频数据处理的内容，其中 3A 主要由 AudioProcessing 完成，抗丢包则由 NetEQ 完成。 还可以对声音应用一些音效，如混响，变声等等等。音频数据处理，特别是抗丢包和 3A 是 RTC 中一个非常精巧的部分，也是 RTC 相对于其它音视频系统的一个比较大的不同点。
 
-音频数据的编码和解码，主要分为硬编硬解和软便软解。硬编硬解主要借助于终端设备上专门的硬件，通过特定终端系统提供的专门 API 来完成。软编软解则通过跨平台的一些专门的编解码库来完成，如 WebRTC 中包含有 OPUS 等格式的音频软件编解码器，fdkaac 库可以用于 AAC 的编码解码等。
+音频数据的编码和解码，主要分为硬编硬解和软便软解。硬编硬解主要借助于终端设备上专门的硬件，通过特定终端系统提供的专门 API 来完成。软编软解则通过跨平台的一些专门的编解码库来完成，如 WebRTC 中包含有 OPUS 等格式的音频软件编解码器，fdkaac 库可以用于 AAC 的编码解码等。RTC 的编解码立足于其它音视频系统编解码的长久发展，但也有一些它自己特别的地方：一是码率的动态变化，即网络传输状态的信息反馈到编解码模块中，编码码率会动态的变化，以实现更好的延迟和音质的平衡；二是专门为 RTC 而生的编解码方式，如 OPUS 等。
 
-视频数据的编码解码，同样分为硬编硬解和软编软解。硬编硬解同样主要借助于终端设备上专门的硬件，通过特定终端系统提供的专门 API 来完成。软编软解同样通过跨平台的一些专门的编解码库来完成，如 WebRTC 中包含有 VP8、VP9 等格式的视频软件编解码器，x264 和 openh264 库可以用于 H264 的编码解码，x265 可以用于 H265 的编码解码等。相对于音频，视频的硬编硬解通常要更加重要一点。软编软解对于许多终端的系统平台而言，实现高分辨率高帧率的流畅的编码解码和播放几乎是不可能实现的。
+视频数据的编码解码，同样分为硬编硬解和软编软解。硬编硬解同样主要借助于终端设备上专门的硬件，通过特定终端系统提供的专门 API 来完成。软编软解同样通过跨平台的一些专门的编解码库来完成，如 WebRTC 中包含有 VP8、VP9 等格式的视频软件编解码器，x264 和 openh264 库可以用于 H264 的编码解码，x265 可以用于 H265 的编码解码等。相对于音频，视频的硬编硬解通常要更加重要一点。软编软解对于许多终端的系统平台而言，实现高分辨率高帧率的流畅的编码解码和播放几乎是不可能实现的。与音频类似，RTC 中的视频编码码率也可能会根据网络传输状况的变化而变化。
 
-实时音视频中，除了音视频的内容外，网络传输相关的技术也十分重要。实时音视频目前应用最多的就是基于 UDP 的 RTP/RTCP 了。与 TCP 和 QUIC 这类通用的可靠传输协议不同，不同编解码格式的数据，在通过 RTP/RTCP 传输时，通常都有一份专门的 RFC 协议文档来定义具体的方法。如 [RFC6184](https://tools.ietf.org/html/rfc6184) （RTP Payload Format for H.264 Video），[RFC7741](https://tools.ietf.org/html/rfc7741) （RTP Payload Format for VP8 Video），[RFC7587](https://tools.ietf.org/html/rfc7587) （RTP Payload Format for the Opus Speech and Audio Codec），[RFC7587](https://tools.ietf.org/html/rfc7798) （RTP Payload Format for High Efficiency Video Coding (HEVC)），及 How to Write an RTP Payload Format 的 [RFC8088](https://tools.ietf.org/html/rfc8088) 等（更多相关的 RTC 文档可以在 RTC 的 index 页 [https://tools.ietf.org/rfc/index](https://tools.ietf.org/rfc/index) 搜 "RTP Payload Format"）。实现了不同音视频编解码格式针对 RTP 的打包解包之后，还需要借助于 RTCP 报告的网络状况信息，实现各种精细的网络传输控制，即拥塞控制 CC，以实现良好的用户体验。RTSP 是基于 RTP/RTCP 设计的一种得到广泛应用的实时音视频流传输协议。QUIC 是另外一种基于 UDP 的，有可能可以用于实时音视频传输的网络协议。在实时音视频的开发中，对于相关的网络协议的了解几乎是必不可少的。
+不仅要高分辨率的流畅低延迟播放，对视频数据的处理，做出各种酷炫的效果，是吸引到众多用户的良好手段。
+
+实时音视频中，除了音视频的内容外，网络传输相关的技术也十分重要。实时音视频传输目前应用最多的就是基于 UDP 的 RTP/RTCP 了。与 TCP 和 QUIC 这类通用的可靠传输协议不同，不同编解码格式的数据，在通过 RTP/RTCP 传输时，通常都有一份专门的 RFC 协议文档来定义具体的方法。如 [RFC6184](https://tools.ietf.org/html/rfc6184) （RTP Payload Format for H.264 Video），[RFC7741](https://tools.ietf.org/html/rfc7741) （RTP Payload Format for VP8 Video），[RFC7587](https://tools.ietf.org/html/rfc7587) （RTP Payload Format for the Opus Speech and Audio Codec），[RFC7587](https://tools.ietf.org/html/rfc7798) （RTP Payload Format for High Efficiency Video Coding (HEVC)），及 How to Write an RTP Payload Format 的 [RFC8088](https://tools.ietf.org/html/rfc8088) 等（更多相关的 RTC 文档可以在 RTC 的 index 页 [https://tools.ietf.org/rfc/index](https://tools.ietf.org/rfc/index) 搜 "RTP Payload Format"）。实现了不同音视频编解码格式针对 RTP 的打包解包之后，还需要借助于 RTCP 报告的网络状况信息，实现各种精细的网络传输控制，即拥塞控制 CC，以实现良好的用户体验。对于拥塞控制，除了丢包重传，FEC 前向冗余纠错也是比较常见的一个手段。RTSP 是基于 RTP/RTCP 设计的一种得到广泛应用的实时音视频流传输协议。QUIC 是另外一种基于 UDP 的，有可能可以用于实时音视频传输的网络协议。在实时音视频的开发中，对于相关的网络协议的了解几乎是必不可少的。
 
 如我们前面提到的，实时音视频技术相对于之前的音视频技术有一个巨大的不同，即网络传输的部分检测到的网络状况，对于音视频的采集编码处理和播放都有巨大的影响。在 WebRTC 中有相当一部分代码在处理这部分逻辑。
 
 网络协议也好，编解码也好，都需要具体实现的库提供支持，才能真正地应用于项目之中。之前的音视频系统中会用到的大量相关库在实时音视频系统中同样会被用到，如 ffmpeg，libx264，fdkaac，openh264 等。WebRTC 是实时音视频领域的一个集大成者，其中继集成了许多早已存在的音视频相关的库，同时也实现了许许多多实时音视频领域中专有的逻辑。
+
+RTC 技术还要完成的一个重要的部分，就是提供良好的抽象，把前述各个子部分组合为一个灵活强大完整的 PIPELINE，并呈现给用户。
 
 Done.
