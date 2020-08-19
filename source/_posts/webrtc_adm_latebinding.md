@@ -509,3 +509,111 @@ int16_t AudioDeviceLinuxPulse::RecordingDevices() {
  - 辅助定义具体的 libdl wrapper 类的宏，定义方便访问符号的 enum 的宏，用于声明符号表和动态链接库名称的宏
  - 用于定义动态链接库名称和符号表的宏。
  - 用于访问特定符号的宏。
+
+WebRTC 实现的这套东西存在一些问题：
+1. 重复逻辑没有完全消除。为了访问延迟加载的符号，重复定义了用于访问符号的宏。如在 `webrtc/modules/audio_device/linux/audio_device_alsa_linux.cc`、`webrtc/modules/audio_device/linux/audio_device_pulse_linux.cc`、`webrtc/modules/audio_device/linux/audio_mixer_manager_alsa_linux.cc`、`webrtc/modules/audio_device/linux/audio_mixer_manager_pulse_linux.cc` 这几个文件中重复定义了 `LATE` 宏。
+
+2. 创建具体的 AudioDeviceGeneric 类型对象时，没有判断系统是否真的能够支持。即在 `webrtc/modules/audio_device/audio_device_impl.cc` 文件中，仅仅根据编译时的宏开关和传入的 audio_layer 参数来决定创建的具体 AudioDeviceGeneric 类型对象，而没有判断系统是否能够支持。
+
+对于上面的第 2 个问题，可以创建一个 `AudioManager` 类，用于判断系统是否支持，如 `AudioManager` 的声明如下：
+```
+#ifndef MODULES_AUDIO_DEVICE_LINUX_AUDIO_MANAGER_H_
+#define MODULES_AUDIO_DEVICE_LINUX_AUDIO_MANAGER_H_
+
+namespace webrtc {
+
+class AudioManager {
+public:
+  AudioManager();
+  virtual ~AudioManager();
+  bool IsALSAAudioSupported();
+  bool IsPulseAudioSupported();
+};
+
+}  // namespace webrtc
+
+#endif /* MODULES_AUDIO_DEVICE_LINUX_AUDIO_MANAGER_H_ */
+```
+
+`AudioManager` 类的定义如下：
+```
+#include "audio_manager.h"
+
+#if defined(LINUX_ALSA)
+#include "modules/audio_device/linux/alsasymboltable_linux.h"
+#endif
+
+#if defined(LINUX_PULSE)
+#include "modules/audio_device/linux/pulseaudiosymboltable_linux.h"
+#endif
+
+#if defined(LINUX_ALSA)
+extern webrtc::adm_linux_alsa::AlsaSymbolTable AlsaSymbolTable;
+#endif
+
+#if defined(LINUX_PULSE)
+extern webrtc::adm_linux_pulse::PulseAudioSymbolTable PaSymbolTable;
+#endif
+
+namespace webrtc {
+
+AudioManager::AudioManager() {}
+
+AudioManager::~AudioManager() {}
+
+bool AudioManager::IsALSAAudioSupported() {
+#if defined(LINUX_ALSA)
+  return AlsaSymbolTable.Load();
+#else
+  return false;
+#endif
+}
+
+bool AudioManager::IsPulseAudioSupported() {
+#if defined(LINUX_PULSE)
+  return PaSymbolTable.Load();
+#else
+  return false;
+#endif
+}
+
+}  // namespace webrtc
+```
+
+而 `webrtc/modules/audio_device/audio_device_impl.cc` 中的相关逻辑则可以修改为如下这样：
+```
+#elif defined(WEBRTC_LINUX)
+  std::unique_ptr<AudioManager> audio_manager(new AudioManager());
+#if !defined(LINUX_PULSE)
+  // Build flag 'rtc_include_pulse_audio' is set to false. In this mode:
+  // - kPlatformDefaultAudio => ALSA, and
+  // - kLinuxAlsaAudio => ALSA, and
+  // - kLinuxPulseAudio => Invalid selection.
+  RTC_LOG(WARNING) << "PulseAudio is disabled using build flag.";
+  if ((audio_layer == kLinuxAlsaAudio) ||
+      (audio_layer == kPlatformDefaultAudio)) {
+    audio_device_.reset(new AudioDeviceLinuxALSA());
+    RTC_LOG(INFO) << "Linux ALSA APIs will be utilized.";
+  }
+#else
+  // Build flag 'rtc_include_pulse_audio' is set to true (default). In this
+  // mode:
+  // - kPlatformDefaultAudio => PulseAudio, and
+  // - kLinuxPulseAudio => PulseAudio, and
+  // - kLinuxAlsaAudio => ALSA (supported but not default).
+  RTC_LOG(INFO) << "PulseAudio support is enabled.";
+  if (((audio_layer == kLinuxPulseAudio) ||
+      (audio_layer == kPlatformDefaultAudio)) && audio_manager->IsPulseAudioSupported()) {
+    // Linux PulseAudio implementation is default.
+    audio_device_.reset(new AudioDeviceLinuxPulse());
+    RTC_LOG(INFO) << "Linux PulseAudio APIs will be utilized";
+  } else if ((audio_layer == kLinuxAlsaAudio) ||
+      (audio_layer == kPlatformDefaultAudio)) {
+    audio_device_.reset(new AudioDeviceLinuxALSA());
+    RTC_LOG(WARNING) << "Linux ALSA APIs will be utilized.";
+  }
+#endif  // #if !defined(LINUX_PULSE)
+#endif  // #if defined(WEBRTC_LINUX)
+```
+
+不过这种做法也有一些问题，即在判断系统是否支持时，就提前加载了对应的系统库。
