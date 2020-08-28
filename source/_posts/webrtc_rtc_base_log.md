@@ -1031,6 +1031,7 @@ WebRTC 的 rtc_base 的 log 系统实现，还有几点看得比较晕的地方�
 
 关于 WebRTC 的 rtc_base log 系统实现：
  - log 系统除了要功能强大，性能优异，还需要提供一个非常好用的用户接口。易用的用户接口的重要性，从这个 log 系统复杂的 `LogStreamer` 模板类实现就可见一斑。
+ - WebRTC 的 rtc_base log 系统实现在向 `LogSink` 输出 log 时，使用了锁做同步，log 输出非常频繁时，锁争抢可能会成为一个问题。
  - 输出 log 一般都需要执行 IO 操作，不过 WebRTC 的 rtc_base log 系统实现没有把 log 输出异步化，输出 log 都是同步操作，即使专门实现的 `LogSink` `FileRotatingLogSink` 和 `CallSessionFileRotatingLogSink` 也是。
 
 Done.
