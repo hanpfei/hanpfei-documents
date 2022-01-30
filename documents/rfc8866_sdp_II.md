@@ -192,6 +192,7 @@ RFC 必须 (MUST) 按照 [[RFC8859](https://www.rfc-editor.org/rfc/rfc8866#RFC88
 `<bwtype>` 注册表的格式为：
 | 类型 | SDP 名称 | Mux 类别 | 引用 |
 |--|--|--|--|
+
 表 6：`<bwtype>` 注册表的格式
 
 IANA 已使用本备忘录 [第 5.8 节](https://www.rfc-editor.org/rfc/rfc8866#bandwidthInfo) 中的定义，更新了带宽说明符 “CT” 和 “AS” 的 `<bwtype>` 注册表条目（这些定义替换了 [[RFC4566](https://www.rfc-editor.org/rfc/rfc8866#RFC4566)] 中的定义）。
@@ -205,6 +206,7 @@ IANA 已使用本备忘录 [第 5.8 节](https://www.rfc-editor.org/rfc/rfc8866#
 `<nettype>` 注册表的格式为：
 | 类型 | SDP 名称 | 可用的地址类型值 | 引用 |
 |--|--|--|--|
+
 表 7：`<nettype>` 注册表的格式
 
 IANA 已将 `<nettype>` 注册表更新为这种新格式。以下是注册表的更新内容：
@@ -214,6 +216,7 @@ IANA 已将 `<nettype>` 注册表更新为这种新格式。以下是注册表�
 | nettype | IN | RFC2543 | [[RFC2848](https://www.rfc-editor.org/rfc/rfc8866#RFC2848)] ​|
 | nettype | ATM | NSAP，GWID，E164 | [[RFC3108](https://www.rfc-editor.org/rfc/rfc8866#RFC3108)] |
 | nettype | ATM | E164 |   [[RFC7195](https://www.rfc-editor.org/rfc/rfc8866#RFC7195)] |
+
 表 8：`<nettype>` 注册表的内容
 
 请注意，尽管 [[RFC7195](https://www.rfc-editor.org/rfc/rfc8866#RFC7195)] 提到 “E164” 地址类型对于 ATM 和 PSTN 网络具有不同的上下文，[[RFC7195](https://www.rfc-editor.org/rfc/rfc8866#RFC7195)] 和 [[RFC3108](https://www.rfc-editor.org/rfc/rfc8866#RFC3108)] 都将 “E164” 注册为地址类型。
