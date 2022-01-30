@@ -180,13 +180,46 @@ IANA 已使用本备忘录 [第 6 节](https://www.rfc-editor.org/rfc/rfc8866#at
 
 ### 8.2.5. 带宽说明符 (<bwtype>)
 
+强烈不鼓励带宽说明符的扩散。
 
- * 
-### 
-()    [   ]().  >
-```
+新带宽说明符必须 (MUST) 向 IANA 注册（<bwtype> 子字段值）。提交必须 (MUST) 引用标准跟踪 RFC，准确地指定带宽说明符的语义，并指出何时应该使用它，以及为什么现有的注册带宽说明符不够用。
 
-```
+RFC 必须 (MUST) 按照 [[RFC8859](https://www.rfc-editor.org/rfc/rfc8866#RFC8859)] 的定义为这个值指定 Mux 类别。
+
+<bwtype> 注册表的格式为：
+| 类型 | SDP 名称 | Mux 类别 | 引用 |
+|--|--|--|--|
+表 6：<bwtype> 注册表的格式
+
+IANA 已使用本备忘录 [第 5.8 节](https://www.rfc-editor.org/rfc/rfc8866#bandwidthInfo) 中的定义，更新了带宽说明符 “CT” 和 “AS” 的 <bwtype> 注册表条目（这些定义替换了 [[RFC4566](https://www.rfc-editor.org/rfc/rfc8866#RFC4566)] 中的定义）。
+
+### 8.2.6. 网络类型 (<nettype>)
+
+代表 Internet 的网络类型 “IN” 在本备忘录的 [第 5.2 节](https://www.rfc-editor.org/rfc/rfc8866#origin) 和 [第 5.7 节](https://www.rfc-editor.org/rfc/rfc8866#connection-information) 中定义（此定义替换 [[RFC4566](https://www.rfc-editor.org/rfc/rfc8866#RFC4566)] 中的定义）。
+
+为了使 SDP 能够引用新的非 Internet 环境，必须 (MUST) 向 IANA 注册新的网络类型（<nettype> 子字段值）。注册受 [[RFC8126](https://www.rfc-editor.org/rfc/rfc8866#RFC8126)] 的 “RFC 要求” 政策的约束。尽管非 Internet 环境通常不属于 IANA，但可能存在 Internet 应用程序需要与非 Internet 应用程序互操作的情况，例如将 Internet 电话呼叫网关接入公共交换电话网络 (PSTN) 时。网络类型的数量应该很少，并且应该很少扩展。新的网络类型注册必须 (MUST) 引用一个 RFC，该 RFC 提供了网络类型的详细信息，以及可能与它一起使用的地址类型。
+
+<nettype> 注册表的格式为：
+| 类型 | SDP 名称 | 可用的地址类型值 | 引用 |
+|--|--|--|--|
+表 7：<nettype> 注册表的格式
+
+IANA 已将 <nettype> 注册表更新为这种新格式。以下是注册表的更新内容：
+| 类型 | SDP 名称 | 可用的地址类型值 | 引用 |
+|--|--|--|--|
+| nettype | IN | IP4，IP6 | [RFC8866] |
+| nettype | IN | RFC2543 | [[RFC2848](https://www.rfc-editor.org/rfc/rfc8866#RFC2848)] ​|
+| nettype | ATM | NSAP，GWID，E164 | [[RFC3108](https://www.rfc-editor.org/rfc/rfc8866#RFC3108)] |
+| nettype | ATM | E164 |   [[RFC7195](https://www.rfc-editor.org/rfc/rfc8866#RFC7195)] |
+表 8：<nettype> 注册表的内容
+
+请注意，尽管 [[RFC7195](https://www.rfc-editor.org/rfc/rfc8866#RFC7195)] 提到 “E164” 地址类型对于 ATM 和 PSTN 网络具有不同的上下文，[[RFC7195](https://www.rfc-editor.org/rfc/rfc8866#RFC7195)] 和 [[RFC3108](https://www.rfc-editor.org/rfc/rfc8866#RFC3108)] 都将 “E164” 注册为地址类型。
+
+### 8.2.7. 地址类型 (<addrtype>)
+
+新地址类型 (<addrtype>) 必须 (MUST) 向 IANA 注册。注册受 [[RFC8126](https://www.rfc-editor.org/rfc/rfc8866#RFC8126)] 的 “RFC 要求” 政策的约束。新的地址类型注册必须 (MUST) 引用一个 RFC，该 RFC 提供了地址类型的语法的详细信息。地址类型预计不会经常注册。
+
+本文档的 [第 5.7 节](https://www.rfc-editor.org/rfc/rfc8866#connection-information) 给出了地址类型 “IP4” 和 “IP6” 的新定义。
 
 ## 8.3 加密密钥访问方法（已废弃）
 
@@ -199,24 +232,24 @@ IANA 之前维护了一个 SDP 加密密钥访问方法（“enckey”）名称�
 ```
 ; SDP Syntax
 session-description = version-field
-                      origin-field
-                      session-name-field
-                      [information-field]
-                      [uri-field]
-                      *email-field
-                      *phone-field
-                      [connection-field]
-                      *bandwidth-field
-                      1*time-description
-                      [key-field]
-                      *attribute-field
-                      *media-description
+                     ​origin-field
+                     ​session-name-field
+                     ​[information-field]
+                     ​[uri-field]
+                     ​*email-field
+                     ​*phone-field
+                     ​[connection-field]
+                     ​*bandwidth-field
+                     ​1*time-description
+                     ​[key-field]
+                     ​*attribute-field
+                     ​*media-description
 
 version-field =       %s"v" "=" 1*DIGIT CRLF
-                          ;this memo describes version 0
+                         ​;this memo describes version 0
 
 origin-field =       %s"o" "=" username SP sess-id SP sess-version SP
-                         nettype SP addrtype SP unicast-address CRLF
+                        ​nettype SP addrtype SP unicast-address CRLF
 
 session-name-field =  %s"s" "=" text CRLF
 
@@ -229,71 +262,71 @@ email-field =         %s"e" "=" email-address CRLF
 phone-field =         %s"p" "=" phone-number CRLF
 
 connection-field =    %s"c" "=" nettype SP addrtype SP
-                          connection-address CRLF
-                          ;a connection field must be present
-                          ;in every media description or at the
-                          ;session level
+                         ​connection-address CRLF
+                         ​;a connection field must be present
+                         ​;in every media description or at the
+                         ​;session level
 
 bandwidth-field =     %s"b" "=" bwtype ":" bandwidth CRLF
 
 time-description =    time-field
-                          [repeat-description]
+                         ​[repeat-description]
 
 repeat-description =  1*repeat-field
-                          [zone-field]
+                         ​[zone-field]
 
 time-field =          %s"t" "=" start-time SP stop-time CRLF
 
 repeat-field =        %s"r" "=" repeat-interval SP typed-time
-                          1*(SP typed-time) CRLF
+                         ​1*(SP typed-time) CRLF
 
 zone-field =          %s"z" "=" time SP ["-"] typed-time
-                          *(SP time SP ["-"] typed-time) CRLF
+                         ​*(SP time SP ["-"] typed-time) CRLF
 
 key-field =           %s"k" "=" key-type CRLF
 
 attribute-field =     %s"a" "=" attribute CRLF
 
 media-description =   media-field
-                      [information-field]
-                      *connection-field
-                      *bandwidth-field
-                      [key-field]
-                      *attribute-field
+                     ​[information-field]
+                     ​*connection-field
+                     ​*bandwidth-field
+                     ​[key-field]
+                     ​*attribute-field
 
 media-field =         %s"m" "=" media SP port ["/" integer]
-                          SP proto 1*(SP fmt) CRLF
+                         ​SP proto 1*(SP fmt) CRLF
 
 ; sub-rules of 'o='
 username =            non-ws-string
-                      ;pretty wide definition, but doesn't
-                      ;include space
+                     ​;pretty wide definition, but doesn't
+                     ​;include space
 
 sess-id =             1*DIGIT
-                      ;should be unique for this username/host
+                     ​;should be unique for this username/host
 
 sess-version =        1*DIGIT
 
 nettype =             token
-                      ;typically "IN"
+                     ​;typically "IN"
 
 addrtype =            token
-                      ;typically "IP4" or "IP6"
+                     ​;typically "IP4" or "IP6"
 
 ; sub-rules of 'u='
 uri =                 URI-reference
-                      ; see RFC 3986
+                     ​; see RFC 3986
 
 ; sub-rules of 'e=', see RFC 5322 for definitions
 email-address        = address-and-comment / dispname-and-address
-                       / addr-spec
+                      ​/ addr-spec
 address-and-comment  = addr-spec 1*SP "(" 1*email-safe ")"
 dispname-and-address = 1*email-safe 1*SP "<" addr-spec ">"
 
 ; sub-rules of 'p='
 phone-number =        phone *SP "(" 1*email-safe ")" /
-                      1*email-safe "<" phone ">" /
-                      phone
+                     ​1*email-safe "<" phone ">" /
+                     ​phone
 
 phone =               ["+"] DIGIT 1*(SP / "-" / DIGIT)
 
@@ -311,13 +344,13 @@ start-time =          time / "0"
 stop-time =           time / "0"
 
 time =                POS-DIGIT 9*DIGIT
-                      ; Decimal representation of time in
-                      ; seconds since January 1, 1900 UTC.
-                      ; The representation is an unbounded
-                      ; length field containing at least
-                      ; 10 digits. Unlike some representations
-                      ; used elsewhere, time in SDP does not
-                      ; wrap in the year 2036.
+                     ​; Decimal representation of time in
+                     ​; seconds since January 1, 1900 UTC.
+                     ​; The representation is an unbounded
+                     ​; length field containing at least
+                     ​; 10 digits. Unlike some representations
+                     ​; used elsewhere, time in SDP does not
+                     ​; wrap in the year 2036.
 
 ; sub-rules of 'r=' and 'z='
 repeat-interval =     POS-DIGIT *DIGIT [fixed-len-time-unit]
@@ -329,10 +362,10 @@ fixed-len-time-unit = %s"d" / %s"h" / %s"m" / %s"s"
 
 ; sub-rules of 'k='
 key-type =            %s"prompt" /
-                      %s"clear:" text /
-                      %s"base64:" base64 /
-                      %s"uri:" uri
-                      ; NOTE: These names are case-sensitive.
+                     ​%s"clear:" text /
+                     ​%s"base64:" base64 /
+                     ​%s"uri:" uri
+                     ​; NOTE: These names are case-sensitive.
 
 base64      =         *base64-unit [base64-pad]
 base64-unit =         4base64-char
@@ -341,7 +374,7 @@ base64-char =         ALPHA / DIGIT / "+" / "/"
 
 ; sub-rules of 'a='
 attribute =           (attribute-name ":" attribute-value) /
-                      attribute-name
+                     ​attribute-name
 
 attribute-name =      token
 
@@ -351,16 +384,16 @@ att-field =           attribute-name ; for backward compatibility
 
 ; sub-rules of 'm='
 media =               token
-                      ;typically "audio", "video", "text", "image"
-                      ;or "application"
+                     ​;typically "audio", "video", "text", "image"
+                     ​;or "application"
 
 fmt =                 token
-                      ;typically an RTP payload type for audio
-                      ;and video media
+                     ​;typically an RTP payload type for audio
+                     ​;and video media
 
 proto  =              token *("/" token)
-                      ;typically "RTP/AVP", "RTP/SAVP", "udp",
-                      ;or "RTP/SAVPF"
+                     ​;typically "RTP/AVP", "RTP/SAVP", "udp",
+                     ​;or "RTP/SAVPF"
 
 port =                1*DIGIT
 
@@ -368,41 +401,41 @@ port =                1*DIGIT
 unicast-address =     IP4-address / IP6-address / FQDN / extn-addr
 
 multicast-address =   IP4-multicast / IP6-multicast / FQDN
-                      / extn-addr
+                     ​/ extn-addr
 
 IP4-multicast =       m1 3( "." decimal-uchar )
-                      "/" ttl [ "/" numaddr ]
-                      ; IP4 multicast addresses may be in the
-                      ; range 224.0.0.0 to 239.255.255.255
+                     ​"/" ttl [ "/" numaddr ]
+                     ​; IP4 multicast addresses may be in the
+                     ​; range 224.0.0.0 to 239.255.255.255
 
 m1 =                  ("22" ("4"/"5"/"6"/"7"/"8"/"9")) /
-                      ("23" DIGIT )
+                     ​("23" DIGIT )
 
 IP6-multicast =       IP6-address [ "/" numaddr ]
-                      ; IP6 address starting with FF
+                     ​; IP6 address starting with FF
 
 numaddr =             integer
 
 ttl =                 (POS-DIGIT *2DIGIT) / "0"
 
 FQDN =                4*(alpha-numeric / "-" / ".")
-                      ; fully qualified domain name as specified
-                      ; in RFC 1035 (and updates)
+                     ​; fully qualified domain name as specified
+                     ​; in RFC 1035 (and updates)
 
 IP4-address =         b1 3("." decimal-uchar)
 
 b1 =                  decimal-uchar
-                      ; less than "224"
+                     ​; less than "224"
 
 IP6-address =                                      6( h16 ":" ) ls32
-                      /                       "::" 5( h16 ":" ) ls32
-                      / [               h16 ] "::" 4( h16 ":" ) ls32
-                      / [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
-                      / [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
-                      / [ *3( h16 ":" ) h16 ] "::"    h16 ":"   ls32
-                      / [ *4( h16 ":" ) h16 ] "::"              ls32
-                      / [ *5( h16 ":" ) h16 ] "::"              h16
-                      / [ *6( h16 ":" ) h16 ] "::"
+                     ​/                       "::" 5( h16 ":" ) ls32
+                     ​/ [               h16 ] "::" 4( h16 ":" ) ls32
+                     ​/ [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
+                     ​/ [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
+                     ​/ [ *3( h16 ":" ) h16 ] "::"    h16 ":"   ls32
+                     ​/ [ *4( h16 ":" ) h16 ] "::"              ls32
+                     ​/ [ *5( h16 ":" ) h16 ] "::"              h16
+                     ​/ [ *6( h16 ":" ) h16 ] "::"
 
 h16 =                 1*4HEXDIG
 
@@ -413,28 +446,28 @@ extn-addr =      non-ws-string
 
 ; generic sub-rules: datatypes
 text =                byte-string
-                      ;default is to interpret this as UTF8 text.
-                      ;ISO 8859-1 requires "a=charset:ISO-8859-1"
-                      ;session-level attribute to be used
+                     ​;default is to interpret this as UTF8 text.
+                     ​;ISO 8859-1 requires "a=charset:ISO-8859-1"
+                     ​;session-level attribute to be used
 
 byte-string =         1*(%x01-09/%x0B-0C/%x0E-FF)
-                      ;any byte except NUL, CR, or LF
+                     ​;any byte except NUL, CR, or LF
 
 non-ws-string =       1*(VCHAR/%x80-FF)
-                      ;string of visible characters
+                     ​;string of visible characters
 
 token-char =          ALPHA / DIGIT
-                              / "!" / "#" / "$" / "%" / "&"
-                              / "'" ; (single quote)
-                              / "*" / "+" / "-" / "." / "^" / "_"
-                              / "`" ; (Grave accent)
-                              / "{" / "|" / "}" / "~"
+                             ​/ "!" / "#" / "$" / "%" / "&"
+                             ​/ "'" ; (single quote)
+                             ​/ "*" / "+" / "-" / "." / "^" / "_"
+                             ​/ "`" ; (Grave accent)
+                             ​/ "{" / "|" / "}" / "~"
 
 token =               1*(token-char)
 
 email-safe =          %x01-09/%x0B-0C/%x0E-27/%x2A-3B/%x3D/%x3F-FF
-                      ;any byte except NUL, CR, LF, or the quoting
-                      ;characters ()<>
+                     ​;any byte except NUL, CR, LF, or the quoting
+                     ​;characters ()<>
 
 integer =             POS-DIGIT *DIGIT
 
@@ -450,10 +483,10 @@ alpha-numeric =       ALPHA / DIGIT
 POS-DIGIT =           %x31-39 ; 1 - 9
 
 decimal-uchar =       DIGIT
-                      / POS-DIGIT DIGIT
-                      / ("1" 2(DIGIT))
-                      / ("2" ("0"/"1"/"2"/"3"/"4") DIGIT)
-                      / ("2" "5" ("0"/"1"/"2"/"3"/"4"/"5"))
+                     ​/ POS-DIGIT DIGIT
+                     ​/ ("1" 2(DIGIT))
+                     ​/ ("2" ("0"/"1"/"2"/"3"/"4") DIGIT)
+                     ​/ ("2" "5" ("0"/"1"/"2"/"3"/"4"/"5"))
 
 ; external references:
 ALPHA =               <ALPHA definition from RFC 5234>
@@ -468,319 +501,319 @@ addr-spec =           <addr-spec definition from RFC 5322>
 
 # 10. 自 RFC 4566 以来的变更摘要
 
- * 总体上澄清和完善的术语。文本中使用的术语与 ABNF 对齐。术语 <attribute>、<att-field> 和 “att-field” 现在是 <attribute-name>。术语 <value> 和 <att-value> 现在是 <attribute-value>。 术语 "media" 现在是 <media>。
+​* 总体上澄清和完善的术语。文本中使用的术语与 ABNF 对齐。术语 <attribute>、<att-field> 和 “att-field” 现在是 <attribute-name>。术语 <value> 和 <att-value> 现在是 <attribute-value>。 术语 "media" 现在是 <media>。
 
- * 已确定现已过时的项目：“a=cat:”（第 6.1 节）、“a=keywds:”（第 6.2 节）和 “k=”（第 5.12 节）。
+​* 已确定现已过时的项目：“a=cat:”（第 6.1 节）、“a=keywds:”（第 6.2 节）和 “k=”（第 5.12 节）。
 
- * 更新了规范性和信息性参考，并添加了对其他相关 RFC 的参考。
+​* 更新了规范性和信息性参考，并添加了对其他相关 RFC 的参考。
 
- * 重新格式化 SDP 属性一节（第 6 节）以提高可读性。 属性值的语法现在以 ABNF 给出。
+​* 重新格式化 SDP 属性一节（第 6 节）以提高可读性。 属性值的语法现在以 ABNF 给出。
 
- * 强制发送带有非活动媒体流的 RTCP（第 6.7.4 节）。
+​* 强制发送带有非活动媒体流的 RTCP（第 6.7.4 节）。
 
- * 删除了 “私有会话” 小节。 该小节可以追溯到 SDP 主要与 SAP（会话公告协议）一起使用的时候，后者已不再使用。现在 SDP 的绝大多数用途是建立私人会话。第 7 节介绍了对此的注意事项。
+​* 删除了 “私有会话” 小节。 该小节可以追溯到 SDP 主要与 SAP（会话公告协议）一起使用的时候，后者已不再使用。现在 SDP 的绝大多数用途是建立私人会话。第 7 节介绍了对此的注意事项。
 
- * 扩展并阐明了 “a=lang:”（第 6.12 节）和 “a=sdplang:”（第 6.11 节）属性的规范。
+​* 扩展并阐明了 “a=lang:”（第 6.12 节）和 “a=sdplang:”（第 6.11 节）属性的规范。
 
- * 删除了对 SAP 的一些引用，因为它不再广泛使用。
+​* 删除了对 SAP 的一些引用，因为它不再广泛使用。
 
- * 更改了注册 UDP 传输的 <fmt> 值的方式（第 8.2.3 节）。
+​* 更改了注册 UDP 传输的 <fmt> 值的方式（第 8.2.3 节）。
 
- * 更改了注册新属性所需的机制和文档（第 8.2.4.1 节）。
+​* 更改了注册新属性所需的机制和文档（第 8.2.4.1 节）。
 
- * 收紧了 IANA 扩展注册程序。
+​* 收紧了 IANA 扩展注册程序。
 
- * 删除了电话号码和长格式名称（第 8.2 节）。
+​* 删除了电话号码和长格式名称（第 8.2 节）。
 
- * 扩展了 IANA <nettype> 注册表以标识有效的 <addrtype> 子字段（第 8.2.6 节）。
+​* 扩展了 IANA <nettype> 注册表以标识有效的 <addrtype> 子字段（第 8.2.6 节）。
 
- * 将多个 IANA “att-field” 注册表重组为单个 <attribute-name> 注册表（第 8.2.4 节）。
+​* 将多个 IANA “att-field” 注册表重组为单个 <attribute-name> 注册表（第 8.2.4 节）。
 
- * 修订 ABNF 语法（第 9 节），以提高清晰度并与文本对齐。保持向后兼容性，但有少数例外。
+​* 修订 ABNF 语法（第 9 节），以提高清晰度并与文本对齐。保持向后兼容性，但有少数例外。
 
-     - 修订了时间描述的语法（“t=”、“r=”、“z=”）以消除歧义。澄清 “z=” 只修改前面的 “r=” 行。使没有前面的 “r=” 的 “z=” 成为语法错误（第 5.11 节）。（这与某些异常用法不兼容。）
+    ​- 修订了时间描述的语法（“t=”、“r=”、“z=”）以消除歧义。澄清 “z=” 只修改前面的 “r=” 行。使没有前面的 “r=” 的 “z=” 成为语法错误（第 5.11 节）。（这与某些异常用法不兼容。）
 
-     - 更新了 “IP6-address” 和 “IP6-multicast” 规则，与 [RFC3986] 中的语法一致，反映了 [RFC5954] 对 [RFC3261] 所做的错误修复。删除了由于此更改而未使用的规则。
+    ​- 更新了 “IP6-address” 和 “IP6-multicast” 规则，与 [RFC3986] 中的语法一致，反映了 [RFC5954] 对 [RFC3261] 所做的错误修复。删除了由于此更改而未使用的规则。
 
-     - “att-field” 规则已重命名为 “attribute-name”，因为在其他地方 “*-field” 总是指完整的行。但是，规则名称 “att-field” 仍然被定义为一个同义词，以与其他 RFC 的引用向后兼容。
+    ​- “att-field” 规则已重命名为 “attribute-name”，因为在其他地方 “*-field” 总是指完整的行。但是，规则名称 “att-field” 仍然被定义为一个同义词，以与其他 RFC 的引用向后兼容。
 
- * “att-value” 规则已重命名为 “attribute-value”。
+​* “att-value” 规则已重命名为 “attribute-value”。
 
- * 修订了以 ABNF 语法来说冗余的规范性声明，使文本变为非规范性的。
+​* 修订了以 ABNF 语法来说冗余的规范性声明，使文本变为非规范性的。
 
- * 根据 [RFC5735] 和 [RFC5771] 修改了示例 SDP 描述中的 IPv4 单播和多播地址。
+​* 根据 [RFC5735] 和 [RFC5771] 修改了示例 SDP 描述中的 IPv4 单播和多播地址。
 
- * 更改了一些示例以使用 IPv6 地址，并添加了使用 IPv6 的其他示例。
+​* 更改了一些示例以使用 IPv6 地址，并添加了使用 IPv6 的其他示例。
 
- * 合并了来自 [RFC4855] 的不区分大小写规则。
+​* 合并了来自 [RFC4855] 的不区分大小写规则。
 
- * 修订了错误引用 NTP 的部分（第 5.2 节、第 5.9 节、第 5.10 节和第 5.11 节）。
+​* 修订了错误引用 NTP 的部分（第 5.2 节、第 5.9 节、第 5.10 节和第 5.11 节）。
 
- * 澄清了对 “a=charset:” 属性的影响和使用的解释（第 6.10 节）。
+​* 澄清了对 “a=charset:” 属性的影响和使用的解释（第 6.10 节）。
 
- * 修订了 “a=type:” 属性的描述，以消除它有时会将默认媒体方向更改为 “a=sendrecv” 以外的其他内容的暗示（第 6.9 节）。
+​* 修订了 “a=type:” 属性的描述，以消除它有时会将默认媒体方向更改为 “a=sendrecv” 以外的其他内容的暗示（第 6.9 节）。
 
 # 11. 参考 (References)
 
 ## 11.1. 规范性参考 (Normative References)
 
 ```
-   [E164]     International Telecommunication Union, "E.164 : The
-              international public telecommunication numbering plan",
-              ITU Recommendation E.164, November 2010,
-              <https://www.itu.int/rec/T-REC-E.164-201011-I/en>.
+  ​[E164]     International Telecommunication Union, "E.164 : The
+             ​international public telecommunication numbering plan",
+             ​ITU Recommendation E.164, November 2010,
+             ​<https://www.itu.int/rec/T-REC-E.164-201011-I/en>.
 
-   [ISO.8859-1.1998]
-              International Organization for Standardization,
-              "Information technology - 8-bit single byte coded graphic
-              - character sets - Part 1: Latin alphabet No. 1, JTC1/
-              SC2", ISO/IEC Standard 8859-1, 1998.
+  ​[ISO.8859-1.1998]
+             ​International Organization for Standardization,
+             ​"Information technology - 8-bit single byte coded graphic
+             ​- character sets - Part 1: Latin alphabet No. 1, JTC1/
+             ​SC2", ISO/IEC Standard 8859-1, 1998.
 
-   [RFC1034]  Mockapetris, P., "Domain names - concepts and facilities",
-              STD 13, RFC 1034, DOI 10.17487/RFC1034, November 1987,
-              <https://www.rfc-editor.org/info/rfc1034>.
+  ​[RFC1034]  Mockapetris, P., "Domain names - concepts and facilities",
+             ​STD 13, RFC 1034, DOI 10.17487/RFC1034, November 1987,
+             ​<https://www.rfc-editor.org/info/rfc1034>.
 
-   [RFC1035]  Mockapetris, P., "Domain names - implementation and
-              specification", STD 13, RFC 1035, DOI 10.17487/RFC1035,
-              November 1987, <https://www.rfc-editor.org/info/rfc1035>.
+  ​[RFC1035]  Mockapetris, P., "Domain names - implementation and
+             ​specification", STD 13, RFC 1035, DOI 10.17487/RFC1035,
+             ​November 1987, <https://www.rfc-editor.org/info/rfc1035>.
 
-   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
-              Requirement Levels", BCP 14, RFC 2119,
-              DOI 10.17487/RFC2119, March 1997,
-              <https://www.rfc-editor.org/info/rfc2119>.
+  ​[RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+             ​Requirement Levels", BCP 14, RFC 2119,
+             ​DOI 10.17487/RFC2119, March 1997,
+             ​<https://www.rfc-editor.org/info/rfc2119>.
 
-   [RFC2848]  Petrack, S. and L. Conroy, "The PINT Service Protocol:
-              Extensions to SIP and SDP for IP Access to Telephone Call
-              Services", RFC 2848, DOI 10.17487/RFC2848, June 2000,
-              <https://www.rfc-editor.org/info/rfc2848>.
+  ​[RFC2848]  Petrack, S. and L. Conroy, "The PINT Service Protocol:
+             ​Extensions to SIP and SDP for IP Access to Telephone Call
+             ​Services", RFC 2848, DOI 10.17487/RFC2848, June 2000,
+             ​<https://www.rfc-editor.org/info/rfc2848>.
 
-   [RFC2978]  Freed, N. and J. Postel, "IANA Charset Registration
-              Procedures", BCP 19, RFC 2978, DOI 10.17487/RFC2978,
-              October 2000, <https://www.rfc-editor.org/info/rfc2978>.
+  ​[RFC2978]  Freed, N. and J. Postel, "IANA Charset Registration
+             ​Procedures", BCP 19, RFC 2978, DOI 10.17487/RFC2978,
+             ​October 2000, <https://www.rfc-editor.org/info/rfc2978>.
 
-   [RFC3108]  Kumar, R. and M. Mostafa, "Conventions for the use of the
-              Session Description Protocol (SDP) for ATM Bearer
-              Connections", RFC 3108, DOI 10.17487/RFC3108, May 2001,
-              <https://www.rfc-editor.org/info/rfc3108>.
+  ​[RFC3108]  Kumar, R. and M. Mostafa, "Conventions for the use of the
+             ​Session Description Protocol (SDP) for ATM Bearer
+             ​Connections", RFC 3108, DOI 10.17487/RFC3108, May 2001,
+             ​<https://www.rfc-editor.org/info/rfc3108>.
 
-   [RFC3629]  Yergeau, F., "UTF-8, a transformation format of ISO
-              10646", STD 63, RFC 3629, DOI 10.17487/RFC3629, November
-              2003, <https://www.rfc-editor.org/info/rfc3629>.
+  ​[RFC3629]  Yergeau, F., "UTF-8, a transformation format of ISO
+             ​10646", STD 63, RFC 3629, DOI 10.17487/RFC3629, November
+             ​2003, <https://www.rfc-editor.org/info/rfc3629>.
 
-   [RFC3986]  Berners-Lee, T., Fielding, R., and L. Masinter, "Uniform
-              Resource Identifier (URI): Generic Syntax", STD 66,
-              RFC 3986, DOI 10.17487/RFC3986, January 2005,
-              <https://www.rfc-editor.org/info/rfc3986>.
+  ​[RFC3986]  Berners-Lee, T., Fielding, R., and L. Masinter, "Uniform
+             ​Resource Identifier (URI): Generic Syntax", STD 66,
+             ​RFC 3986, DOI 10.17487/RFC3986, January 2005,
+             ​<https://www.rfc-editor.org/info/rfc3986>.
 
-   [RFC4566]  Handley, M., Jacobson, V., and C. Perkins, "SDP: Session
-              Description Protocol", RFC 4566, DOI 10.17487/RFC4566,
-              July 2006, <https://www.rfc-editor.org/info/rfc4566>.
+  ​[RFC4566]  Handley, M., Jacobson, V., and C. Perkins, "SDP: Session
+             ​Description Protocol", RFC 4566, DOI 10.17487/RFC4566,
+             ​July 2006, <https://www.rfc-editor.org/info/rfc4566>.
 
-   [RFC5234]  Crocker, D., Ed. and P. Overell, "Augmented BNF for Syntax
-              Specifications: ABNF", STD 68, RFC 5234,
-              DOI 10.17487/RFC5234, January 2008,
-              <https://www.rfc-editor.org/info/rfc5234>.
+  ​[RFC5234]  Crocker, D., Ed. and P. Overell, "Augmented BNF for Syntax
+             ​Specifications: ABNF", STD 68, RFC 5234,
+             ​DOI 10.17487/RFC5234, January 2008,
+             ​<https://www.rfc-editor.org/info/rfc5234>.
 
-   [RFC5576]  Lennox, J., Ott, J., and T. Schierl, "Source-Specific
-              Media Attributes in the Session Description Protocol
-              (SDP)", RFC 5576, DOI 10.17487/RFC5576, June 2009,
-              <https://www.rfc-editor.org/info/rfc5576>.
+  ​[RFC5576]  Lennox, J., Ott, J., and T. Schierl, "Source-Specific
+             ​Media Attributes in the Session Description Protocol
+             ​(SDP)", RFC 5576, DOI 10.17487/RFC5576, June 2009,
+             ​<https://www.rfc-editor.org/info/rfc5576>.
 
-   [RFC5646]  Phillips, A., Ed. and M. Davis, Ed., "Tags for Identifying
-              Languages", BCP 47, RFC 5646, DOI 10.17487/RFC5646,
-              September 2009, <https://www.rfc-editor.org/info/rfc5646>.
+  ​[RFC5646]  Phillips, A., Ed. and M. Davis, Ed., "Tags for Identifying
+             ​Languages", BCP 47, RFC 5646, DOI 10.17487/RFC5646,
+             ​September 2009, <https://www.rfc-editor.org/info/rfc5646>.
 
-   [RFC5890]  Klensin, J., "Internationalized Domain Names for
-              Applications (IDNA): Definitions and Document Framework",
-              RFC 5890, DOI 10.17487/RFC5890, August 2010,
-              <https://www.rfc-editor.org/info/rfc5890>.
+  ​[RFC5890]  Klensin, J., "Internationalized Domain Names for
+             ​Applications (IDNA): Definitions and Document Framework",
+             ​RFC 5890, DOI 10.17487/RFC5890, August 2010,
+             ​<https://www.rfc-editor.org/info/rfc5890>.
 
-   [RFC5952]  Kawamura, S. and M. Kawashima, "A Recommendation for IPv6
-              Address Text Representation", RFC 5952,
-              DOI 10.17487/RFC5952, August 2010,
-              <https://www.rfc-editor.org/info/rfc5952>.
+  ​[RFC5952]  Kawamura, S. and M. Kawashima, "A Recommendation for IPv6
+             ​Address Text Representation", RFC 5952,
+             ​DOI 10.17487/RFC5952, August 2010,
+             ​<https://www.rfc-editor.org/info/rfc5952>.
 
-   [RFC7195]  Garcia-Martin, M. and S. Veikkolainen, "Session
-              Description Protocol (SDP) Extension for Setting Audio and
-              Video Media Streams over Circuit-Switched Bearers in the
-              Public Switched Telephone Network (PSTN)", RFC 7195,
-              DOI 10.17487/RFC7195, May 2014,
-              <https://www.rfc-editor.org/info/rfc7195>.
+  ​[RFC7195]  Garcia-Martin, M. and S. Veikkolainen, "Session
+             ​Description Protocol (SDP) Extension for Setting Audio and
+             ​Video Media Streams over Circuit-Switched Bearers in the
+             ​Public Switched Telephone Network (PSTN)", RFC 7195,
+             ​DOI 10.17487/RFC7195, May 2014,
+             ​<https://www.rfc-editor.org/info/rfc7195>.
 
-   [RFC8126]  Cotton, M., Leiba, B., and T. Narten, "Guidelines for
-              Writing an IANA Considerations Section in RFCs", BCP 26,
-              RFC 8126, DOI 10.17487/RFC8126, June 2017,
-              <https://www.rfc-editor.org/info/rfc8126>.
+  ​[RFC8126]  Cotton, M., Leiba, B., and T. Narten, "Guidelines for
+             ​Writing an IANA Considerations Section in RFCs", BCP 26,
+             ​RFC 8126, DOI 10.17487/RFC8126, June 2017,
+             ​<https://www.rfc-editor.org/info/rfc8126>.
 
-   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
-              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
-              May 2017, <https://www.rfc-editor.org/info/rfc8174>.
+  ​[RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+             ​2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+             ​May 2017, <https://www.rfc-editor.org/info/rfc8174>.
 
-   [RFC8859]  Nandakumar, S., "A Framework for Session Description
-              Protocol (SDP) Attributes When Multiplexing", RFC 8859,
-              DOI 10.17487/RFC8859, January 2021,
-              <https://www.rfc-editor.org/info/rfc8859>.
+  ​[RFC8859]  Nandakumar, S., "A Framework for Session Description
+             ​Protocol (SDP) Attributes When Multiplexing", RFC 8859,
+             ​DOI 10.17487/RFC8859, January 2021,
+             ​<https://www.rfc-editor.org/info/rfc8859>.
 
-   [RFC8864]  Drage, K., Makaraju, M., Ejzak, R., Marcon, J., and R.
-              Even, Ed., "Negotiation Data Channels Using the Session
-              Description Protocol (SDP)", RFC 8864,
-              DOI 10.17487/RFC8864, January 2021,
-              <https://www.rfc-editor.org/info/rfc8864>.
+  ​[RFC8864]  Drage, K., Makaraju, M., Ejzak, R., Marcon, J., and R.
+             ​Even, Ed., "Negotiation Data Channels Using the Session
+             ​Description Protocol (SDP)", RFC 8864,
+             ​DOI 10.17487/RFC8864, January 2021,
+             ​<https://www.rfc-editor.org/info/rfc8864>.
 ```
 
 ## 11.2. 参考资料 (Informative References)
 
 ```
-   [ITU.H332.1998]
-              International Telecommunication Union, "H.332 : H.323
-              extended for loosely coupled conferences", ITU
-              Recommendation H.332, September 1998,
-              <https://www.itu.int/rec/T-REC-H.332-199809-I/en>.
+  ​[ITU.H332.1998]
+             ​International Telecommunication Union, "H.332 : H.323
+             ​extended for loosely coupled conferences", ITU
+             ​Recommendation H.332, September 1998,
+             ​<https://www.itu.int/rec/T-REC-H.332-199809-I/en>.
 
-   [RFC2045]  Freed, N. and N. Borenstein, "Multipurpose Internet Mail
-              Extensions (MIME) Part One: Format of Internet Message
-              Bodies", RFC 2045, DOI 10.17487/RFC2045, November 1996,
-              <https://www.rfc-editor.org/info/rfc2045>.
+  ​[RFC2045]  Freed, N. and N. Borenstein, "Multipurpose Internet Mail
+             ​Extensions (MIME) Part One: Format of Internet Message
+             ​Bodies", RFC 2045, DOI 10.17487/RFC2045, November 1996,
+             ​<https://www.rfc-editor.org/info/rfc2045>.
 
-   [RFC2327]  Handley, M. and V. Jacobson, "SDP: Session Description
-              Protocol", RFC 2327, DOI 10.17487/RFC2327, April 1998,
-              <https://www.rfc-editor.org/info/rfc2327>.
+  ​[RFC2327]  Handley, M. and V. Jacobson, "SDP: Session Description
+             ​Protocol", RFC 2327, DOI 10.17487/RFC2327, April 1998,
+             ​<https://www.rfc-editor.org/info/rfc2327>.
 
-   [RFC2974]  Handley, M., Perkins, C., and E. Whelan, "Session
-              Announcement Protocol", RFC 2974, DOI 10.17487/RFC2974,
-              October 2000, <https://www.rfc-editor.org/info/rfc2974>.
+  ​[RFC2974]  Handley, M., Perkins, C., and E. Whelan, "Session
+             ​Announcement Protocol", RFC 2974, DOI 10.17487/RFC2974,
+             ​October 2000, <https://www.rfc-editor.org/info/rfc2974>.
 
-   [RFC3261]  Rosenberg, J., Schulzrinne, H., Camarillo, G., Johnston,
-              A., Peterson, J., Sparks, R., Handley, M., and E.
-              Schooler, "SIP: Session Initiation Protocol", RFC 3261,
-              DOI 10.17487/RFC3261, June 2002,
-              <https://www.rfc-editor.org/info/rfc3261>.
+  ​[RFC3261]  Rosenberg, J., Schulzrinne, H., Camarillo, G., Johnston,
+             ​A., Peterson, J., Sparks, R., Handley, M., and E.
+             ​Schooler, "SIP: Session Initiation Protocol", RFC 3261,
+             ​DOI 10.17487/RFC3261, June 2002,
+             ​<https://www.rfc-editor.org/info/rfc3261>.
 
-   [RFC3264]  Rosenberg, J. and H. Schulzrinne, "An Offer/Answer Model
-              with Session Description Protocol (SDP)", RFC 3264,
-              DOI 10.17487/RFC3264, June 2002,
-              <https://www.rfc-editor.org/info/rfc3264>.
+  ​[RFC3264]  Rosenberg, J. and H. Schulzrinne, "An Offer/Answer Model
+             ​with Session Description Protocol (SDP)", RFC 3264,
+             ​DOI 10.17487/RFC3264, June 2002,
+             ​<https://www.rfc-editor.org/info/rfc3264>.
 
-   [RFC3550]  Schulzrinne, H., Casner, S., Frederick, R., and V.
-              Jacobson, "RTP: A Transport Protocol for Real-Time
-              Applications", STD 64, RFC 3550, DOI 10.17487/RFC3550,
-              July 2003, <https://www.rfc-editor.org/info/rfc3550>.
+  ​[RFC3550]  Schulzrinne, H., Casner, S., Frederick, R., and V.
+             ​Jacobson, "RTP: A Transport Protocol for Real-Time
+             ​Applications", STD 64, RFC 3550, DOI 10.17487/RFC3550,
+             ​July 2003, <https://www.rfc-editor.org/info/rfc3550>.
 
-   [RFC3551]  Schulzrinne, H. and S. Casner, "RTP Profile for Audio and
-              Video Conferences with Minimal Control", STD 65, RFC 3551,
-              DOI 10.17487/RFC3551, July 2003,
-              <https://www.rfc-editor.org/info/rfc3551>.
+  ​[RFC3551]  Schulzrinne, H. and S. Casner, "RTP Profile for Audio and
+             ​Video Conferences with Minimal Control", STD 65, RFC 3551,
+             ​DOI 10.17487/RFC3551, July 2003,
+             ​<https://www.rfc-editor.org/info/rfc3551>.
 
-   [RFC3556]  Casner, S., "Session Description Protocol (SDP) Bandwidth
-              Modifiers for RTP Control Protocol (RTCP) Bandwidth",
-              RFC 3556, DOI 10.17487/RFC3556, July 2003,
-              <https://www.rfc-editor.org/info/rfc3556>.
+  ​[RFC3556]  Casner, S., "Session Description Protocol (SDP) Bandwidth
+             ​Modifiers for RTP Control Protocol (RTCP) Bandwidth",
+             ​RFC 3556, DOI 10.17487/RFC3556, July 2003,
+             ​<https://www.rfc-editor.org/info/rfc3556>.
 
-   [RFC3605]  Huitema, C., "Real Time Control Protocol (RTCP) attribute
-              in Session Description Protocol (SDP)", RFC 3605,
-              DOI 10.17487/RFC3605, October 2003,
-              <https://www.rfc-editor.org/info/rfc3605>.
+  ​[RFC3605]  Huitema, C., "Real Time Control Protocol (RTCP) attribute
+             ​in Session Description Protocol (SDP)", RFC 3605,
+             ​DOI 10.17487/RFC3605, October 2003,
+             ​<https://www.rfc-editor.org/info/rfc3605>.
 
-   [RFC3711]  Baugher, M., McGrew, D., Naslund, M., Carrara, E., and K.
-              Norrman, "The Secure Real-time Transport Protocol (SRTP)",
-              RFC 3711, DOI 10.17487/RFC3711, March 2004,
-              <https://www.rfc-editor.org/info/rfc3711>.
+  ​[RFC3711]  Baugher, M., McGrew, D., Naslund, M., Carrara, E., and K.
+             ​Norrman, "The Secure Real-time Transport Protocol (SRTP)",
+             ​RFC 3711, DOI 10.17487/RFC3711, March 2004,
+             ​<https://www.rfc-editor.org/info/rfc3711>.
 
-   [RFC3840]  Rosenberg, J., Schulzrinne, H., and P. Kyzivat,
-              "Indicating User Agent Capabilities in the Session
-              Initiation Protocol (SIP)", RFC 3840,
-              DOI 10.17487/RFC3840, August 2004,
-              <https://www.rfc-editor.org/info/rfc3840>.
+  ​[RFC3840]  Rosenberg, J., Schulzrinne, H., and P. Kyzivat,
+             ​"Indicating User Agent Capabilities in the Session
+             ​Initiation Protocol (SIP)", RFC 3840,
+             ​DOI 10.17487/RFC3840, August 2004,
+             ​<https://www.rfc-editor.org/info/rfc3840>.
 
-   [RFC3890]  Westerlund, M., "A Transport Independent Bandwidth
-              Modifier for the Session Description Protocol (SDP)",
-              RFC 3890, DOI 10.17487/RFC3890, September 2004,
-              <https://www.rfc-editor.org/info/rfc3890>.
+  ​[RFC3890]  Westerlund, M., "A Transport Independent Bandwidth
+             ​Modifier for the Session Description Protocol (SDP)",
+             ​RFC 3890, DOI 10.17487/RFC3890, September 2004,
+             ​<https://www.rfc-editor.org/info/rfc3890>.
 
-   [RFC4568]  Andreasen, F., Baugher, M., and D. Wing, "Session
-              Description Protocol (SDP) Security Descriptions for Media
-              Streams", RFC 4568, DOI 10.17487/RFC4568, July 2006,
-              <https://www.rfc-editor.org/info/rfc4568>.
+  ​[RFC4568]  Andreasen, F., Baugher, M., and D. Wing, "Session
+             ​Description Protocol (SDP) Security Descriptions for Media
+             ​Streams", RFC 4568, DOI 10.17487/RFC4568, July 2006,
+             ​<https://www.rfc-editor.org/info/rfc4568>.
 
-   [RFC4855]  Casner, S., "Media Type Registration of RTP Payload
-              Formats", RFC 4855, DOI 10.17487/RFC4855, February 2007,
-              <https://www.rfc-editor.org/info/rfc4855>.
+  ​[RFC4855]  Casner, S., "Media Type Registration of RTP Payload
+             ​Formats", RFC 4855, DOI 10.17487/RFC4855, February 2007,
+             ​<https://www.rfc-editor.org/info/rfc4855>.
 
-   [RFC5124]  Ott, J. and E. Carrara, "Extended Secure RTP Profile for
-              Real-time Transport Control Protocol (RTCP)-Based Feedback
-              (RTP/SAVPF)", RFC 5124, DOI 10.17487/RFC5124, February
-              2008, <https://www.rfc-editor.org/info/rfc5124>.
+  ​[RFC5124]  Ott, J. and E. Carrara, "Extended Secure RTP Profile for
+             ​Real-time Transport Control Protocol (RTCP)-Based Feedback
+             ​(RTP/SAVPF)", RFC 5124, DOI 10.17487/RFC5124, February
+             ​2008, <https://www.rfc-editor.org/info/rfc5124>.
 
-   [RFC5322]  Resnick, P., Ed., "Internet Message Format", RFC 5322,
-              DOI 10.17487/RFC5322, October 2008,
-              <https://www.rfc-editor.org/info/rfc5322>.
+  ​[RFC5322]  Resnick, P., Ed., "Internet Message Format", RFC 5322,
+             ​DOI 10.17487/RFC5322, October 2008,
+             ​<https://www.rfc-editor.org/info/rfc5322>.
 
-   [RFC5735]  Cotton, M. and L. Vegoda, "Special Use IPv4 Addresses",
-              RFC 5735, DOI 10.17487/RFC5735, January 2010,
-              <https://www.rfc-editor.org/info/rfc5735>.
+  ​[RFC5735]  Cotton, M. and L. Vegoda, "Special Use IPv4 Addresses",
+             ​RFC 5735, DOI 10.17487/RFC5735, January 2010,
+             ​<https://www.rfc-editor.org/info/rfc5735>.
 
-   [RFC5771]  Cotton, M., Vegoda, L., and D. Meyer, "IANA Guidelines for
-              IPv4 Multicast Address Assignments", BCP 51, RFC 5771,
-              DOI 10.17487/RFC5771, March 2010,
-              <https://www.rfc-editor.org/info/rfc5771>.
+  ​[RFC5771]  Cotton, M., Vegoda, L., and D. Meyer, "IANA Guidelines for
+             ​IPv4 Multicast Address Assignments", BCP 51, RFC 5771,
+             ​DOI 10.17487/RFC5771, March 2010,
+             ​<https://www.rfc-editor.org/info/rfc5771>.
 
-   [RFC5888]  Camarillo, G. and H. Schulzrinne, "The Session Description
-              Protocol (SDP) Grouping Framework", RFC 5888,
-              DOI 10.17487/RFC5888, June 2010,
-              <https://www.rfc-editor.org/info/rfc5888>.
+  ​[RFC5888]  Camarillo, G. and H. Schulzrinne, "The Session Description
+             ​Protocol (SDP) Grouping Framework", RFC 5888,
+             ​DOI 10.17487/RFC5888, June 2010,
+             ​<https://www.rfc-editor.org/info/rfc5888>.
 
-   [RFC5954]  Gurbani, V., Ed., Carpenter, B., Ed., and B. Tate, Ed.,
-              "Essential Correction for IPv6 ABNF and URI Comparison in
-              RFC 3261", RFC 5954, DOI 10.17487/RFC5954, August 2010,
-              <https://www.rfc-editor.org/info/rfc5954>.
+  ​[RFC5954]  Gurbani, V., Ed., Carpenter, B., Ed., and B. Tate, Ed.,
+             ​"Essential Correction for IPv6 ABNF and URI Comparison in
+             ​RFC 3261", RFC 5954, DOI 10.17487/RFC5954, August 2010,
+             ​<https://www.rfc-editor.org/info/rfc5954>.
 
-   [RFC6466]  Salgueiro, G., "IANA Registration of the 'image' Media
-              Type for the Session Description Protocol (SDP)",
-              RFC 6466, DOI 10.17487/RFC6466, December 2011,
-              <https://www.rfc-editor.org/info/rfc6466>.
+  ​[RFC6466]  Salgueiro, G., "IANA Registration of the 'image' Media
+             ​Type for the Session Description Protocol (SDP)",
+             ​RFC 6466, DOI 10.17487/RFC6466, December 2011,
+             ​<https://www.rfc-editor.org/info/rfc6466>.
 
-   [RFC6838]  Freed, N., Klensin, J., and T. Hansen, "Media Type
-              Specifications and Registration Procedures", BCP 13,
-              RFC 6838, DOI 10.17487/RFC6838, January 2013,
-              <https://www.rfc-editor.org/info/rfc6838>.
+  ​[RFC6838]  Freed, N., Klensin, J., and T. Hansen, "Media Type
+             ​Specifications and Registration Procedures", BCP 13,
+             ​RFC 6838, DOI 10.17487/RFC6838, January 2013,
+             ​<https://www.rfc-editor.org/info/rfc6838>.
 
-   [RFC7230]  Fielding, R., Ed. and J. Reschke, Ed., "Hypertext Transfer
-              Protocol (HTTP/1.1): Message Syntax and Routing",
-              RFC 7230, DOI 10.17487/RFC7230, June 2014,
-              <https://www.rfc-editor.org/info/rfc7230>.
+  ​[RFC7230]  Fielding, R., Ed. and J. Reschke, Ed., "Hypertext Transfer
+             ​Protocol (HTTP/1.1): Message Syntax and Routing",
+             ​RFC 7230, DOI 10.17487/RFC7230, June 2014,
+             ​<https://www.rfc-editor.org/info/rfc7230>.
 
-   [RFC7405]  Kyzivat, P., "Case-Sensitive String Support in ABNF",
-              RFC 7405, DOI 10.17487/RFC7405, December 2014,
-              <https://www.rfc-editor.org/info/rfc7405>.
+  ​[RFC7405]  Kyzivat, P., "Case-Sensitive String Support in ABNF",
+             ​RFC 7405, DOI 10.17487/RFC7405, December 2014,
+             ​<https://www.rfc-editor.org/info/rfc7405>.
 
-   [RFC7656]  Lennox, J., Gross, K., Nandakumar, S., Salgueiro, G., and
-              B. Burman, Ed., "A Taxonomy of Semantics and Mechanisms
-              for Real-Time Transport Protocol (RTP) Sources", RFC 7656,
-              DOI 10.17487/RFC7656, November 2015,
-              <https://www.rfc-editor.org/info/rfc7656>.
+  ​[RFC7656]  Lennox, J., Gross, K., Nandakumar, S., Salgueiro, G., and
+             ​B. Burman, Ed., "A Taxonomy of Semantics and Mechanisms
+             ​for Real-Time Transport Protocol (RTP) Sources", RFC 7656,
+             ​DOI 10.17487/RFC7656, November 2015,
+             ​<https://www.rfc-editor.org/info/rfc7656>.
 
-   [RFC7826]  Schulzrinne, H., Rao, A., Lanphier, R., Westerlund, M.,
-              and M. Stiemerling, Ed., "Real-Time Streaming Protocol
-              Version 2.0", RFC 7826, DOI 10.17487/RFC7826, December
-              2016, <https://www.rfc-editor.org/info/rfc7826>.
+  ​[RFC7826]  Schulzrinne, H., Rao, A., Lanphier, R., Westerlund, M.,
+             ​and M. Stiemerling, Ed., "Real-Time Streaming Protocol
+             ​Version 2.0", RFC 7826, DOI 10.17487/RFC7826, December
+             ​2016, <https://www.rfc-editor.org/info/rfc7826>.
 
-   [RFC8445]  Keranen, A., Holmberg, C., and J. Rosenberg, "Interactive
-              Connectivity Establishment (ICE): A Protocol for Network
-              Address Translator (NAT) Traversal", RFC 8445,
-              DOI 10.17487/RFC8445, July 2018,
-              <https://www.rfc-editor.org/info/rfc8445>.
+  ​[RFC8445]  Keranen, A., Holmberg, C., and J. Rosenberg, "Interactive
+             ​Connectivity Establishment (ICE): A Protocol for Network
+             ​Address Translator (NAT) Traversal", RFC 8445,
+             ​DOI 10.17487/RFC8445, July 2018,
+             ​<https://www.rfc-editor.org/info/rfc8445>.
 
-   [RFC8839]  Petit-Huguenin, M., Nandakumar, S., Holmberg, C., Keränen,
-              A., and R. Shpount, "Session Description Protocol (SDP)
-              Offer/Answer Procedures for Interactive Connectivity
-              Establishment (ICE)", RFC 8839, DOI 10.17487/RFC8839,
-              January 2021, <https://www.rfc-editor.org/info/rfc8839>.
+  ​[RFC8839]  Petit-Huguenin, M., Nandakumar, S., Holmberg, C., Keränen,
+             ​A., and R. Shpount, "Session Description Protocol (SDP)
+             ​Offer/Answer Procedures for Interactive Connectivity
+             ​Establishment (ICE)", RFC 8839, DOI 10.17487/RFC8839,
+             ​January 2021, <https://www.rfc-editor.org/info/rfc8839>.
 
-   [RFC8843]  Holmberg, C., Alvestrand, H., and C. Jennings,
-              "Negotiating Media Multiplexing Using the Session
-              Description Protocol (SDP)", RFC 8843,
-              DOI 10.17487/RFC8843, January 2021,
-              <https://www.rfc-editor.org/info/rfc8843>.
+  ​[RFC8843]  Holmberg, C., Alvestrand, H., and C. Jennings,
+             ​"Negotiating Media Multiplexing Using the Session
+             ​Description Protocol (SDP)", RFC 8843,
+             ​DOI 10.17487/RFC8843, January 2021,
+             ​<https://www.rfc-editor.org/info/rfc8843>.
 ```
 
 # 致谢
@@ -816,4 +849,5 @@ WC1E 6BT
 United Kingdom
 Email: M.Handley@cs.ucl.ac.uk
 
-[原文](https://www.rfc-editor.org/rfc/rfc8866)
+
+[原文](https://www.rfc-editor.org/rfc/rfc8866
