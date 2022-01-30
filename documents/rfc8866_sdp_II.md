@@ -73,7 +73,7 @@ IANA 已将这些注册表中对 RFC 4566 的所有引用更改为引用本文�
  * 联系人名字
  * 联系人电子邮件地址
  * 正在定义的名称（因为它将出现在 SDP 中）
- * 名称的类型（`<media>`、`<proto>`、`<attribute-name>`、`<bwtype>`、`<nettype>` 或 `<addrtype>`）
+ * 名称的类型（<media>、<proto>、<attribute-name>、<bwtype>、<nettype> 或 <addrtype>）
  * 定义名称的用途描述
  * 对包含此信息和值定义的文档的稳定引用。（这通常是一个 RFC 编号。）
 
@@ -158,6 +158,11 @@ IANA 已使用本备忘录 [第 6 节](https://www.rfc-editor.org/rfc/rfc8866#at
 
 #### 8.2.4.2. 对已有属性的更新
 
+根据 [[RFC8126](https://www.rfc-editor.org/rfc/rfc8866#RFC8126)] 的 “规范要求” 策略接受更新的属性的注册。
+
+审查更新的指定专家，被要求评估更新是否与属性的先前意图和使用兼容，以及新文件是否具有足够的成熟度，和相对于先前文件的权威性。
+
+更新属性的规范（例如，通过添加新值）必须 (MUST) 根据以下约束更新 [第 8.2.4.1 节](https://www.rfc-editor.org/rfc/rfc8866#newatt) 中的注册信息项：
 
 
 
@@ -795,5 +800,6 @@ London
 WC1E 6BT
 United Kingdom
 Email: M.Handley@cs.ucl.ac.uk
+
 
 [原文](https://www.rfc-editor.org/rfc/rfc8866)
