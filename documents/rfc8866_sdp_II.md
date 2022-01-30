@@ -73,7 +73,7 @@ IANA 已将这些注册表中对 RFC 4566 的所有引用更改为引用本文�
  * 联系人名字
  * 联系人电子邮件地址
  * 正在定义的名称（因为它将出现在 SDP 中）
- * 名称的类型（<media>、<proto>、<attribute-name>、<bwtype>、<nettype> 或 <addrtype>）
+ * 名称的类型（`<media>`、`<proto>`、`<attribute-name>`、`<bwtype>`、`<nettype>` 或 `<addrtype>`）
  * 定义名称的用途描述
  * 对包含此信息和值定义的文档的稳定引用。（这通常是一个 RFC 编号。）
 
