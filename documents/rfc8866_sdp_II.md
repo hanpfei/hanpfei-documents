@@ -64,6 +64,7 @@ IANA 已将这些注册表中对 RFC 4566 的所有引用更改为引用本文�
 所有这些注册表都有如下的通用格式：
 | 类型 | SDP 名称 | [其他字段] | 引用 |
 |--|--|--|--|
+
 表 3：SDP 注册表的通用格式
 
 ### 8.2.1 注册过程
@@ -117,12 +118,14 @@ IANA 已将这些注册表中对 RFC 4566 的所有引用更改为引用本文�
 `<attribute-name>` 注册表的格式为：
 | 类型 | SDP 名称 | 使用级别 | Mux 类别 | 引用 |
 |--|--|--|--|--|
+
 表 4：`<attribute-name>` 注册表的格式
 
 例如，为会话和媒体级别定义的属性 “a=lang:” 将在新注册表中列出如下：
 | 类型 | SDP 名称 | 使用级别 | Mux 类别 | 引用 |
 |--|--|--|--|--|
 | attribute | lang | 会话，媒体 | TRANSPORT | [RFC8866] [[RFC8859](https://www.rfc-editor.org/rfc/rfc8866#RFC8859)] |
+
 表 5：`<attribute-name>` 注册表示例
 
 这个 `<attribute-name>` 注册表结合了所有以前 使用级别特定 的 “att-field” 注册表，包括 [[RFC8859](https://www.rfc-editor.org/rfc/rfc8866#RFC8859)] 所做的更新，并将 “att-field” 注册表重命名为 “attribute-name”（以前的 "att-field")" 注册表。 IANA 已完成必要的重新格式化。
