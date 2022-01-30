@@ -52,7 +52,7 @@ SDP 不得 (MUST NOT) 用于传送密钥材料（例如，使用 “a=crypto:”
 
 ## 8.2. 向 IANA 注册 SDP 参数
 
-本文档为六个命名的 SDP 子字段指定 IANA 参数注册表。使用 SDP 规范增强巴库斯-瑙尔形式 (ABNF) 中的术语，它们是 <media>、<proto>、<attribute-name>、<bwtype>、<nettype> 和 <addrtype>。
+本文档为六个命名的 SDP 子字段指定 IANA 参数注册表。使用 SDP 规范增强巴库斯-瑙尔形式 (ABNF) 中的术语，它们是 <media>、<proto>、`<attribute-name>`、<bwtype>、<nettype> 和 <addrtype>。
 
 本文档还替换和更新了先前定义在 [[RFC4566](https://www.rfc-editor.org/rfc/rfc8866#RFC4566)] 中的所有这些参数的定义。
 
