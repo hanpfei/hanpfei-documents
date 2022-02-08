@@ -8,7 +8,7 @@ tags:
 
 # 7. 安全注意事项
 
-SDP 经常与[会话发起协议](https://www.rfc-editor.org/rfc/rfc8866#RFC3261) [[RFC3261](https://www.rfc-editor.org/rfc/rfc8866#RFC3261)] 一起使用，使用 [提供/应答模型](https://www.rfc-editor.org/rfc/rfc8866#RFC3264) [[RFC3264](https://www.rfc-editor.org/rfc/rfc8866#RFC3264)] 来就单播会话的参数达成一致。 当以这种方式使用时，这些协议的安全考虑同样适用。
+SDP 经常与[会话发起协议](https://www.rfc-editor.org/rfc/rfc8866#RFC3261) [[RFC3261](https://www.rfc-editor.org/rfc/rfc8866#RFC3261)] 一起使用，使用 [要约/应答模型](https://www.rfc-editor.org/rfc/rfc8866#RFC3264) [[RFC3264](https://www.rfc-editor.org/rfc/rfc8866#RFC3264)] 来就单播会话的参数达成一致。 当以这种方式使用时，这些协议的安全考虑同样适用。
 
 SDP 是一个描述多媒体会话的会话描述格式。接收 SDP 消息并对其采取行动的实体应该 (SHOULD) 意识到，会话描述是不可信的，除非它是通过经过身份验证和完整性保护的传输协议，从已知和可信来源获得的。许多不同的传输协议可以被用来分发会话描述，并且身份验证和完整性保护的性质也因传输而异。对于某些传输，通常不部署安全功能。如果没有以可信的方式获得会话描述，端点应该 (SHOULD) 小心，因为在其他攻击中，接收到的媒体会话可能不是预期的那个，媒体发送到的目的地可能不是预期的 ，会话的任何参数都可能不正确，或者媒体安全性可能受到损害。考虑到应用程序的安全风险和用户偏好，依赖于端点做出明智的决定 —— 端点可以决定询问用户是否接受会话。
 
