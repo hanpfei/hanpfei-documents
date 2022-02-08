@@ -10,15 +10,15 @@ tags:
 
 SDP 经常与[会话发起协议](https://www.rfc-editor.org/rfc/rfc8866#RFC3261) [[RFC3261](https://www.rfc-editor.org/rfc/rfc8866#RFC3261)] 一起使用，使用 [要约/应答模型](https://www.rfc-editor.org/rfc/rfc8866#RFC3264) [[RFC3264](https://www.rfc-editor.org/rfc/rfc8866#RFC3264)] 来就单播会话的参数达成一致。 当以这种方式使用时，这些协议的安全考虑同样适用。
 
-SDP 是一个描述多媒体会话的会话描述格式。接收 SDP 消息并对其采取行动的实体应该 (SHOULD) 意识到，会话描述是不可信的，除非它是通过经过身份验证和完整性保护的传输协议，从已知和可信来源获得的。许多不同的传输协议可以被用来分发会话描述，并且身份验证和完整性保护的性质也因传输而异。对于某些传输，通常不部署安全功能。如果没有以可信的方式获得会话描述，端点应该 (SHOULD) 小心，因为在其他攻击中，接收到的媒体会话可能不是预期的那个，媒体发送到的目的地可能不是预期的 ，会话的任何参数都可能不正确，或者媒体安全性可能受到损害。考虑到应用程序的安全风险和用户偏好，依赖于端点做出明智的决定 —— 端点可以决定询问用户是否接受会话。
+SDP 是一个描述多媒体会话的会话描述格式。接收 SDP 消息并对其采取行动的实体应该 (SHOULD) 意识到，会话描述是不可信的，除非它是通过经过身份验证和完整性保护的传输协议，从已知和可信来源获得的。许多不同的传输协议可以被用来分发会话描述，并且身份验证和完整性保护的性质也因传输而异。对于某些传输，通常不部署安全功能。如果没有以可信的方式获得会话描述，端点应该 (SHOULD) 小心，因为在其它攻击中，接收到的媒体会话可能不是预期的那个，媒体发送到的目的地可能不是预期的 ，会话的任何参数都可能不正确，或者媒体安全性可能受到损害。考虑到应用程序的安全风险和用户偏好，依赖于端点做出明智的决定 —— 端点可以决定询问用户是否接受会话。
 
-在通过未经身份验证的传输机制或从不受信任的一方收到会话描述时，解析会话描述的软件应该采取一些预防措施。如果完整性保护没有到位，类似的问题也适用。会话描述包含了在接收者的系统上启动软件所需的信息。解析会话描述的软件不得 (MUST NOT) 启动其他软件，除非专门配置为参与多媒体会话的适当的软件。通常认为，解析会话描述的软件在用户系统上启动适合参与多媒体会话的软件，而没有首先通知用户此类软件将被启动，并征得用户同意，是不合适的。因此，通过会话公告、电子邮件、会话邀请或 WWW 页面到达的会话描述，不得 (MUST NOT) 将用户带进交互式多媒体会话中，除非用户已明确预授权此类操作。由于判断会话是否是交互式的，并不总是那么简单，因此不确定的应用程序应该假设会话是交互式的。处理会话描述中包含的 URL 的软件还应注意 [[RFC3986](https://www.rfc-editor.org/rfc/rfc8866#RFC3986)] 中确定的安全注意事项。
+在通过未经身份验证的传输机制或从不受信任的一方收到会话描述时，解析会话描述的软件应该采取一些预防措施。如果完整性保护没有到位，类似的问题也适用。会话描述包含了在接收者的系统上启动软件所需的信息。解析会话描述的软件不得 (MUST NOT) 启动其它软件，除非专门配置为参与多媒体会话的适当的软件。通常认为，解析会话描述的软件在用户系统上启动适合参与多媒体会话的软件，而没有首先通知用户此类软件将被启动，并征得用户同意，是不合适的。因此，通过会话公告、电子邮件、会话邀请或 WWW 页面到达的会话描述，不得 (MUST NOT) 将用户带进交互式多媒体会话中，除非用户已明确预授权此类操作。由于判断会话是否是交互式的，并不总是那么简单，因此不确定的应用程序应该假设会话是交互式的。处理会话描述中包含的 URL 的软件还应注意 [[RFC3986](https://www.rfc-editor.org/rfc/rfc8866#RFC3986)] 中确定的安全注意事项。
 
 在本规范中，没有允许会话描述的接收者被告知，以默认传输模式启动多媒体工具的属性。在某些情况下，定义此类属性可能是合适的。如果这样做了，解析包含此类属性的会话描述的应用程序，应该忽略它们或通知用户，加入此会话将导致多媒体数据的自动传输。未知属性的默认行为是忽略它。
 
-在某些环境中，中间系统拦截和分析包含在其他信令协议中的会话描述已变得很常见。这样做出于多种目的，包括但不限于，在防火墙中打洞以允许媒体流通过，或有选择地标记、确定优先级或阻止流量。在某些情况下，这样的中间系统可能修改会话描述，例如，使会话描述的内容与动态创建的 NAT 绑定相匹配。除非会话描述以允许中间系统进行适当检查，以建立会话描述的真实性，以及建立为建立此类通信会话的来源的权限的方式，否则不建议 (NOT RECOMMENDED) 使用这些行为。SDP 本身不包含启用这些检查的足够信息：它们依赖于封装协议（例如，SIP 或 RTSP）。使用某些程序和 SDP 扩展（例如，交互式连接建立 (ICE) [[RFC8445](https://www.rfc-editor.org/rfc/rfc8866#RFC8445)] 和 ICE-SIP-SDP [[RFC8839](https://www.rfc-editor.org/rfc/rfc8866#RFC8839)]）可以避免中间系统修改 SDP 的需要。
+在某些环境中，中间系统拦截和分析包含在其它信令协议中的会话描述已变得很常见。这样做出于多种目的，包括但不限于，在防火墙中打洞以允许媒体流通过，或有选择地标记、确定优先级或阻止流量。在某些情况下，这样的中间系统可能修改会话描述，例如，使会话描述的内容与动态创建的 NAT 绑定相匹配。除非会话描述以允许中间系统进行适当检查，以建立会话描述的真实性，以及建立为建立此类通信会话的来源的权限的方式，否则不建议 (NOT RECOMMENDED) 使用这些行为。SDP 本身不包含启用这些检查的足够信息：它们依赖于封装协议（例如，SIP 或 RTSP）。使用某些程序和 SDP 扩展（例如，交互式连接建立 (ICE) [[RFC8445](https://www.rfc-editor.org/rfc/rfc8866#RFC8445)] 和 ICE-SIP-SDP [[RFC8839](https://www.rfc-editor.org/rfc/rfc8866#RFC8839)]）可以避免中间系统修改 SDP 的需要。
 
-SDP 不得 (MUST NOT) 用于传送密钥材料（例如，使用 “a=crypto:” 属性 [[RFC4568](https://www.rfc-editor.org/rfc/rfc8866#RFC4568)]），除非可以保证，传递 SDP 的通道既是私有的又是经过身份验证的。
+SDP 不得 (MUST NOT) 用于传送密钥材料（例如，使用 "a=crypto:" 属性 [[RFC4568](https://www.rfc-editor.org/rfc/rfc8866#RFC4568)]），除非可以保证，传递 SDP 的通道既是私有的又是经过身份验证的。
 
 # 8. IANA 注意事项
 
@@ -30,7 +30,7 @@ SDP 不得 (MUST NOT) 用于传送密钥材料（例如，使用 “a=crypto:”
  * 自类型名称：sdp
  * 必须的参数：无。
  * 可选的参数：无。
- * 编码注意事项：8 位文本。SDP 文件主要是 UTF-8 格式文本。 “a=charset:” 属性可用于表示在 SDP 文件的某些部分中存在其他字符集（参见 RFC 8866 的[第 6 节](https://www.rfc-editor.org/rfc/rfc8866#attrs)）。 任意二进制内容不能在 SDP 中直接表示。
+ * 编码注意事项：8 位文本。SDP 文件主要是 UTF-8 格式文本。 "a=charset:" 属性可用于表示在 SDP 文件的某些部分中存在其它字符集（参见 RFC 8866 的[第 6 节](https://www.rfc-editor.org/rfc/rfc8866#attrs)）。 任意二进制内容不能在 SDP 中直接表示。
  * 安全注意事项：参见 RFC 8866 的[第 7 节](https://www.rfc-editor.org/rfc/rfc8866#security)。
  * 互操作性注意事项：参见 RFC 8866。
  * 发布的规范：参见 RFC 8866。
@@ -62,7 +62,7 @@ IANA 已将这些注册表中对 RFC 4566 的所有引用更改为引用本文�
  > IETF MMUSIC 工作组 `<mmusic@ietf.org>` 或由 IESG 指定的其继任者。
 
 所有这些注册表都有如下的通用格式：
-| 类型 | SDP 名称 | [其他字段] | 引用 |
+| 类型 | SDP 名称 | [其它字段] | 引用 |
 |--|--|--|--|
 
 表 3：SDP 注册表的通用格式
@@ -78,7 +78,7 @@ IANA 已将这些注册表中对 RFC 4566 的所有引用更改为引用本文�
  * 定义名称的用途描述
  * 对包含此信息和值定义的文档的稳定引用。（这通常是一个 RFC 编号。）
 
-下面的小节指定必须为特定参数指定哪些其他信息（如果有），以及注册表中要包含哪些其他字段。
+下面的小节指定必须为特定参数指定哪些其它信息（如果有），以及注册表中要包含哪些其它字段。
 
 ### 8.2.2 媒体类型 (`<media>`)
 
@@ -86,7 +86,7 @@ IANA 已将这些注册表中对 RFC 4566 的所有引用更改为引用本文�
 
 本备忘录注册媒体类型 "audio"、"video"、"text"、"application" 和 "message"。
 
-注意：媒体类型 “control” 和 “data” 在本规范的早期版本 [[RFC2327](https://www.rfc-editor.org/rfc/rfc8866#RFC2327)] 中被列为有效；但是，它们的语义从未完全说明，也没有被广泛使用。这些媒体类型已在本规范中删除，尽管它们仍然是 [[RFC3840](https://www.rfc-editor.org/rfc/rfc8866#RFC3840)] 中定义的 SIP 用户代理的有效媒体类型能力。 如果这些媒体类型在未来被认为有用，则必须 (MUST) 生成标准跟踪 RFC 来记录它们的使用。在此之前，应用程序不应 (SHOULD NOT) 使用这些类型，并且不应 (SHOULD NOT) 在 SIP 能力声明中声明对它们的支持（即使它们存在于 [[RFC3840](https://www.rfc-editor.org/rfc/rfc8866#RFC3840)] 创建的注册表中）。另请注意，[[RFC6466](https://www.rfc-editor.org/rfc/rfc8866#RFC6466)] 定义了 “image” 媒体类型。
+注意：媒体类型 "control" 和 "data" 在本规范的早期版本 [[RFC2327](https://www.rfc-editor.org/rfc/rfc8866#RFC2327)] 中被列为有效；但是，它们的语义从未完全说明，也没有被广泛使用。这些媒体类型已在本规范中删除，尽管它们仍然是 [[RFC3840](https://www.rfc-editor.org/rfc/rfc8866#RFC3840)] 中定义的 SIP 用户代理的有效媒体类型能力。 如果这些媒体类型在未来被认为有用，则必须 (MUST) 生成标准跟踪 RFC 来记录它们的使用。在此之前，应用程序不应 (SHOULD NOT) 使用这些类型，并且不应 (SHOULD NOT) 在 SIP 能力声明中声明对它们的支持（即使它们存在于 [[RFC3840](https://www.rfc-editor.org/rfc/rfc8866#RFC3840)] 创建的注册表中）。另请注意，[[RFC6466](https://www.rfc-editor.org/rfc/rfc8866#RFC6466)] 定义了 "image" 媒体类型。
 
 ### 8.2.3. 传输协议 (`<proto>`)
 
@@ -94,20 +94,20 @@ IANA 已将这些注册表中对 RFC 4566 的所有引用更改为引用本文�
 
 本文档注册了两个值：
 
- * “RTP/AVP” 是对 [[RFC3550](https://www.rfc-editor.org/rfc/rfc8866#RFC3550)] 的引用，通过 UDP/IP 运行，在 [具有最小控制的音频和视频会议的 RTP 配置文件](https://www.rfc-editor.org/rfc/rfc8866#RFC3551) [[RFC3551](https://www.rfc-editor.org/rfc/rfc8866#RFC3551)] 下使用。
+ * "RTP/AVP" 是对 [[RFC3550](https://www.rfc-editor.org/rfc/rfc8866#RFC3550)] 的引用，通过 UDP/IP 运行，在 [具有最小控制的音频和视频会议的 RTP 配置文件](https://www.rfc-editor.org/rfc/rfc8866#RFC3551) [[RFC3551](https://www.rfc-editor.org/rfc/rfc8866#RFC3551)] 下使用。
  * "udp" 表示直接使用 UDP。
 
 可以 (MAY) 定义新的传输协议，并且必须 (MUST) 向 IANA 注册。 注册必须 (MUST) 引用描述协议的 RFC。这样的 RFC 可以 (MAY) 是实验性的或信息性的，尽管它最好是标准跟踪。定义新协议的 RFC 必须 (MUST) 定义管理 `<fmt>`（见下文）命名空间的规则。
 
-以 “RTP/” 开头的 `<proto>` 名称必须 (MUST) 仅用于定义作为 RTP 配置的传输协议。 例如，短名称为 “XYZ” 的配置将由 “RTP/XYZ” 的 `<proto>` 子字段表示。
+以 "RTP/" 开头的 `<proto>` 名称必须 (MUST) 仅用于定义作为 RTP 配置的传输协议。 例如，短名称为 "XYZ" 的配置将由 "RTP/XYZ" 的 `<proto>` 子字段表示。
 
 由 `<proto>` 子字段定义的每个传输协议，有一个关联的 `<fmt>` 命名空间，其描述了可以由该协议传递的媒体格式。格式覆盖所有可能在多媒体会话中传输的的编码。
 
-“RTP/AVP” 和其他 “RTP/*” 配置下的 RTP 有效载荷格式必须 (MUST) 使用有效载荷类型号作为它们的 `<fmt>` 值。如果此会话描述动态分配有效载荷类型号，则必须 (MUST) 包含附加的 “a=rtpmap:” 属性，以指定媒体类型注册为有效负载格式定义的格式名称和参数。建议注册（与 RTP 结合）为 SDP 传输协议的其他 RTP 配置的配置，为 `<fmt>` 命名空间指定相同的规则。
+"RTP/AVP" 和其它 "RTP/*" 配置下的 RTP 有效载荷格式必须 (MUST) 使用有效载荷类型号作为它们的 `<fmt>` 值。如果此会话描述动态分配有效载荷类型号，则必须 (MUST) 包含附加的 "a=rtpmap:" 属性，以指定媒体类型注册为有效负载格式定义的格式名称和参数。建议注册（与 RTP 结合）为 SDP 传输协议的其它 RTP 配置的配置，为 `<fmt>` 命名空间指定相同的规则。
 
-对于 “udp” 协议，允许的 `<fmt>` 值是来自 IANA 媒体类型注册表的媒体子类型。媒体类型和子类型组合 `<media>`/`<fmt>` 指定 UDP 数据包主体的格式。鼓励使用格式的现有媒体子类型。如果没有合适的媒体子类型，建议 (RECOMMENDED) 通过 IETF 流程 [[RFC6838](https://www.rfc-editor.org/rfc/rfc8866#RFC6838)]，通过生成或引用定义格式的标准跟踪 RFC，来注册新的媒体子类型。
+对于 "udp" 协议，允许的 `<fmt>` 值是来自 IANA 媒体类型注册表的媒体子类型。媒体类型和子类型组合 `<media>`/`<fmt>` 指定 UDP 数据包主体的格式。鼓励使用格式的现有媒体子类型。如果没有合适的媒体子类型，建议 (RECOMMENDED) 通过 IETF 流程 [[RFC6838](https://www.rfc-editor.org/rfc/rfc8866#RFC6838)]，通过生成或引用定义格式的标准跟踪 RFC，来注册新的媒体子类型。
 
-对于其他协议，可以 (MAY) 根据 `<proto>` 规范相关的规则注册格式。
+对于其它协议，可以 (MAY) 根据 `<proto>` 规范相关的规则注册格式。
 
 新格式的注册必须 (MUST) 指定它们适用于哪些传输协议。
 
@@ -121,14 +121,14 @@ IANA 已将这些注册表中对 RFC 4566 的所有引用更改为引用本文�
 
 表 4：`<attribute-name>` 注册表的格式
 
-例如，为会话和媒体级别定义的属性 “a=lang:” 将在新注册表中列出如下：
+例如，为会话和媒体级别定义的属性 "a=lang:" 将在新注册表中列出如下：
 | 类型 | SDP 名称 | 使用级别 | Mux 类别 | 引用 |
 |--|--|--|--|--|
 | attribute | lang | 会话，媒体 | TRANSPORT | [RFC8866] [[RFC8859](https://www.rfc-editor.org/rfc/rfc8866#RFC8859)] |
 
 表 5：`<attribute-name>` 注册表示例
 
-这个 `<attribute-name>` 注册表结合了所有以前 使用级别特定 的 “att-field” 注册表，包括 [[RFC8859](https://www.rfc-editor.org/rfc/rfc8866#RFC8859)] 所做的更新，并将 “att-field” 注册表重命名为 “attribute-name”（以前的 "att-field")" 注册表。 IANA 已完成必要的重新格式化。
+这个 `<attribute-name>` 注册表结合了所有以前 使用级别特定 的 "att-field" 注册表，包括 [[RFC8859](https://www.rfc-editor.org/rfc/rfc8866#RFC8859)] 所做的更新，并将 "att-field" 注册表重命名为 "attribute-name"（以前的 "att-field")" 注册表。 IANA 已完成必要的重新格式化。
 
 本文档的 [第 6 节](https://www.rfc-editor.org/rfc/rfc8866#attrs) 替换了 [[RFC4566](https://www.rfc-editor.org/rfc/rfc8866#RFC4566)] 制定的初始属性定义集。 IANA 已相应地更新了注册表。
 
@@ -143,9 +143,9 @@ IANA 已将这些注册表中对 RFC 4566 的所有引用更改为引用本文�
  * 属性名称：将出现在 SDP 中的属性名称。这必须 (MUST) 符合 `<attribute-name>` 的定义。
  * 属性语法：对于值属性（参见 [第 5.13 节](https://www.rfc-editor.org/rfc/rfc8866#attribspec)），必须 (MUST) 提供属性值 `<attribute-value>` 语法（参见 [第 9 节](https://www.rfc-editor.org/rfc/rfc8866#abnf)）的 ABNF 定义。语法必须 (MUST) 遵循 [[RFC7405](https://www.rfc-editor.org/rfc/rfc8866#RFC7405)] 和 [[RFC5234](https://www.rfc-editor.org/rfc/rfc8866#RFC5234)] 的 [第 2.2 节](https://www.rfc-editor.org/rfc/rfc5234#section-2.2) 的规则形式。这应 (SHALL) 定义属性可能采用的允许值。它还可以 (MAY) 定义用于添加未来的值的扩展方法。对于属性属性，ABNF 定义被省略，因为属性属性没有值。
  * 属性语义：对于值属性，必须 (MUST) 提供该属性可能采用的值的语义描述。 属性属性的用法在下面的 目的 中进行描述。
- * 属性值：定义值的语法的 ABNF 语法规则的名称。 缺少规则名称表示该属性没有取值。 将规则名称包含在 “[” 和 “]” 中表示值是可选的。
+ * 属性值：定义值的语法的 ABNF 语法规则的名称。 缺少规则名称表示该属性没有取值。 将规则名称包含在 "[" 和 "]" 中表示值是可选的。
  * 使用级别：属性的使用级别。这必须 (MUST) 是以下一项或多项：会话、媒体、源、dcsa 和 dcsa（子协议）。 有关源级属性的定义，请参阅 [[RFC5576](https://www.rfc-editor.org/rfc/rfc8866#RFC5576)]。 有关 dcsa 属性的定义，请参见 [[RFC8864](https://www.rfc-editor.org/rfc/rfc8866#RFC8864)]。
- * 字符集依赖：这必须 (MUST) 是 “是” 或 “否”，具体取决于属性值是否受制于 “a=charset:” 属性。
+ * 字符集依赖：这必须 (MUST) 是 “是” 或 “否”，具体取决于属性值是否受制于 "a=charset:" 属性。
  * 目的：对属性的目的和用法的说明。
  * O/A 过程：在 [[RFC3264](https://www.rfc-editor.org/rfc/rfc8866#RFC3264)] 中解释的提议/应答过程。
  * Mux 类别：这必须 (MUST) 指示以下类别之一：由 [[RFC8859](https://www.rfc-editor.org/rfc/rfc8866#RFC8859)] 定义的 NORMAL、NOT RECOMMENDED、IDENTICAL、SUM、TRANSPORT、INHERIT、IDENTICAL-PER-PT、SPECIAL 或 TBD。
@@ -155,7 +155,7 @@ IANA 已将这些注册表中对 RFC 4566 的所有引用更改为引用本文�
 
 注册提交者应确保规范符合 SDP 属性的精神，最值得注意的是，属性在某种意义上是平台独立的，因为它不对操作系统做出隐含的假设，并且不会以可能抑制互操作性的方式命名特定的软件片段。
 
-注册提交者还应谨慎选择属性的使用级别。当媒体被分开时，属性可以具有不同的值时，他们不应该只选择 “会话” 级，比如，当每个 “m =” 部分在不同的端点上都有自己的 IP 地址时。在这种情况下，选择的属性类型应该是 “会话、媒体” 或 “媒体”（取决于所需的语义）。默认规则是，对于可以同时出现在会话和媒体级别的所有新 SDP 属性，媒体级别覆盖会话级别。当新 SDP 属性不是这种情况时，必须 (MUST) 明确说明。
+注册提交者还应谨慎选择属性的使用级别。当媒体被分开时，属性可以具有不同的值时，它们不应该只选择 “会话” 级，比如，当每个 "m=" 部分在不同的端点上都有自己的 IP 地址时。在这种情况下，选择的属性类型应该是 “会话、媒体” 或 “媒体”（取决于所需的语义）。默认规则是，对于可以同时出现在会话和媒体级别的所有新 SDP 属性，媒体级别覆盖会话级别。当新 SDP 属性不是这种情况时，必须 (MUST) 明确说明。
 
 IANA 已使用本备忘录 [第 6 节](https://www.rfc-editor.org/rfc/rfc8866#attrs) 中的定义注册了初始属性名称集（`<attribute-name>` 值）（这些定义替换了 [RFC4566] 中的定义）。
 
@@ -176,7 +176,7 @@ IANA 已使用本备忘录 [第 6 节](https://www.rfc-editor.org/rfc/rfc8866#at
  * 字符集依赖：不得 (MUST NOT) 更改。
  * 目的：可以 (MAY) 根据更新的用法进行扩展。
  * O/A 过程：可以 (MAY) 以向后兼容的方式更新，和/或仅适用于新的使用级别。
- * Mux 类别：除非从 “TBD” 更改为另一个值（参见 [[RFC8859](https://www.rfc-editor.org/rfc/rfc8866#RFC8859)]），否则不更改。如果将媒体级别添加到以前不包括它的属性的定义中，它也可以 (MAY) 更改。
+ * Mux 类别：除非从 "TBD" 更改为另一个值（参见 [[RFC8859](https://www.rfc-editor.org/rfc/rfc8866#RFC8859)]），否则不更改。如果将媒体级别添加到以前不包括它的属性的定义中，它也可以 (MAY) 更改。
  * 引用：必须 (MUST) 提供新的（附加的或替换）引用。
 
 如果属性更新对项目没有影响，则应该 (SHOULD) 省略项目。
@@ -195,11 +195,11 @@ RFC 必须 (MUST) 按照 [[RFC8859](https://www.rfc-editor.org/rfc/rfc8866#RFC88
 
 表 6：`<bwtype>` 注册表的格式
 
-IANA 已使用本备忘录 [第 5.8 节](https://www.rfc-editor.org/rfc/rfc8866#bandwidthInfo) 中的定义，更新了带宽说明符 “CT” 和 “AS” 的 `<bwtype>` 注册表条目（这些定义替换了 [[RFC4566](https://www.rfc-editor.org/rfc/rfc8866#RFC4566)] 中的定义）。
+IANA 已使用本备忘录 [第 5.8 节](https://www.rfc-editor.org/rfc/rfc8866#bandwidthInfo) 中的定义，更新了带宽说明符 "CT" 和 "AS" 的 `<bwtype>` 注册表条目（这些定义替换了 [[RFC4566](https://www.rfc-editor.org/rfc/rfc8866#RFC4566)] 中的定义）。
 
 ### 8.2.6. 网络类型 (`<nettype>`)
 
-代表 Internet 的网络类型 “IN” 在本备忘录的 [第 5.2 节](https://www.rfc-editor.org/rfc/rfc8866#origin) 和 [第 5.7 节](https://www.rfc-editor.org/rfc/rfc8866#connection-information) 中定义（此定义替换 [[RFC4566](https://www.rfc-editor.org/rfc/rfc8866#RFC4566)] 中的定义）。
+代表 Internet 的网络类型 "IN" 在本备忘录的 [第 5.2 节](https://www.rfc-editor.org/rfc/rfc8866#origin) 和 [第 5.7 节](https://www.rfc-editor.org/rfc/rfc8866#connection-information) 中定义（此定义替换 [[RFC4566](https://www.rfc-editor.org/rfc/rfc8866#RFC4566)] 中的定义）。
 
 为了使 SDP 能够引用新的非 Internet 环境，必须 (MUST) 向 IANA 注册新的网络类型（`<nettype>` 子字段值）。注册受 [[RFC8126](https://www.rfc-editor.org/rfc/rfc8866#RFC8126)] 的 “RFC 要求” 政策的约束。尽管非 Internet 环境通常不属于 IANA，但可能存在 Internet 应用程序需要与非 Internet 应用程序互操作的情况，例如将 Internet 电话呼叫网关接入公共交换电话网络 (PSTN) 时。网络类型的数量应该很少，并且应该很少扩展。新的网络类型注册必须 (MUST) 引用一个 RFC，该 RFC 提供了网络类型的详细信息，以及可能与它一起使用的地址类型。
 
@@ -219,17 +219,17 @@ IANA 已将 `<nettype>` 注册表更新为这种新格式。以下是注册表�
 
 表 8：`<nettype>` 注册表的内容
 
-请注意，尽管 [[RFC7195](https://www.rfc-editor.org/rfc/rfc8866#RFC7195)] 提到 “E164” 地址类型对于 ATM 和 PSTN 网络具有不同的上下文，[[RFC7195](https://www.rfc-editor.org/rfc/rfc8866#RFC7195)] 和 [[RFC3108](https://www.rfc-editor.org/rfc/rfc8866#RFC3108)] 都将 “E164” 注册为地址类型。
+请注意，尽管 [[RFC7195](https://www.rfc-editor.org/rfc/rfc8866#RFC7195)] 提到 "E164" 地址类型对于 ATM 和 PSTN 网络具有不同的上下文，[[RFC7195](https://www.rfc-editor.org/rfc/rfc8866#RFC7195)] 和 [[RFC3108](https://www.rfc-editor.org/rfc/rfc8866#RFC3108)] 都将 "E164" 注册为地址类型。
 
 ### 8.2.7. 地址类型 (`<addrtype>`)
 
 新地址类型 (`<addrtype>`) 必须 (MUST) 向 IANA 注册。注册受 [[RFC8126](https://www.rfc-editor.org/rfc/rfc8866#RFC8126)] 的 “RFC 要求” 政策的约束。新的地址类型注册必须 (MUST) 引用一个 RFC，该 RFC 提供了地址类型的语法的详细信息。地址类型预计不会经常注册。
 
-本文档的 [第 5.7 节](https://www.rfc-editor.org/rfc/rfc8866#connection-information) 给出了地址类型 “IP4” 和 “IP6” 的新定义。
+本文档的 [第 5.7 节](https://www.rfc-editor.org/rfc/rfc8866#connection-information) 给出了地址类型 "IP4" 和 "IP6" 的新定义。
 
 ## 8.3 加密密钥访问方法（已废弃）
 
-IANA 之前维护了一个 SDP 加密密钥访问方法（“enckey”）名称表。该表已废弃，因为 “k=” 行不可扩展。 不得 (MUST NOT) 接受新的注册。
+IANA 之前维护了一个 SDP 加密密钥访问方法（"enckey"）名称表。该表已废弃，因为 "k=" 行不可扩展。 不得 (MUST NOT) 接受新的注册。
 
 # 9. SDP 语法
 
@@ -507,11 +507,11 @@ addr-spec =           `<addr-spec definition from RFC 5322>`
 
 # 10. 自 RFC 4566 以来的变更摘要
 
- * 总体上澄清和完善的术语。文本中使用的术语与 ABNF 对齐。术语 `<attribute>`、`<att-field>` 和 “att-field” 现在是 `<attribute-name>`。术语 `<value>` 和 `<att-value>` 现在是 `<attribute-value>`。 术语 "media" 现在是 `<media>`。
+ * 总体上澄清和完善的术语。文本中使用的术语与 ABNF 对齐。术语 `<attribute>`、`<att-field>` 和 "att-field" 现在是 `<attribute-name>`。术语 `<value>` 和 `<att-value>` 现在是 `<attribute-value>`。 术语 "media" 现在是 `<media>`。
 
- * 已确定现已过时的项目：“a=cat:”（第 6.1 节）、“a=keywds:”（第 6.2 节）和 “k=”（第 5.12 节）。
+ * 已确定现已过时的项目："a=cat:"（第 6.1 节）、"a=keywds:"（第 6.2 节）和 "k="（第 5.12 节）。
 
- * 更新了规范性和信息性参考，并添加了对其他相关 RFC 的参考。
+ * 更新了规范性和信息性参考，并添加了对其它相关 RFC 的参考。
 
  * 重新格式化 SDP 属性一节（第 6 节）以提高可读性。 属性值的语法现在以 ABNF 给出。
 
@@ -519,7 +519,7 @@ addr-spec =           `<addr-spec definition from RFC 5322>`
 
  * 删除了 “私有会话” 小节。 该小节可以追溯到 SDP 主要与 SAP（会话公告协议）一起使用的时候，后者已不再使用。现在 SDP 的绝大多数用途是建立私人会话。第 7 节介绍了对此的注意事项。
 
- * 扩展并阐明了 “a=lang:”（第 6.12 节）和 “a=sdplang:”（第 6.11 节）属性的规范。
+ * 扩展并阐明了 "a=lang:"（第 6.12 节）和 "a=sdplang:"（第 6.11 节）属性的规范。
 
  * 删除了对 SAP 的一些引用，因为它不再广泛使用。
 
@@ -533,31 +533,31 @@ addr-spec =           `<addr-spec definition from RFC 5322>`
 
  * 扩展了 IANA `<nettype>` 注册表以标识有效的 `<addrtype>` 子字段（第 8.2.6 节）。
 
- * 将多个 IANA “att-field” 注册表重组为单个 `<attribute-name>` 注册表（第 8.2.4 节）。
+ * 将多个 IANA "att-field" 注册表重组为单个 `<attribute-name>` 注册表（第 8.2.4 节）。
 
  * 修订 ABNF 语法（第 9 节），以提高清晰度并与文本对齐。保持向后兼容性，但有少数例外。
 
-     - 修订了时间描述的语法（“t=”、“r=”、“z=”）以消除歧义。澄清 “z=” 只修改前面的 “r=” 行。使没有前面的 “r=” 的 “z=” 成为语法错误（第 5.11 节）。（这与某些异常用法不兼容。）
+     - 修订了时间描述的语法（"t="、"r="、"z="）以消除歧义。澄清 "z=" 只修改前面的 "r=" 行。使没有前面的 "r=" 的 "z=" 成为语法错误（第 5.11 节）。（这与某些异常用法不兼容。）
 
-     - 更新了 “IP6-address” 和 “IP6-multicast” 规则，与 [RFC3986] 中的语法一致，反映了 [RFC5954] 对 [RFC3261] 所做的错误修复。删除了由于此更改而未使用的规则。
+     - 更新了 "IP6-address" 和 "IP6-multicast" 规则，与 [RFC3986] 中的语法一致，反映了 [RFC5954] 对 [RFC3261] 所做的错误修复。删除了由于此更改而未使用的规则。
 
-     - “att-field” 规则已重命名为 “attribute-name”，因为在其他地方 “*-field” 总是指完整的行。但是，规则名称 “att-field” 仍然被定义为一个同义词，以与其他 RFC 的引用向后兼容。
+     - "att-field" 规则已重命名为 "attribute-name"，因为在其它地方 "*-field" 总是指完整的行。但是，规则名称 "att-field" 仍然被定义为一个同义词，以与其它 RFC 的引用向后兼容。
 
- * “att-value” 规则已重命名为 “attribute-value”。
+ * "att-value" 规则已重命名为 "attribute-value"。
 
  * 修订了以 ABNF 语法来说冗余的规范性声明，使文本变为非规范性的。
 
  * 根据 [RFC5735] 和 [RFC5771] 修改了示例 SDP 描述中的 IPv4 单播和多播地址。
 
- * 更改了一些示例以使用 IPv6 地址，并添加了使用 IPv6 的其他示例。
+ * 更改了一些示例以使用 IPv6 地址，并添加了使用 IPv6 的其它示例。
 
  * 合并了来自 [RFC4855] 的不区分大小写规则。
 
  * 修订了错误引用 NTP 的部分（第 5.2 节、第 5.9 节、第 5.10 节和第 5.11 节）。
 
- * 澄清了对 “a=charset:” 属性的影响和使用的解释（第 6.10 节）。
+ * 澄清了对 "a=charset:" 属性的影响和使用的解释（第 6.10 节）。
 
- * 修订了 “a=type:” 属性的描述，以消除它有时会将默认媒体方向更改为 “a=sendrecv” 以外的其他内容的暗示（第 6.9 节）。
+ * 修订了 "a=type:" 属性的描述，以消除它有时会将默认媒体方向更改为 "a=sendrecv" 以外的其它内容的暗示（第 6.9 节）。
 
 # 11. 参考 (References)
 
