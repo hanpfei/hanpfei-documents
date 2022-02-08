@@ -16,7 +16,7 @@ tags:
 
 这是一份互联网标准跟踪文件。
 
-本文档是 IETF (Internet Engineering Task Force) 的产品。它代表了 IETF 社区的共识。它已接受公众审查，并已获互联网工程指导小组 (IESG) 批准出版。有关互联网标准的进一步信息，请参阅 [RFC 7841第2节](https://www.rfc-editor.org/rfc/rfc7841#section-2)。
+本文档是 IETF (Internet Engineering Task Force) 的产品。它代表了 IETF 社区的共识。它已接受公众审查，并已获互联网工程指导小组 (IESG) 批准出版。有关互联网标准的进一步信息，请参阅 [RFC 7841 的第2节](https://www.rfc-editor.org/rfc/rfc7841#section-2)。
 
 有关此文档的当前状态、任何勘误表以及如何对其提供反馈的信息，可在以下网址获得 [https://www.rfc-editor.org/info/rfc8839](https://www.rfc-editor.org/info/rfc8839)。
 
