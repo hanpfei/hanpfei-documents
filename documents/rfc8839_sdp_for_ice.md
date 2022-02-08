@@ -1,10 +1,3 @@
-title: RFC8839 交互式连接建立 (ICE) 的会话描述协议 (SDP) 提议/应答过程
-date: 2022-02-05 12:35:49
-categories: 网络协议
-tags:
-- 网络协议
----
-
 # 摘要
 
 本文档描述了用于在代理之间执行交互式连接建立 (ICE) 的会话描述协议 (SDP) 提议/应答过程。
@@ -43,342 +36,95 @@ tags:
 
 读者应该熟悉 [[RFC3264](https://www.rfc-editor.org/rfc/rfc8839#RFC3264)]、[[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 中定义的术语以及以下内容：
 
+默认目的地址/候选地址：数据流的组件的默认目的地址是不知道 ICE 的代理将使用的传输地址。组件的默认候选地址是其传输地址与该组件的默认目的地址相匹配的候选地址。对于 RTP 组件，默认连接地址在 SDP 的 “c=” 行，端口和传输协议在 “m=” 行。对于 RTP 控制协议 (RTCP) 组件，如果存在，则使用 [[RFC3605](https://www.rfc-editor.org/rfc/rfc8839#RFC3605)] 中定义的 “rtcp” 属性指示地址和端口； 否则，RTCP 组件地址与 RTP 组件地址相同，其端口比 RTP 组件端口大一。
 
- * 
-* *
-""
-[]()
+# 4. SDP 提议/应答 过程
 
+## 4.1. 简介
 
+[[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 将 ICE 候选地址交换定义为 ICE 代理（发起者和响应者）交换其在代理处进行 ICE 处理所需的候选地址信息的过程。就本规范而言，候选地址交换过程对应于 Offer/Answer 协议 [[RFC3264](https://www.rfc-editor.org/rfc/rfc8839#RFC3264)]，术语 “offerer” 和 “answerer” 分别对应于 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 中的发起者和响应者角色。
 
-# 10. IANA 注意事项
+一旦发起代理收集、修剪并确定了其候选地址集的优先级 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)]，与对等代理的候选地址交换就开始了。
 
-## 10.1. SDP 属性
+## 4.2. 一般程序
 
-最初的 ICE 规范根据 [[RFC4566](https://www.rfc-editor.org/rfc/rfc8839#RFC4566)] 的 [第 8.2.4 节](https://www.rfc-editor.org/rfc/rfc4566#section-8.2.4) 的程序定义了七个新的 SDP 属性。此处包含来自原始规范的注册信息，并进行了修改以包含 Mux 类别 [[RFC8859](https://www.rfc-editor.org/rfc/rfc8839#RFC8859)]，并且还定义了一个新的 SDP 属性 “ice-pacing”。
+### 4.2.1. 编码
 
-### 10.1.1. "candidate" 属性
+[第 5 节](https://www.rfc-editor.org/rfc/rfc8839#sec-grammar) 提供了构建本规范中定义的各种 SDP 属性的详细规则。
 
-属性名称：candidate
-属性类型：媒体级 media-level
-受制于字符集：否
-目的：此属性与交互式连接建立 (ICE) 一起使用，并提供许多可能的通信候选地址之一。这些地址通过使用 NAT 会话遍历实用程序 (STUN) 的端到端连接检查进行验证。
+#### 4.2.1.1. 数据流
 
-适当的值：参见 RFC 8839 的 [第 5 节](https://www.rfc-editor.org/rfc/rfc8839#sec-grammar)。
-联系人姓名：IESG
-联系电子邮件：iesg@ietf.org
-参考引用：RFC 8839
-Mux 类别哦：TRANSPORT
+每个数据流 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 由一个 SDP 媒体描述 ("m=" 部分) 表示。
 
-### 10.1.2. "remote-candidates" 属性
+#### 4.2.1.2. 候选地址
 
-属性名称：remote-candidates
-属性类型：媒体级 media-level
-受制于字符集：否
-目的：此属性与交互式连接建立 (ICE) 一起使用，并提供提议者希望应答者在其应答中使用的远程候选地址的标识。
+在 “m=” 部分中，与数据流相关联的每个候选地址（包括默认候选地址）由 SDP "candidate" 属性表示。
 
-适当的值：参见 RFC 8839 的 [第 5 节](https://www.rfc-editor.org/rfc/rfc8839#sec-grammar)。
-联系人姓名：IESG
-联系电子邮件：iesg@ietf.org
-参考引用：RFC 8839
-Mux 类别哦：TRANSPORT
+在提名之前，与 “m=” 部分关联的 “c=” 行包含默认候选地址的连接地址，而 “m=” 行包含该 “m=” 部分的默认候选地址的端口和传输协议。
 
-### 10.1.3. "ice-lite" 属性
+提名后，给定 “m=” 部分的 “c=” 行包含提名的候选地址（提名的候选地址对的本地候选地址）的连接地址，“m=” 行包含与该 “m=” 部分的提名候选地址对应的端口和传输协议。
 
-属性名称：ice-lite
-属性类型：会话级 session-level
-受制于字符集：否
-目的：此属性与交互式连接建立 (ICE) 一起使用，并表示代理具有支持 ICE 与具有完整实现的对等方互操作所需的最低功能。
+#### 4.2.1.3. 用户名和密码
 
-适当的值：参见 RFC 8839 的 [第 5 节](https://www.rfc-editor.org/rfc/rfc8839#sec-grammar)。
-联系人姓名：IESG
-联系电子邮件：iesg@ietf.org
-参考引用：RFC 8839
-Mux 类别哦：NORMAL
+ICE 用户名由 SDP "ice-ufrag" 属性表示，ICE 密码由 SDP "ice-pwd" 属性表示。
 
-### 10.1.4. "ice-mismatch" 属性
+#### 4.2.1.4. 精简实现
 
-属性名称：ice-mismatch
-属性类型：媒体级 media-level
-受制于字符集：否
-目的：此属性与交互式连接建立 (ICE) 一起使用，并表示代理具有 ICE 能力，但由于候选地址与 SDP 中发出的媒体的默认目的地不匹配，而没有继续进行 ICE。
+ICE 精简实现 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 必须 (MUST) 包含 SDP "ice-lite" 属性。 完整实现不得 (MUST NOT) 包含该属性。
 
-适当的值：参见 RFC 8839 的 [第 5 节](https://www.rfc-editor.org/rfc/rfc8839#sec-grammar)。
-联系人姓名：IESG
-联系电子邮件：iesg@ietf.org
-参考引用：RFC 8839
-Mux 类别哦：NORMAL
+#### 4.2.1.5. ICE 扩展
 
-### 10.1.5. "ice-pwd" 属性
+代理使用 SDP "ice-options" 属性来指示对 ICE 扩展的支持。
 
-属性名称：ice-pwd
-属性类型：会话或媒体级 session- or media-level
-受制于字符集：否
-目的：此属性与交互式连接建立 (ICE) 一起使用，并提供用于保护 STUN 连接检查的密码。
+符合本规范的代理必须 (MUST) 包含一个带有 "ice2" 属性值的 SDP "ice-options" 属性 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)]。 如果代理收到表明 ICE 支持的 SDP 提议或应答，但不包含具有 "ice2" 属性值的 SDP "ice-options" 属性，则代理可以假设对等方符合 [[RFC5245](https://www.rfc-editor.org/rfc/rfc8839#RFC5245)]。
 
-适当的值：参见 RFC 8839 的 [第 5 节](https://www.rfc-editor.org/rfc/rfc8839#sec-grammar)。
-联系人姓名：IESG
-联系电子邮件：iesg@ietf.org
-参考引用：RFC 8839
-Mux 类别哦：TRANSPORT
+#### 4.2.1.6. 非活动和禁用的数据流
 
-### 10.1.6. "ice-ufrag" 属性
+如果 “m=” 部分被标记为非活动 [[RFC4566](https://www.rfc-editor.org/rfc/rfc8839#RFC4566)]，或者带宽值为零[[RFC4566](https://www.rfc-editor.org/rfc/rfc8839#RFC4566)]，代理必须 (MUST) 仍然包含与 ICE 相关的 SDP 属性。
 
-属性名称：ice-ufrag
-属性类型：会话或媒体级 session- or media-level
-受制于字符集：否
-目的：此属性与交互式连接建立 (ICE) 一起使用，并提供用于构造 STUN 连接检查中的用户名的片段。
+如果按照 [[RFC3264](https://www.rfc-editor.org/rfc/rfc8839#RFC3264)] 的 [第 8.2 节](https://www.rfc-editor.org/rfc/rfc3264#section-8.2) 中的定义，与 “m=” 部分关联的端口值设置为零（暗示禁用流），则代理不应 (SHOULD NOT) 在该 “m=” 中包含 ICE 相关的 SDP "candidate" 属性，除非使用了另外指定的 SDP 扩展。
 
-适当的值：参见 RFC 8839 的 [第 5 节](https://www.rfc-editor.org/rfc/rfc8839#sec-grammar)。
-联系人姓名：IESG
-联系电子邮件：iesg@ietf.org
-参考引用：RFC 8839
-Mux 类别哦：TRANSPORT
+### 4.2.2. RTP/RTCP 注意事项
 
-### 10.1.7. "ice-options" 属性
+如果代理同时使用 RTP 和 RTCP，并且为 RTP 和 RTCP 使用了单独的端口，则代理必须 (MUST) 包括 RTP 和 RTCP 组件的 SDP "candidate" 属性。
 
-属性名称：ice-options
-长形式：ice-options
-属性类型：会话级 session-level
-受制于字符集：否
-目的：此属性与交互式连接建立 (ICE) 一起使用，并指示代理所使用的 ICE 选项或扩展。
+代理遵循 [[RFC3605](https://www.rfc-editor.org/rfc/rfc8839#RFC3605)] 中的过程，包括一个 SDP "rtcp" 属性。 因此，在 RTCP 端口值比 RTP 端口值大 1，并且 RTCP 组件地址与 RTP 组件地址相同的情况下，可以省略 SDP "rtcp" 属性。 
 
-适当的值：参见 RFC 8839 的 [第 5 节](https://www.rfc-editor.org/rfc/rfc8839#sec-grammar)。
-联系人姓名：IESG
-联系电子邮件：iesg@ietf.org
-参考引用：RFC 8839
-Mux 类别哦：NORMAL
+注意：[[RFC5245](https://www.rfc-editor.org/rfc/rfc8839#RFC5245)] 要求代理始终包含 SDP "rtcp" 属性，即使 RTCP 端口值比 RTP 端口值高 1。本规范将 "rtcp" 属性过程与 [[RFC3605](https://www.rfc-editor.org/rfc/rfc8839#RFC3605)] 保持一致。
 
-### 10.1.8. "ice-pacing" 属性
+如果代理不使用 RTCP，它通过包含 [[RFC3556](https://www.rfc-editor.org/rfc/rfc8839#RFC3556)] 中描述的 "RS:0" 和 "RR:0" SDP 属性来表示。
 
-本规范还定义了一个新的 SDP 属性，"ice-pacing"，根据如下的数据：
+### 4.2.3. 确定角色
 
-属性名称：ice-pacing
-属性类型：会话级 session-level
-受制于字符集：否
-目的：此属性与交互式连接建立 (ICE) 一起使用，以指示所需要的连接检查 pacing 值。
+提议者充当发起人角色。应答者充当响应代理角色。ICE 角色（控制和受控）是使用 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 中的程序确定的。
 
-适当的值：参见 RFC 8839 的 [第 5 节](https://www.rfc-editor.org/rfc/rfc8839#sec-grammar)。
-联系人姓名：IESG
-联系电子邮件：iesg@ietf.org
-参考引用：RFC 8839
-Mux 类别哦：NORMAL
+### 4.2.4. STUN 注意事项
 
-## 10.2. 交互式连接建立 (ICE) 选项注册表
+一旦代理在 SDP 提议或应答中向其对等方提供了本地候选地址，代理必须 (MUST) 准备好在那些候选地址上接收 STUN（NAT 会话穿透实用程序，[[RFC5389](https://www.rfc-editor.org/rfc/rfc8839#RFC5389)]）连接检查绑定请求。
 
-IANA 根据 “在 RFC 中编写 IANA 注意事项的指南” [[RFC8126](https://www.rfc-editor.org/rfc/rfc8839#RFC8126)] 中定义的 规范要求 政策维护 “ice-options” 标识符的注册表。根据 [第 5.6 节](https://www.rfc-editor.org/rfc/rfc8839#sec-ice-options) 的语法，ICE 选项的长度不受限制；但是，建议 (RECOMMENDED) 它们不超过 20 个字符。这是为了减少消息大小并允许高效的解析。 ICE 选项在会话级别定义。
+### 4.2.5. 验证 ICE 支持的过程
 
-注册请求必须 (MUST) 包含以下信息：
+ICE 代理通过在提议或应答中至少包含 SDP "ice-pwd" 和 "ice-ufrag" 属性来表示对 ICE 的支持。符合本规范的 ICE 代理还必须 (MUST) 包含一个带有 "ice2" 属性值的 SDP "ice-options" 属性。
 
- * 要注册的 ICE 选项标识符
- * 具有变更控制权的组织或个人的姓名和电子邮件地址
- * 选项相关的 ICE 扩展的简短描述
- * 对定义 ICE 选项和相关扩展的规范的参考引用
+如果对于它收到的 SDP 中的每个数据流，该数据流的每个组件的默认目的地址出现在 "candidate" 属性中，则代理将继续执行 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 和本规范中定义的 ICE 过程。例如，在 RTP 的情况下， “c=” 和 “m=” 行中的连接地址、端口和传输协议分别出现在 "candidate" 属性中，值出现在 "rtcp" 属性中，出现在 "candidate" 属性中。
 
-## 10.3. 候选地址属性扩展子注册建立
+本规范没有提供关于在不满足上述条件的情况下代理应如何进行的指导，以下几点例外：
+  1. 如 [第 8 节](https://www.rfc-editor.org/rfc/rfc8839#sec-alg-sip) 所述，某些应用层网关的存在可能会修改传输地址信息。在这种情况下响应代理的行为取决于实现。非正式地，响应代理可以将不匹配的传输地址信息视为从对等方学习到的似是而非的新候选地址，并继续其包含该传输地址的 ICE 处理。或者，响应代理可以 (MAY) 在其对此数据流的应答中包含 "ice-mismatch" 属性。如果代理选择在其对数据流的应答中包含 "ice-mismatch" 属性，那么它也必须 (MUST) 省略 "candidate" 属性，必须 (MUST) 终止 ICE 程序的使用，并且必须 (MUST) 为该数据流使用 [[RFC3264](https://www.rfc-editor.org/rfc/rfc8839#RFC3264)] 程序来代替。
 
-本节在 SDP 参数注册表下创建一个新的子注册表 “候选地址属性扩展”：http://www.iana.org/assignments/sdp-parameters。
+  2. 来自对等方的默认目的地址的传输地址设置为 IPv4/IPv6 地址值 "0.0.0.0"/"::" 和端口值 "9"。这不得 (MUST NOT) 被对等代理视为 ICE 故障，并且 ICE 处理必须 (MUST) 照常继续。
 
-子注册表的目的是注册 SDP “candidate” 属性扩展。
+  3. 在某些情况下，控制/发起者代理可能会收到一个 SDP 应答，该应答可能会省略数据流的 "candidate" 属性，而是包含媒体级别的 "ice-mismatch" 属性。这向提议者发出信号，表明应答者支持 ICE，但 ICE 处理并未用于该数据流。在这种情况下，必须 (MUST) 终止该数据流的 ICE 处理，而必须 (MUST) 遵循 [[RFC3264](https://www.rfc-editor.org/rfc/rfc8839#RFC3264)] 的程序。
 
-当在子注册表中注册 “candidate” 扩展时，它需要满足 [[RFC8126](https://www.rfc-editor.org/rfc/rfc8839#RFC8126)] 中定义的 “规范要求” 政策。
+  4. 来自对等方的默认目的地址的传输地址是一个 FQDN。无论用于解析 FQDN 的过程或解析结果如何，对等代理都不得 (MUST NOT) 将其视为 ICE 故障，并且 ICE 处理必须 (MUST) 照常继续。
 
-“candidate” 属性扩展必须 (MUST) 遵循 “cand-extension” 语法。 属性扩展名称必须 (MUST) 遵循 'extension-att-name' 语法，属性扩展值必须 (MUST) 遵循 'extension-att-value' 语法。
+### 4.2.6. SDP 示例
 
-注册请求必须 (MUST) 包含以下信息：
-
- * 属性扩展的名称
- * 具有变更控制权的组织或个人的姓名和电子邮件地址
- * 属性扩展的简短描述
- * 对描述属性扩展的语义、用法和可能值的规范的参考引用。
-
-# 11. 自 RFC 5245 以来的变更
-
-[[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 描述了对通用 SIP 程序所做的更改，包括取消积极提名、修改计算候选地址对状态的程序、调度连接检查以及计时器值的计算。
-
-本文档定义了以下 SDP 提议/应答特有的更改：
-
- * SDP offer/answer 实现和'ice2' 选项的使用。
- * SDP “ice-pacing” 属性的定义和使用。
- * ICE 代理不得生成具有 FQDN 的候选地址的显式文本，并且如果从对等代理处接收到此类候选地址，则必须丢弃此类候选地址。
- * 放宽包含 SDP “rtcp” 属性的要求。
- * SDP 提议/应答程序的一般说明。
- * ICE 不匹配现在是可选的，并且代理可以选择不触发不匹配，而是将默认候选地址视为附加候选地址。
- * FQDN 和 “0.0.0.0” / “::” IP 地址与端口 “9” 默认候选地址不会触发 ICE 不匹配。
-
-# 12. 参考 (References)
-
-## 12.1. 规范性参考 (Normative References)
-
-```
-   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
-              Requirement Levels", BCP 14, RFC 2119,
-              DOI 10.17487/RFC2119, March 1997,
-              <https://www.rfc-editor.org/info/rfc2119>.
-
-   [RFC3261]  Rosenberg, J., Schulzrinne, H., Camarillo, G., Johnston,
-              A., Peterson, J., Sparks, R., Handley, M., and E.
-              Schooler, "SIP: Session Initiation Protocol", RFC 3261,
-              DOI 10.17487/RFC3261, June 2002,
-              <https://www.rfc-editor.org/info/rfc3261>.
-
-   [RFC3262]  Rosenberg, J. and H. Schulzrinne, "Reliability of
-              Provisional Responses in Session Initiation Protocol
-              (SIP)", RFC 3262, DOI 10.17487/RFC3262, June 2002,
-              <https://www.rfc-editor.org/info/rfc3262>.
-
-   [RFC3264]  Rosenberg, J. and H. Schulzrinne, "An Offer/Answer Model
-              with Session Description Protocol (SDP)", RFC 3264,
-              DOI 10.17487/RFC3264, June 2002,
-              <https://www.rfc-editor.org/info/rfc3264>.
-
-   [RFC3312]  Camarillo, G., Ed., Marshall, W., Ed., and J. Rosenberg,
-              "Integration of Resource Management and Session Initiation
-              Protocol (SIP)", RFC 3312, DOI 10.17487/RFC3312, October
-              2002, <https://www.rfc-editor.org/info/rfc3312>.
-
-   [RFC3556]  Casner, S., "Session Description Protocol (SDP) Bandwidth
-              Modifiers for RTP Control Protocol (RTCP) Bandwidth",
-              RFC 3556, DOI 10.17487/RFC3556, July 2003,
-              <https://www.rfc-editor.org/info/rfc3556>.
-
-   [RFC3605]  Huitema, C., "Real Time Control Protocol (RTCP) attribute
-              in Session Description Protocol (SDP)", RFC 3605,
-              DOI 10.17487/RFC3605, October 2003,
-              <https://www.rfc-editor.org/info/rfc3605>.
-
-   [RFC4032]  Camarillo, G. and P. Kyzivat, "Update to the Session
-              Initiation Protocol (SIP) Preconditions Framework",
-              RFC 4032, DOI 10.17487/RFC4032, March 2005,
-              <https://www.rfc-editor.org/info/rfc4032>.
-
-   [RFC4566]  Handley, M., Jacobson, V., and C. Perkins, "SDP: Session
-              Description Protocol", RFC 4566, DOI 10.17487/RFC4566,
-              July 2006, <https://www.rfc-editor.org/info/rfc4566>.
-
-   [RFC5234]  Crocker, D., Ed. and P. Overell, "Augmented BNF for Syntax
-              Specifications: ABNF", STD 68, RFC 5234,
-              DOI 10.17487/RFC5234, January 2008,
-              <https://www.rfc-editor.org/info/rfc5234>.
-
-   [RFC5389]  Rosenberg, J., Mahy, R., Matthews, P., and D. Wing,
-              "Session Traversal Utilities for NAT (STUN)", RFC 5389,
-              DOI 10.17487/RFC5389, October 2008,
-              <https://www.rfc-editor.org/info/rfc5389>.
-
-   [RFC5766]  Mahy, R., Matthews, P., and J. Rosenberg, "Traversal Using
-              Relays around NAT (TURN): Relay Extensions to Session
-              Traversal Utilities for NAT (STUN)", RFC 5766,
-              DOI 10.17487/RFC5766, April 2010,
-              <https://www.rfc-editor.org/info/rfc5766>.
-
-   [RFC5768]  Rosenberg, J., "Indicating Support for Interactive
-              Connectivity Establishment (ICE) in the Session Initiation
-              Protocol (SIP)", RFC 5768, DOI 10.17487/RFC5768, April
-              2010, <https://www.rfc-editor.org/info/rfc5768>.
-
-   [RFC6336]  Westerlund, M. and C. Perkins, "IANA Registry for
-              Interactive Connectivity Establishment (ICE) Options",
-              RFC 6336, DOI 10.17487/RFC6336, July 2011,
-              <https://www.rfc-editor.org/info/rfc6336>.
-
-   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
-              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
-              May 2017, <https://www.rfc-editor.org/info/rfc8174>.
-
-   [RFC8445]  Keranen, A., Holmberg, C., and J. Rosenberg, "Interactive
-              Connectivity Establishment (ICE): A Protocol for Network
-              Address Translator (NAT) Traversal", RFC 8445,
-              DOI 10.17487/RFC8445, July 2018,
-              <https://www.rfc-editor.org/info/rfc8445>.
-```
-
-## 12.2. 参考资料 (Informative References)
-
-```
-   [RFC3725]  Rosenberg, J., Peterson, J., Schulzrinne, H., and G.
-              Camarillo, "Best Current Practices for Third Party Call
-              Control (3pcc) in the Session Initiation Protocol (SIP)",
-              BCP 85, RFC 3725, DOI 10.17487/RFC3725, April 2004,
-              <https://www.rfc-editor.org/info/rfc3725>.
-
-   [RFC3960]  Camarillo, G. and H. Schulzrinne, "Early Media and Ringing
-              Tone Generation in the Session Initiation Protocol (SIP)",
-              RFC 3960, DOI 10.17487/RFC3960, December 2004,
-              <https://www.rfc-editor.org/info/rfc3960>.
-
-   [RFC5245]  Rosenberg, J., "Interactive Connectivity Establishment
-              (ICE): A Protocol for Network Address Translator (NAT)
-              Traversal for Offer/Answer Protocols", RFC 5245,
-              DOI 10.17487/RFC5245, April 2010,
-              <https://www.rfc-editor.org/info/rfc5245>.
-
-   [RFC5626]  Jennings, C., Ed., Mahy, R., Ed., and F. Audet, Ed.,
-              "Managing Client-Initiated Connections in the Session
-              Initiation Protocol (SIP)", RFC 5626,
-              DOI 10.17487/RFC5626, October 2009,
-              <https://www.rfc-editor.org/info/rfc5626>.
-
-   [RFC5898]  Andreasen, F., Camarillo, G., Oran, D., and D. Wing,
-              "Connectivity Preconditions for Session Description
-              Protocol (SDP) Media Streams", RFC 5898,
-              DOI 10.17487/RFC5898, July 2010,
-              <https://www.rfc-editor.org/info/rfc5898>.
-
-   [RFC6679]  Westerlund, M., Johansson, I., Perkins, C., O'Hanlon, P.,
-              and K. Carlberg, "Explicit Congestion Notification (ECN)
-              for RTP over UDP", RFC 6679, DOI 10.17487/RFC6679, August
-              2012, <https://www.rfc-editor.org/info/rfc6679>.
-
-   [RFC7675]  Perumal, M., Wing, D., Ravindranath, R., Reddy, T., and M.
-              Thomson, "Session Traversal Utilities for NAT (STUN) Usage
-              for Consent Freshness", RFC 7675, DOI 10.17487/RFC7675,
-              October 2015, <https://www.rfc-editor.org/info/rfc7675>.
-
-   [RFC8126]  Cotton, M., Leiba, B., and T. Narten, "Guidelines for
-              Writing an IANA Considerations Section in RFCs", BCP 26,
-              RFC 8126, DOI 10.17487/RFC8126, June 2017,
-              <https://www.rfc-editor.org/info/rfc8126>.
-
-   [RFC8859]  Nandakumar, S., "A Framework for Session Description
-              Protocol (SDP) Attributes When Multiplexing", RFC 8859,
-              DOI 10.17487/RFC8859, January 2021,
-              <https://www.rfc-editor.org/info/rfc8859>.
-
-   [RFC8863]  Holmberg, C. and J. Uberti, "Interactive Connectivity
-              Establishment Patiently Awaiting Connectivity (ICE PAC)",
-              RFC 8863, DOI 10.17487/RFC8863, January 2021,
-              <https://www.rfc-editor.org/info/rfc8863>.
-```
-
-# 附录 A. 示例
-
-对于 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] [第 15 节](https://www.rfc-editor.org/rfc/rfc8445#section-15) 中显示的示例，以 SDP 编码的最终的 offer（消息 5）看起来像（为清晰起见折叠行）：
+以下是包含 ICE 属性的示例 SDP 消息（为便于阅读而折叠行）：
 ```
 v=0
-o=jdoe 2890844526 2890842807 IN IP6 $L-PRIV-1.IP
+o=jdoe 2890844526 2890842807 IN IP4 203.0.113.141
 s=
-c=IN IP6 $NAT-PUB-1.IP
-t=0 0
-a=ice-options:ice2
-a=ice-pacing:50
-a=ice-pwd:asd88fgpdd777uzjYhagZg
-a=ice-ufrag:8hhY
-m=audio $NAT-PUB-1.PORT RTP/AVP 0
-b=RS:0
-b=RR:0
-a=rtpmap:0 PCMU/8000
-a=candidate:1 1 UDP 2130706431 $L-PRIV-1.IP $L-PRIV-1.PORT typ host
-a=candidate:2 1 UDP 1694498815 $NAT-PUB-1.IP $NAT-PUB-1.PORT typ
- srflx raddr $L-PRIV-1.IP rport $L-PRIV-1.PORT
-```
-
-该 offer，以它们的值替换变量，将看起来像（为清晰起见折叠行）：
-```
-v=0
-o=jdoe 2890844526 2890842807 IN IP6 fe80::6676:baff:fe9c:ee4a
-s=
-c=IN IP6 2001:db8:8101:3a55:4858:a2a9:22ff:99b9
+c=IN IP4 192.0.2.3
 t=0 0
 a=ice-options:ice2
 a=ice-pacing:50
@@ -388,158 +134,334 @@ m=audio 45664 RTP/AVP 0
 b=RS:0
 b=RR:0
 a=rtpmap:0 PCMU/8000
-a=candidate:1 1 UDP 2130706431 fe80::6676:baff:fe9c:ee4a 8998
- typ host
-a=candidate:2 1 UDP 1694498815 2001:db8:8101:3a55:4858:a2a9:22ff:99b9
- 45664 typ srflx raddr fe80::6676:baff:fe9c:ee4a rport 8998
+a=candidate:1 1 UDP 2130706431 203.0.113.141 8998 typ host
+a=candidate:2 1 UDP 1694498815 192.0.2.3 45664 typ srflx raddr
+ 203.0.113.141 rport 8998
 ```
 
-得到的 answer 如下所示：
+## 4.3. 初始提议/应答交换
+
+### 4.3.1. 发送初始的提议
+
+当提议者生成初始提议时，在每个 “m=” 部分中，它必须 (MUST) 包含与该 “m=” 部分关联的每个可用候选地址的 SDP "candidate" 属性。此外，提议者必须 (MUST) 在提议中包含一个 SDP "ice-ufrag" 属性、一个 SDP "ice-pwd" 属性和一个带有 "ice2" 属性值的 SDP "ice-options" 属性。如果提议者是一个完整的 ICE 实现，它应该 (SHOULD) 在提议中包含一个 "ice-pacing" 属性（如果不包含，将应用默认值）。精简版 ICE 实现不得 (MUST NOT) 在提议中包含 "ice-pacing" 属性（因为它不会执行连接检查）。
+
+提议的 “m=” 行不包含 SDP "candidate" 属性，并将默认目标地址设置为 IP 地址值 “0.0.0.0”/“::”，端口值设置为“9”，是有效的。这意味着提议的代理将仅使用对等自反候选地址或将在后续信令消息中提供额外的候选地址。
+
+注意：在本文档的范围内，“初始提议” 是指为了协商 ICE 的使用而发送的第一个 SDP 提议。它可能是，也可能不是 SDP 会话的初始 SDP 提议。
+
+注意：本文档中的程序仅考虑，与使用 ICE 的数据流关联的 “m=” 部分。
+
+### 4.3.2. 发送初始的应答
+
+当应答者收到一个表明提议者支持 ICE 的初始提议，并且如果应答者接受这个提议和使用 ICE，那么应答者必须 (MUST) 在应答的每个 “m =” 部分中，为与 “m =” 部分关联的每个可用的候选地址包含 SDP "candidate" 属性 。此外，应答者必须 (MUST) 在应答中包含一个 SDP "ice-ufrag" 属性、一个 SDP "ice-pwd" 属性和一个带有 "ice2" 属性值的 SDP "ice-options" 属性。如果应答者是一个完整的 ICE 实现，它应该 (SHOULD) 在应答中包含一个 "ice-pacing" 属性（如果不包含，将应用默认值）。精简版 ICE 实现不得 (MUST NOT) 在应答中包含 "ice-pacing" 属性（因为它不会执行连接检查）。
+
+在每个 “m=” 行中，应答者必须 (MUST) 使用与提议的 “m=” 行中使用的相同的传输协议。如果应答的 “m=” 行中，没有候选地址使用与提议的 “m=” 行中指示的相同的传输协议，那么，为了避免 ICE 不匹配，必须 (MUST) 将默认目标地址设置为 IP 地址值 “0.0.0.0”/“::” 和端口值 “9”。
+
+应答的 “m=” 行不包含 SDP "candidate" 属性，并将默认目标地址设置为 IP 地址值 “0.0.0.0”/“::”，端口值设置为“9”，也是有效的。这意味着应答的代理将仅使用对等自反候选地址或将在后续信令消息中提供额外的候选地址。
+
+一旦应答者发送了应答，它就可以开始对提议中提供的对等候选地址执行连接检查。
+
+如果提议没有表明支持 ICE（[第 4.2.5 节](https://www.rfc-editor.org/rfc/rfc8839#sec-ice-mismatch)），则应答者不得 (MUST NOT) 接受 ICE 的使用。如果应答者仍然接受该提议，则应答者不得 (MUST NOT) 在应答中包含任何与 ICE 相关的 SDP 属性。 相反，应答者将根据正常的提议/应答程序 [[RFC3264](https://www.rfc-editor.org/rfc/rfc8839#RFC3264)] 生成应答。
+
+如果应答者检测到 ICE 不匹配的可能性，则遵循 [第 4.2.5 节](https://www.rfc-editor.org/rfc/rfc8839#sec-ice-mismatch) 中描述的程序。
+
+### 4.3.3. 接收初始的应答
+
+当提议者收到一个表明应答者支持 ICE 的初始应答时，它可以开始对应答中提供的对等候选地址执行连接性检查。
+
+如果应答没有表明应答者支持 ICE，或者应答者在应答中包含所有活动数据流的 "ice-mismatch" 属性，则提议者必须 (MUST) 对整个会话终止 ICE 的使用，并且必须 (MUST) 遵循 [[RFC3264](https://www.rfc-editor.org/rfc/rfc8839#RFC3264)] 的程序。
+
+另一方面，如果应答表明支持 ICE，但在某些活动数据流中包含 "ice-mismatch"，则提议者必须 (MUST) 仅对这些数据流终止使用 ICE 程序，并且必须 (MUST) 使用 [[RFC3264](https://www.rfc-editor.org/rfc/rfc8839#RFC3264)] 的程序来代替。此外，ICE 程序必须 (MUST) 用于不包含 "ice-mismatch" 属性的数据流。
+
+如果提议者在应答中检测到一个或多个数据流的 ICE 不匹配，如 [第 4.2.5 节](https://www.rfc-editor.org/rfc/rfc8839#sec-ice-mismatch) 所述，提议者必须 (MUST) 终止整个会话的 ICE 使用。 提议者采取的后续行动依赖于实现，并且超出了本规范的范围。
+
+### 4.3.4. 结束 ICE
+
+一旦代理成功提名了一个候选地址对 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)]，与该对关联的检查列表的状态设置为已完成 (Completed)。一旦每个检查列表的状态都被设置为了 “已完成 (Completed)” 或 “失败 (Failed)”，对于每个 “已完成 (Completed)” 检查列表，代理都会检查提名的对是否与默认候选地址对匹配。如果有一个或多个对不匹配，并且对等方没有表示支持 'ice2' ice-option，则控制代理必须 (MUST) 生成后续提议，其中与每个数据流关联的 
+ “c=" 和 "m=" 行中的连接地址、端口和传输协议，与该数据流的提名候选地址对的对应本地信息匹配（[第 4.4.1.2.2 节](https://www.rfc-editor.org/rfc/rfc8839#sec-send-subsequent-offer-after-nom)）。如果对等方确实表示支持 'ice2' ice-option，则控制代理不需要立即生成更新的提议以将连接地址、端口和协议与提名地址对对齐。然而，在会话的后期，无论何时控制代理确实发送了后续提议时，它必须 (MUST) 按照上述方式进行对齐。
+
+如果有一个或多个检查表的状态被设置为失败 (Failed)，控制代理必须 (MUST) 生成一个后续的提议，以便通过将数据流的端口值设置为零来删除相关的数据流（[第 4.4.1.2.2 节](https://www.rfc-editor.org/rfc/rfc8839#sec-send-subsequent-offer-after-nom)），即使对等体确实表示支持 'ice2' ice-option。如果需要，此类提议用于对齐连接地址、端口和传输协议，如上所述。
+
+如 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 中所述，一旦控制代理为检查列表提名了一个候选地址对，在 ICE 会话的生命周期内（即，直到 ICE 重新启动），该代理不得 (MUST NOT) 为该检查列表指定另一个候选地址对。
+
+[[RFC8863](https://www.rfc-editor.org/rfc/rfc8839#RFC8863)] 提供了一种机制，允许 ICE 过程运行足够长的时间，以便通过等待潜在的对等自反候选地址来找到工作的候选地址对，即使没有从对等方收到候选地址对，或者与一个检查列表关联的所有当前候选地址对，要么已经失败，要么已经被丢弃。
+
+## 4.4. 后续的提议/应答交换
+
+任一代理都可以 (MAY) 在 [[RFC3264](https://www.rfc-editor.org/rfc/rfc8839#RFC3264)] 允许的任何时间生成后续提议。 本节定义了构建后续提议和应答的规则。
+
+如果后续提议失败，ICE 处理将继续进行，就好像后续提议从未提出过一样。
+
+### 4.4.1. 发送后续的提议
+
+#### 4.4.1.1. 所有实现的过程
+
+##### 4.4.1.1.1. ICE 重启
+
+代理可以 (MAY) 为一个现有数据流重新启动 ICE 处理 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)]。
+
+管理 ICE 重启的规则意味着将 “c=” 行中的连接地址设置为 “0.0.0.0”（对于 IPv4）/ “::”（对于 IPv6）将导致 ICE 重启。因此，ICE 实现不得 (MUST NOT) 使用这种机制来保持呼叫，而必须 (MUST) 使用 [[RFC3264](https://www.rfc-editor.org/rfc/rfc8839#RFC3264)] 中描述的 “inactive” 和 “sendonly”。
+
+要重新启动 ICE，代理必须 (MUST) 同时更改提议中数据流的 “ice-pwd” 和 “ice-ufrag”。 但是，允许在一个提议中使用会话级属性，但在后续提议中的媒体级属性中提供相同的 “ice-pwd” 或 “ice-ufrag”。这不得 (MUST NOT) 被视为 ICE 重启。
+
+代理在此数据流的 SDP 中设置其余与 ICE 相关的字段，就像在此数据流的初始提议中一样（[第 4.2.1 节](https://www.rfc-editor.org/rfc/rfc8839#sec-encoding)）。因此，候选地址集可以 (MAY) 包括该数据流先前的一些、不包括或所有候选地址，并且可以 (MAY) 包括全新的候选地址集。代理可以 (MAY) 修改 SDP "ice-options" 和 SDP "ice-pacing" 属性的属性值，并且可以 (MAY) 使用 SDP "ice-lite" 属性改变它的角色。代理不得 (MUST NOT) 在后续提议中修改 SDP “ice-options”、“ice-pacing” 和 “ice-lite” 属性，除非发送提议是为了请求 ICE 重新启动。
+
+##### 4.4.1.1.2. 移除数据流
+
+如果代理通过将其端口设置为零来删除数据流，则它不得 (MUST NOT) 为该数据流包含任何 "candidate" 属性，并且不应 (SHOULD NOT) 为该数据流包含 [第 5 节](https://www.rfc-editor.org/rfc/rfc8839#sec-grammar) 中定义的任何其他 ICE 相关属性。
+
+##### 4.4.1.1.3. 添加数据流
+
+如果代理希望添加一个新的数据流，它会在 SDP 中为该数据流设置字段，就好像这是该数据流的初始提议（[第 4.2.1 节](https://www.rfc-editor.org/rfc/rfc8839#sec-encoding)）。这将导致 ICE 开始对该数据流进行处理。
+
+#### 4.4.1.2. 完整实现的过程
+
+本节描述完整实现的附加过程，涵盖现有数据流。
+
+##### 4.4.1.2.1. 提名前
+
+当提议者发送后续提议时；在候选地址对尚未被提名的每个 “m =” 部分中，提议必须 (MUST) 包含与先前提议或应答中提议者包含的相同的一组 ICE 相关信息。代理可以 (MAY) 包含它以前没有提供，但自上次提议/应答交换以来收集的其他候选地址，包括对等自反候选地址。
+
+代理可以 (MAY) 更改媒体的默认目的地址。与初始提议一样，提议中必须 (MUST) 有一组与此默认目的地址匹配的 "candidate" 属性。
+
+##### 4.4.1.2.2. 提名后
+
+一旦为数据流提名了候选地址对，与该数据流相关的每个 “c=” 和 “m=” 行中的连接地址、端口和传输协议，必须 (MUST) 和与该数据流的提名地址对相关联的数据匹配。此外，提议者仅包含代表提名候选地址对的本地候选地址的 SDP "candidate" 属性（每个组件一个）。 提议者不得 (MUST NOT) 在后续提议中包含任何其他 SDP "candidate" 属性。
+
+此外，如果代理是控制代理，它必须 (MUST) 为每个其检查列表处于已完成 (Completed) 状态的数据流包含 “remote-candidates” 属性。该属性包含与该数据流的每个组件的有效列表中的提名地址对相对应的远程候选地址。需要避免这样的竞争条件，即控制代理选择其候选地址对，但更新的提议先于连接性检查到达受控代理，受控代理甚至不知道这些候选地址对是有效的，更不用说被选中了。有关此竞争条件的详细说明，请参见 [附录 B](https://www.rfc-editor.org/rfc/rfc8839#sec-why-remote)。
+
+#### 4.4.1.3. 精简实现的过程
+
+如果 ICE 状态为运行中 (Running)，则精简实现必须在任何后续提议的 "candidate" 属性中包含它每个数据流的每个组件的所有候选地址。 候选地址的形成与初始提议的过程相同。
+
+精简实现不得 (MUST NOT) 在后续提议中添加额外的主机候选地址，并且不得 (MUST NOT) 修改用户名片段和密码。如果代理需要提供额外的候选地址，或修改用户名片段和密码，它必须 (MUST) 为该数据流请求 ICE 重启（[第 4.4.1.1.1 节](https://www.rfc-editor.org/rfc/rfc8839#sec-suboffer-restarts)）。
+
+如果 ICE 已经完成了一个数据流，并且如果代理受控代理，则该数据流的默认目的地址，必须 (MUST) 设置为有效列表中该组件的候选地址对的远程候选地址。对于精简实现，对于数据流的每个组件，有效列表中始终只有一个候选地址对。此外，代理必须 (MUST) 为每个默认目的地址包含一个 "candidate" 属性。
+
+如果 ICE 状态是已完成 (Completed)，并且如果代理是控制代理（仅当两个代理都是精简实现时发生），代理必须 (MUST) 为每个数据流包含 “remote-candidates” 属性。该属性包含来自有效列表中候选地址对的远程候选地址（每个数据流的每个组件都有一对）。
+
+### 4.4.2. 发送后续的应答
+
+如果数据流的 ICE 为已完成 (Completed)，并且该数据流的提议缺少 “remote-candidates” 属性，则构建应答的规则与提议者的规则相同，除了应答者不得 (MUST NOT) 在应答中包含 "remote-candidates" 属性外。
+
+当对等端已经结束对数据流的 ICE 处理时，受控代理将收到具有数据流的 "remote-candidates" 属性的提议。该属性出现在提议中，以处理收到提议和收到绑定响应之间的竞争条件，该绑定响应告诉应答者将由 ICE 选择的候选地址。有关此竞争条件的解释，请参见 [附录 B](https://www.rfc-editor.org/rfc/rfc8839#sec-why-remote)。因此，对具有此属性的提议的处理取决于竞争的获胜者。
+
+代理通过以下方式为数据流的每个组件形成一个候选地址对：
+
+ * 将远程候选地址设置为该组件的提议者的默认目的地址（即，RTP 的 “m=” 和 “c=” 行的内容，以及 RTCP 的 “rtcp” 属性）
+ * 将本地候选地址设置为提议中的 "remote-candidates" 属性中的该相同组件的传输地址。
+
+然后，代理会查看这些候选地址对中的每一个是否存在于有效列表中。 如果特定候选地址对不在有效列表中，则该检查 “输掉” 竞争。 称这样的对为 “输掉的对 (losing pair)”。
+
+代理在检查列表中找到所有对，其远程候选地址与输掉的对中的远程候选地址相同的：
+
+ * 如果没有一对处于进行中 (In-Progress)，并且至少有一个是失败的 (Failed)，则很可能发生了网络故障，例如发生了网络分区或严重的数据包丢失。代理应该 (SHOULD) 为这个数据流生成一个应答，就好像 "remote-candidates" 属性不存在一样，然后为这个流重新启动 ICE。
+
+ * 如果有至少一对处于进行中 (In-Progress)，代理应该 (SHOULD) 等待这些检查完成，并且当每个检查完成时，重做本节中的处理，直到没有 输掉的对。
+
+一旦没有 输掉的对，代理就可以生成应答。它必须 (MUST) 将媒体的默认目的地址，设置为来自提议的 “remote-candidates” 属性中的候选地址（现在这每个候选地址都将成为有效列表中候选地址对的本地候选地址）。它必须 (MUST) 在应答中为提议中的 “remote-candidates” 属性中的每个候选地址包含一个 "candidate" 属性。
+
+#### 4.4.2.1. ICE 重启
+
+如果在随后的提议中提议者请求数据流的 ICE 重启动（[第 4.4.1.1.1 节](https://www.rfc-editor.org/rfc/rfc8839#sec-suboffer-restarts)），并且如果应答者接受提议，则应答者遵循生成初始应答的过程。
+
+对于给定的数据流，应答者可以 (MAY) 包含在前一个 ICE 会话中使用的相同候选地址，但它必须 (MUST) 更改 SDP "ice-pwd" 和 "ice-ufrag" 属性值。
+
+应答者可以 (MAY) 修改 SDP "ice-options" 和 SDP "ice-pacing" 属性的属性值，并且它可以 (MAY) 使用 SDP "ice-lite" 属性改变它的角色。应答者不得 (MUST NOT) 在后续应答中修改 SDP "ice-options"、"ice-pacing" 和 "ice-lite" 属性，除非该应答是针对用于请求 ICE 重启的提议而发送的（[第 4.4.1.1.1 节](https://www.rfc-editor.org/rfc/rfc8839#sec-suboffer-restarts)）。如果在随后的提议中修改了任何 SDP 属性，但未用于请求 ICE 重新启动，则应答者必须 (MUST) 拒绝该提议。
+
+#### 4.4.2.2. 精简实现的特有过程
+
+如果收到的提议包含数据流的 "remote-candidates" 属性，则代理通过以下方式为数据流的每个组件形成一个候选地址对：
+
+ * 将远程候选地址设置为该组件的提议者的默认目的地址（即，RTP 的 “m=” 和 “c=” 行的内容，以及 RTCP 的 “rtcp” 属性）
+ * 将本地候选地址设置为提议中的 "remote-candidates" 属性中的该相同组件的传输地址。
+
+与该数据流关联的检查列表的状态设置为已完成 (Completed)。
+
+此外，如果代理认为自己是控制代理，但提议包含 "remote-candidates" 属性，则两个代理都认为他们是控制代理。在这种情况下，两者都将在大约同一时间发送更新的提议。
+
+然而，承载提议/应答交换的信令协议将解决这种眩光情况，通过使一个代理的提议总是在它的对等方发送提议之前被收到，使该代理总是成为 “赢家”。获胜者扮演控制角色，因此失败者（本节中认为的应答者）必须 (MUST) 将其角色更改为受控者。
+
+因此，如果代理根据 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] [第 8.2 节](https://www.rfc-editor.org/rfc/rfc8445#section-8.2) 中的规则进行控制，并且要发送更新的提议，则不再需要。
+
+除了潜在的角色变化、有效列表的变化和状态变化之外，应答的构建与提议的构建相同。
+
+### 4.4.3. 收到后续提议的应答
+
+#### 4.4.3.1. 完整实现的过程
+
+在某些情况下，提议者收到的 SDP 应答可能缺少 ICE 候选地址，尽管最初的应答包括他们。这种 “意外” 应答可能会发生的一个示例是，当一个不知道 ICE 的背靠背用户代理 (B2BUA) 在呼叫保持期间，使用第三方呼叫控制程序 [[RFC3725](https://www.rfc-editor.org/rfc/rfc8839#RFC3725)] 引入媒体服务器时。省略有关如何完成的更多细节，这可能会导致在保持 (holding) 用户代理 UA 处收到由 B2BUA 构建的应答。由于 B2BUA 不了解 ICE，因此该应答将不包括 ICE 候选地址。
+
+在这种情况下收到没有 ICE 属性的应答可能出乎意料，但不一定会损害用户体验。
+
+当提议者收到表明支持 ICE 的应答时，提议者将执行以下操作之一：
+
+ * 如果提议是一个重新启动，代理必须 (MUST) 执行 [第 4.4.3.1.1 节](https://www.rfc-editor.org/rfc/rfc8839#sec-restart-subsequent) 中描述的 ICE 重新启动过程。
+ * 如果提议/应答交换删除了数据流，或者应答拒绝了提议的数据流，则代理必须 (MUST) 刷新该数据流的有效列表。它还必须 (MUST) 终止该数据流正在进行的任何 STUN 事务。
+ * 如果提议/应答交换添加了一个新的数据流，代理必须 (MUST) 为它创建一个新的检查列表（当然还有一个空的有效列表来开始），这反过来又会触发候选地址处理程序 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)]。
+ * 如果与数据流关联的检查列表状态为正在运行 (Running)，则代理会重新计算检查列表。如果新检查列表上的候选地址对也在前一个检查列表上，则复制其候选地址对状态。否则，其候选地址对状态设置为冻结 (Frozen)。如果没有一个检查列表处于活动状态（意味着每个检查列表中的候选地址对状态为冻结 (Frozen)），则执行 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 中的适当过程以将候选地址对，移动到等待 (Waiting) 状态以进一步继续 ICE 处理。
+ * 如果 ICE 状态为已完成 (Completed)，并且 SDP 应答符合 [第 4.4.2 节](https://www.rfc-editor.org/rfc/rfc8839#sec-subsequent-answer)，则代理必须 (MUST) 保持在已完成 (Completed) ICE 状态。
+
+然而，如果 SDP 应答中没有再指示 ICE 支持，代理必须 (MUST) 退回到 [[RFC3264](https://www.rfc-editor.org/rfc/rfc8839#RFC3264)] 的过程，并且不应 (SHOULD NOT) 因为缺少 ICE 支持或意外应答而放弃对话。当代理发送新的提议时，它必须 (MUST) 执行 ICE 重启。
+
+##### 4.4.3.1.1. ICE 重启
+
+在重新启动之前，代理必须 (MUST) 记住数据流每个组件的有效列表中的提名的候选地址对，称为 “先前选择的对”。代理将继续使用该对发送媒体，如 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 的 [第 12 节](https://www.rfc-editor.org/rfc/rfc8445#section-12) 所述。一旦注意到这些目的地址，代理必须 (MUST) 刷新有效列表和检查列表，然后重新计算检查列表及其状态，从而触发候选地址处理程序 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)]。
+
+#### 4.4.3.2. 精简实现的过程
+
+如果 ICE 正在为数据流重新启动，代理必须 (MUST) 为该数据流创建一个新的有效列表。它必须 (MUST) 记住数据流每个组件之前的有效列表中的提名的候选地址对，称为 “先前选择的对”，并将继续在那里发送媒体，如 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 的 [第 12 节](https://www.rfc-editor.org/rfc/rfc8445#section-12) 所述。每个数据流的每个检查列表的状态必须 (MUST) 更改为正在运行 (Running)，并且 ICE 状态必须 (MUST) 设置为正在运行 (Running)。
+
+# 5. 语法
+
+本规范定义了八个新的 SDP 属性 —— "candidate"、"remote-candidates"、"ice-lite"、"ice-mismatch"、"ice-ufrag"、"ice-pwd"、"ice-pacing"、 和 "ice-options" 属性。
+
+本节还提供了所定义属性的非规范性示例。
+
+属性的语法遵循 [[RFC5234](https://www.rfc-editor.org/rfc/rfc8839#RFC5234)] 中定义的增强 BNF。
+
+## 5.1. "candidate" 属性
+
+"candidate" 属性只是媒体级的属性。它为可用于连接检查的候选地址包含了一个传输地址。
 ```
-v=0
-o=bob 2808844564 2808844564 IN IP4 $R-PUB-1.IP
-s=
-c=IN IP4 $R-PUB-1.IP
-t=0 0
-a=ice-options:ice2
+candidate-attribute   = "candidate" ":" foundation SP component-id SP
+                        transport SP
+                        priority SP
+                        connection-address SP     ;from RFC 4566
+                        port         ;port from RFC 4566
+                        SP cand-type
+                        [SP rel-addr]
+                        [SP rel-port]
+                        *(SP cand-extension)
+
+foundation            = 1*32ice-char
+component-id          = 1*3DIGIT
+transport             = "UDP" / transport-extension
+transport-extension   = token              ; from RFC 3261
+priority              = 1*10DIGIT
+cand-type             = "typ" SP candidate-types
+candidate-types       = "host" / "srflx" / "prflx" / "relay" / token
+rel-addr              = "raddr" SP connection-address
+rel-port              = "rport" SP port
+cand-extension        = extension-att-name SP extension-att-value
+extension-att-name    = token
+extension-att-value   = *VCHAR
+ice-char              = ALPHA / DIGIT / "+" / "/"
+```
+
+该语法对候选地址的主要信息进行编码：它的 IP 地址、端口和传输协议，以及它的属性：基础、组件 ID、优先级、类型和相关的传输地址：
+
+<connection-address>：取自于 RFC 4566 [[RFC4566](https://www.rfc-editor.org/rfc/rfc8839#RFC4566)]。它是候选地址的 IP 地址，允许 IPv4 地址、IPv6 地址和完全限定的域名 (FQDNs)。解析此字段时，代理可以通过其值中是否存在冒号来区分 IPv4 地址和 IPv6 地址 - 存在冒号表示 IPv6。生成本地候选地址的代理不得 (MUST NOT) 使用 FQDN 地址。处理远程候选地址的代理，必须 (MUST) 忽略其中包含具有 FQDN 或 IP 地址版本不支持或无法识别的候选地址的 "candidate" 行。生成和处理 FQDN 候选地址的过程，以及代理如何指示对此类过程的支持，需要在扩展规范中指定。
+
+<port>：取自于 RFC 4566 [[RFC4566](https://www.rfc-editor.org/rfc/rfc8839#RFC4566)]。它是候选地址的端口。
+
+<transport>：表示候选地址的传输协议。本规范只定义了 UDP。但是，通过扩展 “交互式连接建立 (ICE)” 注册表下的子注册表 “ICE 传输协议”，提供了可扩展性，以允许未来的传输协议与 ICE 一起使用。
+
+<foundation>：由 1 至 32 个 <ice-char> 组成。它是一个标识符，对于两个具有相同类型、共享相同基并且来自相同 STUN 服务器的候选地址是相等的。基础 foundation 用于优化冻结 (Frozen) 算法中的 ICE 性能，如 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 中所述。
+
+<component-id>：是一个 1 到 256 (包含) 之间的正整数，标识候选地址所属的数据流的特定组件。它必须 (MUST) 从 1 开始，并且必须 (MUST) 为特定候选地址的每个组件增加 1。对于基于 RTP 的数据流，实际 RTP 媒体的候选地址必须 (MUST) 具有为 1 的组件 ID，而 RTCP 的候选地址必须 (MUST) 具有为 2 的组件 ID。有关将 ICE 扩展到新数据流的更多讨论，请参见 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 的 [第 13 节](https://www.rfc-editor.org/rfc/rfc8445#section-13)。
+
+<priority>：是一个 1 到 (2^31 - 1) (包含) 之间的正整数。计算候选地址优先级的过程在 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 的 [第 5.1.2 节](https://www.rfc-editor.org/rfc/rfc8445#section-5.1.2) 描述。
+
+<cand-type>：编码候选地址的类型。本规范分别为主机、服务器自反、对端自反和中继候选地址定义了值 "host"、"srflx"、"prflx" 和 "relay"。新候选地址类型的规范必须 (MUST) 定义 ICE 处理中的各个步骤与本规范定义的步骤有何不同（如果有的话）。
+
+<rel-addr> 和 <rel-port>：传达与候选地址相关的传输地址，对诊断和其他目的有用。<rel-addr> 和 <rel-port> 必须出现在服务器自反、对端自反和中继候选地址中。如果候选地址是服务器自反或对等自反，则 <rel-addr> 和 <rel-port> 等于该服务器自反或对等自反候选地址的基。如果候选地址是中继候选地址，则 <rel-addr> 和 <rel-port> 等于分配 (Allocate) 响应中为客户端提供中继候选地址的映射地址（参见 [[RFC5766](https://www.rfc-editor.org/rfc/rfc8839#RFC5766)] 的 [第 6.3 节](https://www.rfc-editor.org/rfc/rfc5766#section-6.3)）。如果候选地址是主机候选地址，则必须省略 <rel-addr> 和 <rel-port>。
+在某些情况下，例如出于隐私原因，代理可能不想透露相关的地址和端口。在这种情况下，地址必须设置为 “0.0.0.0”（用于 IPv4 候选地址）或 “::”（用于 IPv6 候选地址），端口必须设置为 “9”。
+
+"candidate" 属性本身可以扩展。该语法允许在属性末尾添加新的名称/值对。此类扩展必须 (MUST) 通过 IETF Review 或 IESG Approval [[RFC8126](https://www.rfc-editor.org/rfc/rfc8839#RFC8126)] 进行，并且分配必须 (MUST) 包含特定扩展，和对定义扩展的用法的文档的引用。
+
+实现必须 (MUST) 忽略它不理解的任何名称/值对。
+
+以下是 RTP 组件的 UDP 服务器自反 "candidate" 属性的示例 SDP 行：
+```
+a=candidate:2 1 UDP 1694498815 192.0.2.3 45664 typ srflx raddr
+203.0.113.141 rport 8998
+```
+
+## 5.2. "remote-candidates" 属性
+
+"remote-candidates" 属性的语法使用 [[RFC5234](https://www.rfc-editor.org/rfc/rfc8839#RFC5234)] 中定义的增强 BNF 定义。"remote-candidates" 属性只是媒体级的属性。
+```
+remote-candidate-att = "remote-candidates:" remote-candidate
+                         0*(SP remote-candidate)
+remote-candidate = component-id SP connection-address SP port
+```
+
+该属性包含每个组件的连接地址和端口。组件的顺序无关紧要。但是，数据流的每个组件都必须 (MUST) 存在一个值。该属性必须 (MUST) 由控制代理包含在已完成 (Completed) 数据流的提议中，并且不得 (MUST NOT) 包含在任何其他情况下。
+
+以下是 RTP 和 RTCP 组件的 "remote-candidates" SDP 行示例：
+```
+a=remote-candidates:1 192.0.2.3 45664
+a=remote-candidates:2 192.0.2.3 45665
+```
+
+## 5.3. "ice-lite" 和 "ice-mismatch" 属性
+
+"ice-lite" 和 "ice-mismatch" 属性的语法，它们都是标记，是：
+```
+ice-lite               = "ice-lite"
+ice-mismatch           = "ice-mismatch"
+```
+
+"ice-lite" 只是一个会话级属性，表示代理是一个精简的实现。"ice-mismatch" 是一个媒体级属性，且只在应答中报告。它表示提议到达时，带有一个媒体组件的默认目的地址，该媒体组件没有相应的 "candidate" 属性。为给定数据流包含 "ice-mismatch" 属性，意味着即使两个代理都支持 ICE，ICE 程序不得 (MUST NOT) 用于此数据流，而必须 (MUST) 使用 [[RFC3264](https://www.rfc-editor.org/rfc/rfc8839#RFC3264)] 的程序。
+
+## 5.4. "ice-ufrag" 和 "ice-pwd" 属性
+
+"ice-ufrag" 和 "ice-pwd" 属性传达了 ICE 用于消息完整性的用户名片段和密码。它们的语法是：
+```
+ice-pwd-att           = "ice-pwd:" password
+ice-ufrag-att         = "ice-ufrag:" ufrag
+password              = 22*256ice-char
+ufrag                 = 4*256ice-char
+```
+
+"ice-ufrag" 和 "ice-pwd" 属性可以出现在会话级或媒体级。当两者中都出现时，媒体级中的值优先。因此，会话级别的值实际上是适用于所有数据流的默认值，除非被媒体级别的值覆盖。无论是在会话级别还是媒体级别，每个数据流都必须 (MUST) 有一个 "ice-pwd" 和 "ice-ufrag" 属性。如果两个数据流具有一致的 "ice-ufrag"，则它们必须 (MUST) 具有一致的 "ice-pwd"。
+
+"ice-ufrag" 和 "ice-pwd" 属性必须 (MUST) 在会话开始时随机地选择（当 ICE 为代理重新启动时同样适用）。
+
+[[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 要求 "ice-ufrag" 属性至少包含 24 位的随机性，"ice-pwd" 属性至少包含 128 位的随机性。这意味着 "ice-ufrag" 属性将至少是 4 个字符长的，而 "ice-pwd" 至少是 22 个字符长的，因为这些属性的语法允许每个字符包含 6 位信息。属性分别可以 (MAY) 超过 4 和 22 个字符，当然最多 256 个字符。上限允许在实现中调整缓冲区大小。其较大的上限，允许随着时间的推移增加更多的随机性。
+
+为了与 STUN 用户名属性值的 512 个字符限制兼容，以及出于带宽节约考虑，"ice-ufrag" 属性在发送时不得 (MUST NOT) 超过 32 个字符，但一个实现在接收时必须 (MUST) 接受最多 256 个字符。
+
+以下示例显示了样本 "ice-ufrag" 和 "ice-pwd" SDP 行：
+```
+a=ice-pwd:asd88fgpdd777uzjYhagZg
+a=ice-ufrag:8hhY
+```
+
+## 5.5. "ice-pacing" 属性
+
+"ice-pacing" 是一个会话级属性，它指示发送者希望使用的，想要的连接检查的步调（Ta 间隔），以毫秒为单位。有关选择 pacing 值的更多信息，请参阅 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 的 [第 14.2 节](https://www.rfc-editor.org/rfc/rfc8445#section-14.2)。语法是：
+```
+ice-pacing-att            = "ice-pacing:" pacing-value
+pacing-value              = 1*10DIGIT
+```
+
+如果在提议或应答中不存在，则该属性的默认值为 50 ms，这是 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 中指定的推荐值。
+
+正如 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 中所定义的，无论为每个代理选择的 Ta 值如何，来自所有代理的所有事务的组合（如果给定的实现运行多个并发的代理）将不会超过每 5 毫秒发送一次的频率。
+
+正如 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 中所定义的，一旦两个代理都指示了他们想要使用的 pacing 值，两个代理将使用指示值中的较大者。
+
+以下示例显示了一个值为 '50' 的 "ice-pacing" SDP 行：
+```
 a=ice-pacing:50
-a=ice-pwd:YH75Fviy6338Vbrhrlp8Yh
-a=ice-ufrag:9uB6
-m=audio $R-PUB-1.PORT RTP/AVP 0
-b=RS:0
-b=RR:0
-a=rtpmap:0 PCMU/8000
-a=candidate:1 1 UDP 2130706431 $R-PUB-1.IP $R-PUB-1.PORT typ host
 ```
 
-填入变量之后：
+## 5.6. "ice-options" 属性
+
+"ice-options" 属性是一个会话级和媒体级属性。它包含一系列标识代理支持的选项的标记。它的语法是：
 ```
-v=0
-o=bob 2808844564 2808844564 IN IP4 192.0.2.1
-s=
-c=IN IP4 192.0.2.1
-t=0 0
-a=ice-options:ice2
-a=ice-pacing:50
-a=ice-pwd:YH75Fviy6338Vbrhrlp8Yh
-a=ice-ufrag:9uB6
-m=audio 3478 RTP/AVP 0
-b=RS:0
-b=RR:0
-a=rtpmap:0 PCMU/8000
-a=candidate:1 1 UDP 2130706431 192.0.2.1 3478 typ host
+ice-options           = "ice-options:" ice-option-tag
+                          *(SP ice-option-tag)
+ice-option-tag        = 1*ice-char
 ```
 
-# 附录 B. "remote-candidates" 属性
+提议中存在 "ice-options" 表示代理支持某个扩展，并且如果对等代理在应答中也包含相同的扩展，则它希望使用它。在确定如何在给定会话中使用扩展的代理之间，可能需要进一步的扩展特定的协商。协商过程的细节，如果存在，必须 (MUST) 由定义扩展的规范定义（[第 10.2 节](https://www.rfc-editor.org/rfc/rfc8839#sec-iana-ice-options)）。
 
-“remote-candidates” 属性的存在是为了消除更新的提议，和对将候选地址移动到有效列表中的 STUN 绑定请求的响应之间的竞争条件。这种竞态条件如图 1 所示。收到消息 4 后，代理 L 将候选地址对添加到有效列表中。 如果只有一个包含单个组件的数据流，代理 L 现在可以发送更新的提议。但是，代理 R 的检查尚未收到响应，代理 R 在收到响应（消息 9）之前收到更新的提议（消息 7）。 因此，它还不知道这个特定的对是有效对。为了消除这种情况，由提议者选择的 R 的实际候选地址（远程候选地址）包含在提议本身中，并且应答者延迟其应答，直到这些对验证。
-
+下面的示例显示了一个带有 'ice2' 和 'rtp+ecn' [[RFC6679](https://www.rfc-editor.org/rfc/rfc8839#RFC6679)] 值的 "ice-options" SDP 行。
 ```
-Agent L               Network               Agent R
-   |(1) Offer            |                     |
-   |------------------------------------------>|
-   |(2) Answer           |                     |
-   |<------------------------------------------|
-   |(3) STUN Req.        |                     |
-   |------------------------------------------>|
-   |(4) STUN Res.        |                     |
-   |<------------------------------------------|
-   |(5) STUN Req.        |                     |
-   |<------------------------------------------|
-   |(6) STUN Res.        |                     |
-   |-------------------->|                     |
-   |                     |Lost                 |
-   |(7) Offer            |                     |
-   |------------------------------------------>|
-   |(8) STUN Req.        |                     |
-   |<------------------------------------------|
-   |(9) STUN Res.        |                     |
-   |------------------------------------------>|
-   |(10) Answer          |                     |
-   |<------------------------------------------|
+a=ice-options:ice2 rtp+ecn
 ```
-图 1：竞态条件流程
-
-# 附录 C. 为什么需要冲突解决机制？
-
-当 ICE 在两个对等体之间运行时，一个代理充当受控者角色，另一个充当控制者角色。 规则被定义为实现类型和提议者/应答者的函数，以确定谁在控制和谁被控制。但是，规范中提到，在某些情况下，双方可能都认为自己在控制，或者双方都认为自己受到控制。 这怎么可能发生？
-
-两个代理都认为自己受到控制的情况，出现在第三方呼叫控制案例中。 考虑以下流程：
-```
-          A         Controller          B
-          |(1) INV()     |              |
-          |<-------------|              |
-          |(2) 200(SDP1) |              |
-          |------------->|              |
-          |              |(3) INV()     |
-          |              |------------->|
-          |              |(4) 200(SDP2) |
-          |              |<-------------|
-          |(5) ACK(SDP2) |              |
-          |<-------------|              |
-          |              |(6) ACK(SDP1) |
-          |              |------------->|
-```
-*图 2：角色冲突流程*
-
-该流程是 RFC 3725 [[RFC3725](https://www.rfc-editor.org/rfc/rfc8839#RFC3725)] 流程 III 的变体。 事实上，它比流 III 工作得更好，因为它产生的消息更少。在这个流程中，控制器向代理 A 发送一个无提议的邀请 INVITE，代理 A 以它的提议 SDP1 进行响应。然后，该代理向代理 B 发送无提议邀请 INVITE，代理 B 以它的提议 SDP2 响应该邀请 INVITE。然后控制器使用来自每个代理的提议生成应答。使用此流程时，ICE 将在代理 A 和 B 之间运行，但双方都认为自己处于控制角色。通过角色冲突解决程序，当使用 ICE 时，此流程将正常运行。
-
-目前，没有有记录的流程可能导致两个代理都认为自己受到控制的情况。但是，冲突解决程序允许这种情况，如果出现适合此类别的流程。
-
-# 附录 D. 为什么要发送更新的 Offer？
-
-[[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 的 [第 12.1 节](https://www.rfc-editor.org/rfc/rfc8839#RFC8445) 描述了发送媒体的规则。 一旦 ICE 检查完成，两个代理都可以发送媒体，而无需等待更新的 Offer。实际上，更新的 Offer 的唯一目的是 “更正” SDP，以便媒体的默认目的地与根据 ICE 程序发送媒体的目的地相匹配（这将是最高优先级的提名候选地址对）。
-
-这就提出了一个问题——为什么需要更新的 offer/answer 交换？事实上，在纯粹的提议/应答环境中，它不需要。提议者和应答者通过 ICE 就使用的候选地址达成一致意见，然后可以开始使用它们。就代理本身而言，更新的提议/应答没有提供新信息。然而，在实践中，信令路径上的许多组件都会查看 SDP 信息。其中包括执行路径外 QoS 保留的实体、NAT 穿越组件（例如 ALG 和会话边界控制器 (SBC)）以及被动监控网络的诊断工具。为了让这些工具在不改变的情况下继续运行，SDP 的核心属性 —— 即现有的、ICE 之前用于媒体的地址定义 —— “m=” 和 “c=” 行以及 “rtcp” 属性 —— 必须保留。因此，必须发送更新的 offer。
-
-# 致谢
-
-本文档中的大部分文本来自 [[RFC5245](https://www.rfc-editor.org/rfc/rfc8839#RFC5245)]，由 Jonathan Rosenberg 撰写。
-
-本文档中的一些文本摘自 [[RFC6336](https://www.rfc-editor.org/rfc/rfc8839#RFC6336)]，由 Magnus Westerlund 和 Colin Perkins 撰写。
-
-非常感谢 Flemming Andreasen 的牧羊人评论反馈。
-
-感谢以下专家的评论和建设性反馈：Thomas Stach、Adam Roach、Peter Saint-Andre、Roman Danyliw、Alissa Cooper、Benjamin Kaduk、Mirja Kühlewind、Alexey Melnikov、和 Éric Vyncke，为他们详细的评论。 
-
-# 贡献者
-
-以下专家为这项工作做出了文本和结构方面的改进：
-
-**Thomas Stach**
-Email: thomass.stach@gmail.com
-
-# 作者的地址
-
-**Marc Petit-Huguenin**
-Impedance Mismatch
-Email: marc@petit-huguenin.org
-
-**Suhas Nandakumar**
-Cisco Systems
-707 Tasman Dr
-Milpitas, CA 95035
-United States of America
-Email: snandaku@cisco.com
-
-**Christer Holmberg**
-Ericsson
-Hirsalantie 11
-FI-02420 Jorvas
-Finland
-Email: christer.holmberg@ericsson.com
-
-**Ari Keränen**
-Ericsson
-FI-02420 Jorvas
-Finland
-Email: ari.keranen@ericsson.com
-
-**Roman Shpount**
-TurboBridge
-4905 Del Ray Avenue, Suite 300
-Bethesda, MD 20814
-United States of America
-Email: rshpount@turbobridge.com
 
 [原文](https://www.rfc-editor.org/rfc/rfc8839)
