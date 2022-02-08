@@ -831,29 +831,45 @@ IETF 多方多媒体会话控制 (MMUSIC) 工作组中的许多人通过提出�
 # 作者的地址
 
 **Ali Begen**
+
 Networked Media
+
 Turkey
+
 Email: ali.begen@networked.media
 
 **Paul Kyzivat**
+
 United States of America
+
 Email: pkyzivat@alum.mit.edu
 
 **Colin Perkins**
+
 University of Glasgow
+
 School of Computing Science
+
 Glasgow
+
 G12 8QQ
+
 United Kingdom
+
 Email: csp@csperkins.org
 
 **Mark Handley**
-University College London
-Department of Computer Science
-London
-WC1E 6BT
-United Kingdom
-Email: M.Handley@cs.ucl.ac.uk
 
+University College London
+
+Department of Computer Science
+
+London
+
+WC1E 6BT
+
+United Kingdom
+
+Email: M.Handley@cs.ucl.ac.uk
 
 [原文](https://www.rfc-editor.org/rfc/rfc8866)
