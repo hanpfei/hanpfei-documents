@@ -8,7 +8,7 @@ tags:
 
 # 6. 保活
 
-所有的 ICE 代理必须 (MUST) 遵循 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 的 [第 11 节](https://www.rfc-editor.org/rfc/rfc8445#section-11) 中定义的过程发送保活消息。正如 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 中所定义的，无论数据流当前是否处于 inactive、sendonly、recvonly 或 sendrecv，并且无论带宽属性是否存在或值为何，都将发送 keepalive。代理可以通过每个媒体会话的 "candidate" 属性的存在来确定其对等方支持 ICE。
+所有的 ICE 代理必须 (MUST) 遵循 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 的 [第 11 节](https://www.rfc-editor.org/rfc/rfc8445#section-11) 中定义的过程发送保活消息。正如 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 中所定义的，无论数据流当前是处于 inactive、sendonly、recvonly 还是 sendrecv，并且无论带宽属性是否存在或值为何，都将发送 keepalive。代理可以通过每个媒体会话的 "candidate" 属性的存在来确定其对等方支持 ICE。
 
 # 7. SIP 注意事项
 
