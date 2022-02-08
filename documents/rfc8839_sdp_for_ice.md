@@ -359,21 +359,21 @@ ice-char              = ALPHA / DIGIT / "+" / "/"
 
 该语法对候选地址的主要信息进行编码：它的 IP 地址、端口和传输协议，以及它的属性：基础、组件 ID、优先级、类型和相关的传输地址：
 
-<connection-address>：取自于 RFC 4566 [[RFC4566](https://www.rfc-editor.org/rfc/rfc8839#RFC4566)]。它是候选地址的 IP 地址，允许 IPv4 地址、IPv6 地址和完全限定的域名 (FQDNs)。解析此字段时，代理可以通过其值中是否存在冒号来区分 IPv4 地址和 IPv6 地址 - 存在冒号表示 IPv6。生成本地候选地址的代理不得 (MUST NOT) 使用 FQDN 地址。处理远程候选地址的代理，必须 (MUST) 忽略其中包含具有 FQDN 或 IP 地址版本不支持或无法识别的候选地址的 "candidate" 行。生成和处理 FQDN 候选地址的过程，以及代理如何指示对此类过程的支持，需要在扩展规范中指定。
+`<connection-address>`：取自于 RFC 4566 [[RFC4566](https://www.rfc-editor.org/rfc/rfc8839#RFC4566)]。它是候选地址的 IP 地址，允许 IPv4 地址、IPv6 地址和完全限定的域名 (FQDNs)。解析此字段时，代理可以通过其值中是否存在冒号来区分 IPv4 地址和 IPv6 地址 - 存在冒号表示 IPv6。生成本地候选地址的代理不得 (MUST NOT) 使用 FQDN 地址。处理远程候选地址的代理，必须 (MUST) 忽略其中包含具有 FQDN 或 IP 地址版本不支持或无法识别的候选地址的 "candidate" 行。生成和处理 FQDN 候选地址的过程，以及代理如何指示对此类过程的支持，需要在扩展规范中指定。
 
-<port>：取自于 RFC 4566 [[RFC4566](https://www.rfc-editor.org/rfc/rfc8839#RFC4566)]。它是候选地址的端口。
+`<port>`：取自于 RFC 4566 [[RFC4566](https://www.rfc-editor.org/rfc/rfc8839#RFC4566)]。它是候选地址的端口。
 
-<transport>：表示候选地址的传输协议。本规范只定义了 UDP。但是，通过扩展 “交互式连接建立 (ICE)” 注册表下的子注册表 “ICE 传输协议”，提供了可扩展性，以允许未来的传输协议与 ICE 一起使用。
+`<transport>`：表示候选地址的传输协议。本规范只定义了 UDP。但是，通过扩展 “交互式连接建立 (ICE)” 注册表下的子注册表 “ICE 传输协议”，提供了可扩展性，以允许未来的传输协议与 ICE 一起使用。
 
-<foundation>：由 1 至 32 个 <ice-char> 组成。它是一个标识符，对于两个具有相同类型、共享相同基并且来自相同 STUN 服务器的候选地址是相等的。基础 foundation 用于优化冻结 (Frozen) 算法中的 ICE 性能，如 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 中所述。
+`<foundation>`：由 1 至 32 个 `<ice-char>` 组成。它是一个标识符，对于两个具有相同类型、共享相同基并且来自相同 STUN 服务器的候选地址是相等的。基础 foundation 用于优化冻结 (Frozen) 算法中的 ICE 性能，如 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 中所述。
 
-<component-id>：是一个 1 到 256 (包含) 之间的正整数，标识候选地址所属的数据流的特定组件。它必须 (MUST) 从 1 开始，并且必须 (MUST) 为特定候选地址的每个组件增加 1。对于基于 RTP 的数据流，实际 RTP 媒体的候选地址必须 (MUST) 具有为 1 的组件 ID，而 RTCP 的候选地址必须 (MUST) 具有为 2 的组件 ID。有关将 ICE 扩展到新数据流的更多讨论，请参见 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 的 [第 13 节](https://www.rfc-editor.org/rfc/rfc8445#section-13)。
+`<component-id>`：是一个 1 到 256 (包含) 之间的正整数，标识候选地址所属的数据流的特定组件。它必须 (MUST) 从 1 开始，并且必须 (MUST) 为特定候选地址的每个组件增加 1。对于基于 RTP 的数据流，实际 RTP 媒体的候选地址必须 (MUST) 具有为 1 的组件 ID，而 RTCP 的候选地址必须 (MUST) 具有为 2 的组件 ID。有关将 ICE 扩展到新数据流的更多讨论，请参见 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 的 [第 13 节](https://www.rfc-editor.org/rfc/rfc8445#section-13)。
 
-<priority>：是一个 1 到 (2^31 - 1) (包含) 之间的正整数。计算候选地址优先级的过程在 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 的 [第 5.1.2 节](https://www.rfc-editor.org/rfc/rfc8445#section-5.1.2) 描述。
+`<priority>`：是一个 1 到 (2^31 - 1) (包含) 之间的正整数。计算候选地址优先级的过程在 [[RFC8445](https://www.rfc-editor.org/rfc/rfc8839#RFC8445)] 的 [第 5.1.2 节](https://www.rfc-editor.org/rfc/rfc8445#section-5.1.2) 描述。
 
-<cand-type>：编码候选地址的类型。本规范分别为主机、服务器自反、对端自反和中继候选地址定义了值 "host"、"srflx"、"prflx" 和 "relay"。新候选地址类型的规范必须 (MUST) 定义 ICE 处理中的各个步骤与本规范定义的步骤有何不同（如果有的话）。
+`<cand-type>`：编码候选地址的类型。本规范分别为主机、服务器自反、对端自反和中继候选地址定义了值 "host"、"srflx"、"prflx" 和 "relay"。新候选地址类型的规范必须 (MUST) 定义 ICE 处理中的各个步骤与本规范定义的步骤有何不同（如果有的话）。
 
-<rel-addr> 和 <rel-port>：传达与候选地址相关的传输地址，对诊断和其他目的有用。<rel-addr> 和 <rel-port> 必须出现在服务器自反、对端自反和中继候选地址中。如果候选地址是服务器自反或对等自反，则 <rel-addr> 和 <rel-port> 等于该服务器自反或对等自反候选地址的基。如果候选地址是中继候选地址，则 <rel-addr> 和 <rel-port> 等于分配 (Allocate) 响应中为客户端提供中继候选地址的映射地址（参见 [[RFC5766](https://www.rfc-editor.org/rfc/rfc8839#RFC5766)] 的 [第 6.3 节](https://www.rfc-editor.org/rfc/rfc5766#section-6.3)）。如果候选地址是主机候选地址，则必须省略 <rel-addr> 和 <rel-port>。
+`<rel-addr>` 和 `<rel-port>`：传达与候选地址相关的传输地址，对诊断和其他目的有用。`<rel-addr>` 和 `<rel-port>` 必须出现在服务器自反、对端自反和中继候选地址中。如果候选地址是服务器自反或对等自反，则 `<rel-addr>` 和 `<rel-port>` 等于该服务器自反或对等自反候选地址的基。如果候选地址是中继候选地址，则 `<rel-addr>` 和 `<rel-port>` 等于分配 (Allocate) 响应中为客户端提供中继候选地址的映射地址（参见 [[RFC5766](https://www.rfc-editor.org/rfc/rfc8839#RFC5766)] 的 [第 6.3 节](https://www.rfc-editor.org/rfc/rfc5766#section-6.3)）。如果候选地址是主机候选地址，则必须省略 `<rel-addr>` 和 `<rel-port>`。
 在某些情况下，例如出于隐私原因，代理可能不想透露相关的地址和端口。在这种情况下，地址必须设置为 “0.0.0.0”（用于 IPv4 候选地址）或 “::”（用于 IPv6 候选地址），端口必须设置为 “9”。
 
 "candidate" 属性本身可以扩展。该语法允许在属性末尾添加新的名称/值对。此类扩展必须 (MUST) 通过 IETF Review 或 IESG Approval [[RFC8126](https://www.rfc-editor.org/rfc/rfc8839#RFC8126)] 进行，并且分配必须 (MUST) 包含特定扩展，和对定义扩展的用法的文档的引用。
