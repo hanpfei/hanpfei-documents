@@ -1,5 +1,14 @@
-本文主要内容来自于 [OpenCV-Python 教程](https://docs.opencv.org/4.5.5/d6/d00/tutorial_py_root.html) 的 [OpenCV 中的图像处理](https://docs.opencv.org/4.5.5/d2/d96/tutorial_py_table_of_contents_imgproc.html) 部分，这个部分的主要内容如下：
+---
+title: OpenCV 中的图像处理 001_改变色彩空间
+date: 2022-04-10 18:35:49
+categories: 图形图像
+tags:
+- 图形图像
+- OpenCV
+---
 
+本文主要内容来自于 [OpenCV-Python 教程](https://docs.opencv.org/4.5.5/d6/d00/tutorial_py_root.html) 的 [OpenCV 中的图像处理](https://docs.opencv.org/4.5.5/d2/d96/tutorial_py_table_of_contents_imgproc.html) 部分，这个部分的主要内容如下：
+<!--more-->
 -   [改变色彩空间](https://docs.opencv.org/4.5.5/df/d9d/tutorial_py_colorspaces.html)
 
     学习在不同色彩空间之间改变图像。另外学习跟踪视频中的彩色对象。
