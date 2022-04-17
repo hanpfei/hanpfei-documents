@@ -18,7 +18,7 @@ log 中包含了输出 log 的具体文件位置，和特定的要输出的 log 
 
 整体来看，这个 log 系统可以分为四层：对于 log 系统的用户，看到的是用于输出不同重要性的 log 的一组宏，如 `RTC_LOG(sev)`，这组宏提供了类似于输出流 `std::ostream` 的接口来输出 log；log 系统的核心是 `LogMessage`，它用于对要输出的 log 做格式化，产生最终要输出的字符串，并把产生的字符串送给 log 后端完成 log 输出，同时还可以通过它对 log 系统的行为施加控制；最下面的是 log 后端，log 后端用 `LogSink` 接口描述；在 `RTC_LOG(sev)` 等宏和 `LogMessage` 之间的是用于实现 log 系统的用户看到的类似于输出流的接口的模板类  `LogStreamer` 和 `LogCall` 等。这个 log 系统整体如下图所示：
 
-![WebRTC rtc log](https://www.wolfcstech.com/images/1315506-f93b439075726485.png)
+![WebRTC rtc log](images/1315506-f93b439075726485.png)
 
 ## Log 后端
 

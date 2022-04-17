@@ -8,7 +8,7 @@ tags:
 
 基于 RTC 场景下要解决的声音的问题，WebRTC 有一个大体如下图所示的音频处理流水线：
 
-![Audio Pipeline](https://www.wolfcstech.com/images/1315506-92519e17ff0aa28b.png)
+![Audio Pipeline](images/1315506-92519e17ff0aa28b.png)
 
 <!--more-->
 
@@ -16,7 +16,7 @@ WebRTC 的音频处理流水线，不是一次性建立起来的，而是分阶�
 
 如此，WebRTC 的音频处理流水线大致如下图所示：
 
-![Audio Pipeline](https://www.wolfcstech.com/images/1315506-12d8ce91a203a24f.png)
+![Audio Pipeline](images/1315506-12d8ce91a203a24f.png)
 
 WebRTC 音频的静态流水线，建立之后，其相关节点状态由 `AudioState` 维护和管理。WebRTC 音频的静态流水线，主要包括 `AudioDeviceModule`，`AudioProcessing`，和 `AudioMixer` 等，其中 `AudioDeviceModule` 用于采集和播放音频数据，`AudioProcessing` 主要用于对录制的音频数据做初始处理，如回声消除，降噪等，`AudioMixer` 主要用于对远端发送过来的音频数据做混音。
 

@@ -17,7 +17,7 @@ tags:
 <!--more-->
 WebRTC 的音频处理流水线大体如下图：
 
-![Audio Pipeline](https://www.wolfcstech.com/images/1315506-92519e17ff0aa28b.png)
+![Audio Pipeline](images/1315506-92519e17ff0aa28b.png)
 
 
 除了音效之外，WebRTC 的音频处理流水线包含其它所有的部分，音频数据的采集及播放，音频数据的处理，音频数据的编码和解码，网络传输都有。
@@ -34,7 +34,7 @@ AudioTransport 接 AudioSendStream 和 AudioReceiveStream，在 AudioSendStream 
 
 在 WebRTC 的音频流水线，无论远端发送了多少路音频流，也无论远端发送的各条音频流的采样率和通道数具体是什么，都需要经过重采样，通道数转换和混音，最终转换为系统设备可接受的采样率和通道数的单路音频数据。具体来说，各条音频流需要先重采样和通道数变换转换为某个统一的采样率和通道数，然后做混音；混音之后，再经过重采样以及通道数变换，转变为最终设备可接受的音频数据。（WebRTC 中音频流水线各个节点统一用 16 位整型值表示采样点。）如下面这样：
 
-![Mixing](https://www.wolfcstech.com/images/1315506-0fab6119958b4b6c.png)
+![Mixing](images/1315506-0fab6119958b4b6c.png)
 
 WebRTC 提供了一些音频操作的工具类和函数用来完成上述操作。
 
