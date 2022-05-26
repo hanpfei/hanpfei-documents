@@ -761,6 +761,7 @@ ALSA 将采集和播放分开 ......
 总之，最好不要使用 ALSA 这么底层的音频 API。开源社区有几个非常好的 Linux 音频服务实现：[JACK](http://jackit.sf.net/)，[PulseAudio](https://www.freedesktop.org/wiki/Software/PulseAudio/)，和 [PipeWire](https://pipewire.org/)，这些音频服务的接口使用起来更简单方便。
 
  **参考文档**
+ 
 [A Tutorial on Using the ALSA Audio API](http://equalarea.com/paul/alsa-audio.html)
 
 [PipeWire Late Summer Update 2020](https://blogs.gnome.org/uraeus/2020/09/04/pipewire-late-summer-update-2020/)
