@@ -710,15 +710,24 @@ Group-stop 通知被发送给跟踪器，但不会发送给真正的父进程。
 
 与正常规则相反，**ptrace()** 的 glibc 包装器可以将 *[errno](https://man7.org/linux/man-pages/man3/errno.3.html)* 设置为零。
 
-参考资料：
+**参考资料：**
+
 [man 手册原文](https://man7.org/linux/man-pages/man2/ptrace.2.html)
+
 [Linux ptrace系统调用详解：利用 ptrace 设置硬件断点](https://blog.csdn.net/Rong_Toa/article/details/112155847)
+
 [strace实现原理：ptrace系统调用](https://rtoax.blog.csdn.net/article/details/109825818)
+
 [How debuggers work: Part 1 - Basics](https://eli.thegreenplace.net/2011/01/23/how-debuggers-work-part-1)
+
 [How debuggers work: Part 2 - Breakpoints](https://eli.thegreenplace.net/2011/01/27/how-debuggers-work-part-2-breakpoints)
+
 [How debuggers work: Part 3 - Debugging information](https://eli.thegreenplace.net/2011/02/07/how-debuggers-work-part-3-debugging-information)
+
 [GDB Internals](http://www.deansys.com/doc/gdbInternals/gdbint_toc.html)
+
 [GDB原理之ptrace实现原理](https://mp.weixin.qq.com/s?__biz=MzA3NzYzODg1OA==&mid=2648464351&idx=1&sn=af5e3b8f97da2cfe92cab1330e1e0563&chksm=8766067ab0118f6cc37d8799b97aa1e5053e8dc2408ec2b8ea04311a35d62b62b652de6a7f03&mpshare=1&scene=1&srcid=1102wsQDCpS40e8hzkkaSGGC&sharer_sharetime=1604275938625&sharer_shareid=d21dd3bcaa72a23e9bad061d738dba43&key=0eba2d0597cf1f68faeccd6a77be1767c15e8f97d4539b68f375aeaaee51c4d78bbd3b7baeb3743ce9457180a0d9c7c76284edfc1aaa5260cc5669e1ca0472ad922daca498291f700f36a9a5e4b1f948594d4d279aa173cf76d77bb62879c3ceffa9810651f7681b01cc372034421da43de58216001df6a7597eb72a339530c4&ascene=1&uin=NjczMTY5MzU3&devicetype=Windows+10+x64&version=6300002f&lang=zh_CN&exportkey=A8dvjFWBwW0tDf75BQmT44E%3D&pass_ticket=vOx8u6ogNAJmNnT3EE0lOTdQ0qmiIGrghCQp5S16Nscf8vYHWbSpOmbPZoKX6ejj&wx_header=0)
+
 [ptrace理解](https://www.cnblogs.com/mysky007/p/11047943.html)
 
 Done.
