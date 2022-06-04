@@ -10,7 +10,7 @@ mediasoup 是一个多用于多端视频会议系统的 SFU，它主要用来做
 
 这里先通过 mediasoup 的架构，简单看一下 mediasoup 这个 SFU 建立的主要概念和抽象，如 Router、Transport、Producer、Consumer、DataProducer 和 DataConsumer 等，以及它们在 mediasoup 的媒体数据转发系统中的角色和作用：
 
-![1640916356184.jpg](https://upload-images.jianshu.io/upload_images/1315506-f5c9568d35ecf87c.jpg)
+![1640916356184.jpg](../images/1315506-f5c9568d35ecf87c.jpg)
 
 如上图，描述了 mediasoup 转发服务的主要架构。在 mediasoup 媒体数据转发系统的服务端，Router 是核心，它完成媒体数据的转发。Producer/DataProducer 抽象数据提供者，Consumer/DataConsumer 抽象数据消费者，Transport 抽象 WebRTC 数据传输。
 <!--more-->
