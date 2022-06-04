@@ -67,7 +67,7 @@ Caused by: java.security.cert.CertificateExpiredException: current time: Wed Jun
 
 而这个过程，所有的网络包交互如下：
 
-![2017-06-08 11-06-16屏幕截图.png](https://www.wolfcstech.com/images/1315506-6714dde7114225f7.png)
+![2017-06-08 11-06-16屏幕截图.png](../images/1315506-6714dde7114225f7.png)
 
 整个过程，包括 TCP 连接建立，SSL/TLS 握手，TCP ACK 以及 TCP 连接断开，总共只有 16 个包。
 
@@ -180,7 +180,7 @@ Caused by: java.security.cert.CertificateExpiredException: Certificate expired a
 ```
 在异常的错误消息中指出了异常是由证书验证失败引起的，并大体指明了证书的过期时间和当前时间。但用 Wireshark 抓到的包来看，区别要大一点：
 
-![](https://www.wolfcstech.com/images/1315506-a2aca0be9efc528a.png)
+![](../images/1315506-a2aca0be9efc528a.png)
 
 从 Android 5.0.0 开始，提供了对 TLSv1.2 的支持，整个过程都会用 TLSv1.2 来完成。服务器发送的几个 SSL/TLS 消息 **Server Hello**，**Certificate**，**Server Key Exchange**，**Server Hello Don** 被放在了一个 TCP 包里，第 6 号包，因而，整个握手过程用了更少的包，
 
@@ -250,6 +250,6 @@ Caused by: java.security.cert.CertificateExpiredException: Certificate expired a
 
 这个握手失败的过程，同样包含 16 个网络包：
 
-![](https://www.wolfcstech.com/images/1315506-239f0586548824c1.png)
+![](../images/1315506-239f0586548824c1.png)
 
 [Done]

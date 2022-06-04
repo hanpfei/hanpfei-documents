@@ -105,7 +105,7 @@ if __name__ == "__main__":
 ```
 我们使用部分透明的 source 在屏幕窗口上绘制。`cairo.OPERATOR_SOURCE` 创建一个组合操作，我们以此用 source 来绘制，其中 source 为屏幕窗口。为了获取完全的透明，我们把 alpha 值设置为 0，或者使用 `cairo.OPERATOR_CLEAR` 操作符。
 
-![图：透明窗口](https://www.wolfcstech.com/images/1315506-e089c465708a1bd0.jpg)
+![图：透明窗口](../images/1315506-e089c465708a1bd0.jpg)
 
 # 截屏
 
@@ -316,7 +316,7 @@ if __name__ == "__main__":
 ```
 有一个老 [bug](https://bugzilla.gnome.org/show_bug.cgi?id=622084) 使得我们无法通过 Ctrk+C 快捷键终止由终端启动的应用程序。添加这两行代码是对这种情况的一种workaround 做法。
 
-![图：根窗口上的消息](https://www.wolfcstech.com/images/1315506-bd5cb04439dde6c9.jpg)
+![图：根窗口上的消息](../images/1315506-bd5cb04439dde6c9.jpg)
 
 在这一章中，我们讨论了 PyCairo 中的桌面窗口。
 

@@ -12,7 +12,7 @@ oRTP 是一个 RTP (Real-time Transport Protocol ([RFC 3550](https://www.ietf.or
 
 MediaCode 以 H.264 编码格式编码之后的视频，是由一个一个的NALU组成的。他们的结构如下图所示。
 
-![](https://www.wolfcstech.com/images/1315506-73c59eb70085d7bc.jpg)
+![](../images/1315506-73c59eb70085d7bc.jpg)
 
 其中每个 NALU 之间通过 startcode（起始码）进行分隔。起始码分成两种，一种是 0x000001（3Byte），另一种是 0x00000001（4Byte）。NALU 中，起始码之后，是 NALU 的类型字节，它用于描述这个 NALU 中数据的类型，NALU 的重要性等。H.264 视频流的 meta 信息等也被封装为 NALU，并以特定的类型标识 ，如 SPS 和 PPS 等描述视频流分辨率、码率等特性的信息。NALU 类型字节格式如下：
 

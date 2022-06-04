@@ -13,7 +13,7 @@ HiKey 和 HiKey960 开发板是 Google Android 官方提供支持的开发板。
 
 HiKey960 有 3GB RAM 的配置，而 HiKey 则只有 1GB 和 2GB 的 RAM 配置。HiKey960 板子如下图：
 
-![hikey960](https://www.wolfcstech.com/images/1315506-a966b244e1c000c6.png)
+![hikey960](../images/1315506-a966b244e1c000c6.png)
 
 使用下面的命令可以下载，构建并在 HiKey960 开发板上运行 Android。
 
@@ -49,7 +49,7 @@ $ make -j2
 # 刷写镜像
 1. 通过打开开关 1 和 3 来进入 fastboot mode。
 
-![](https://www.wolfcstech.com/images/1315506-c2747c1381edf7b0.jpg)
+![](../images/1315506-c2747c1381edf7b0.jpg)
 
 开关在板子的如上图所示的这一面，具体位置是在右上角。在图中的右上角可以清晰地看到 “Ext boot”，“Boot mode” 等字样，开关就位于它们的左边并紧挨它们。开关可以通过拨动白色的拨片开打开关闭。板子上可以清晰地看到这些开关的编号，实际上自上至下这些开关的编号分别为 “3”、“2” 和 “1”。
 

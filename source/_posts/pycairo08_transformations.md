@@ -49,7 +49,7 @@ tags:
 ```
 `translate()` 函数通过平移用户空间原点修改当前的变换矩阵。在我们的例子中，我们在两个方向上将原点移动 20 个单位。
 
-![图：平移操作](https://www.wolfcstech.com/images/1315506-531c01053b5b104d.jpg)
+![图：平移操作](../images/1315506-531c01053b5b104d.jpg)
 
 # 切变
 
@@ -84,7 +84,7 @@ tags:
 ```
 我们通过 `transform()` 方法执行变换。
 
-![图：且变操作](https://www.wolfcstech.com/images/1315506-ae71866cb5012ade.jpg)
+![图：且变操作](../images/1315506-ae71866cb5012ade.jpg)
 
 # 放缩
 
@@ -125,7 +125,7 @@ tags:
 ```
 这里我们用系数 0.8 执行另一个放缩操作。如果我们查看图片，我们将看到，第三个黄色矩形是最小的。即使我们已经使用了另一个更小的放缩因子。这是由于变换操作是累积的。事实上，第三个矩形是由放缩因子 0.528 (0.6 ×0.8) 来放缩的。
 
-![图：放缩操作](https://www.wolfcstech.com/images/1315506-0c93d58c8b908065.jpg)
+![图：放缩操作](../images/1315506-0c93d58c8b908065.jpg)
 
 # 隔离变换
 
@@ -164,7 +164,7 @@ tags:
 ```
 我们通过将 `scale()` 方法放到 `save()` 和 `restore()` 方法之间来隔离放缩操作。
 
-![图：隔离变换](https://www.wolfcstech.com/images/1315506-4d23a35dda0bad94.jpg)
+![图：隔离变换](../images/1315506-4d23a35dda0bad94.jpg)
 
 现在第三个黄色矩形比第二个红色的大。
 
@@ -256,7 +256,7 @@ if __name__ == "__main__":
 ```
 我们沿着我们的边界圆形路径创建 36 个椭圆形。我们通过`save()` 和 `restore()` 方法，将各个旋转和放缩操作隔离开。
 
-![图：甜甜圈](https://www.wolfcstech.com/images/1315506-c35cbdde9fd281df.jpg)
+![图：甜甜圈](../images/1315506-c35cbdde9fd281df.jpg)
 
 # 星形
 
@@ -423,7 +423,7 @@ class cv(object):
 ```
 我们在这里绘制星形对象。
 
-![图：星形](https://www.wolfcstech.com/images/1315506-8b6725f02eb3c00c.jpg)
+![图：星形](../images/1315506-8b6725f02eb3c00c.jpg)
 
 在 PyCairo 教程的这个部分，我们讨论了变换。
 

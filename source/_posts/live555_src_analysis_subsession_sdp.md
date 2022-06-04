@@ -10,11 +10,11 @@ tags:
 
 如我们在前文 [live555 源码分析：ServerMediaSession](https://www.wolfcstech.com/2017/09/07/live555_src_analysis_servermediasession/) 中看到的，`H264VideoFileServerMediaSubsession` 的继承层次体系如下图：
 <!--more-->
-![](https://www.wolfcstech.com/images/1315506-e48e136a2a125c08.png)
+![](../images/1315506-e48e136a2a125c08.png)
 
 在这个继承层次体系中，`ServerMediaSubsession` 定义了可以对流媒体的单个子会话执行的操作，它有着如下这样的生命周期：
 
-![ServerMediaSubsession 生命周期](https://www.wolfcstech.com/images/1315506-d620074e60ee3794.png)
+![ServerMediaSubsession 生命周期](../images/1315506-d620074e60ee3794.png)
 
 对于这些操作的实现则是由 `OnDemandServerMediaSubsession` 完成的，本文分析这个类的定义和实现。
 
@@ -68,7 +68,7 @@ FramedSource* H264VideoFileServerMediaSubsession::createNewStreamSource(unsigned
 
 返回的 `FramedSource` 为 `ByteStreamFileSource`。`FramedSource` 用于获取视频流中的单个帧，它有着如下这样的继承层次结构：
 
-![](https://www.wolfcstech.com/images/1315506-22b43008629054fc.png)
+![](../images/1315506-22b43008629054fc.png)
 
 
 第 2 步，调用 `createGroupsock()` 函数创建 `Groupsock`。
@@ -95,7 +95,7 @@ RTPSink* H264VideoFileServerMediaSubsession
 
 传进来的 `FramedSource` 并没有被用到。返回的 `RTPSink` 为 `H264VideoRTPSink`。`H264VideoRTPSink` 的继承层次结构如下图所示：
 
-![](https://www.wolfcstech.com/images/1315506-0b23c6c46d3a5fb1.png)
+![](../images/1315506-0b23c6c46d3a5fb1.png)
 
 第 5 步，调用 `setSDPLinesFromRTPSink()` 生成 SDP 行。前面的几步都是在为这一步的执行做准备。这个函数实现如下：
 ```

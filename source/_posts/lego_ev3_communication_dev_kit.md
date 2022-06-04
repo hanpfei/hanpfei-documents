@@ -54,7 +54,7 @@ LEGO MINDSTORMS EV3 可编程 brick 是新 LEGO MINDSTORMS 平台内的中央处
 
 **系统命令字节：**
 
-![](https://www.wolfcstech.com/images/1315506-aa6f55bd5dc9af28.png)
+![](../images/1315506-aa6f55bd5dc9af28.png)
 
 字节 0 - 1：命令大小，小尾端。命令大小不包含这 2 个字节
 字节 2 - 3：消息计数器，小尾端。Forth running counter
@@ -90,7 +90,7 @@ LEGO MINDSTORMS EV3 可编程 brick 是新 LEGO MINDSTORMS 平台内的中央处
 
 **系统应答字节：**
 
-![](https://www.wolfcstech.com/images/1315506-ce930be5ecb43fc0.png)
+![](../images/1315506-ce930be5ecb43fc0.png)
 
 字节 0 - 1：应答大小，小尾端。应答大小不包含这 2 个字节
 字节 2 - 3：消息计数器，小尾端。等于直接命令
@@ -129,7 +129,7 @@ LEGO MINDSTORMS EV3 可编程 brick 是新 LEGO MINDSTORMS 平台内的中央处
 
 **下面的例子基于想要给 P-Brick 发送一个文件的主机应用（X3 software）构建：**
 
-![](https://www.wolfcstech.com/images/1315506-22619ea04685b8f3.png)
+![](../images/1315506-22619ea04685b8f3.png)
 
 命令大小，命令类型，开始 D/L，文件大小，文件名 ------>
 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<------ 命令大小，命令类型，句柄
@@ -553,7 +553,7 @@ LEGO MINDSTORMS EV3 可编程 brick 是新 LEGO MINDSTORMS 平台内的中央处
 
 **直接命令字节：**
 
-![](https://www.wolfcstech.com/images/1315506-abe01a3233a4c289.png)
+![](../images/1315506-abe01a3233a4c289.png)
 
 字节 0 - 1：命令大小，小尾端。命令大小不包含这 2 个字节
 字节 2 - 3：消息计数器，小尾端。Forth running counter
@@ -581,7 +581,7 @@ LEGO MINDSTORMS EV3 可编程 brick 是新 LEGO MINDSTORMS 平台内的中央处
 
 **直接应答字节：**
 
-![](https://www.wolfcstech.com/images/1315506-14588e96314e7c3c.png)
+![](../images/1315506-14588e96314e7c3c.png)
 
 字节 0 - 1：应答大小，小尾端。应答大小不包含这 2 个字节
 字节 2 - 3：消息计数器，小尾端。与直接命令相同

@@ -88,7 +88,7 @@ protected: // redefined virtual functions
 ```
 
 `DynamicRTSPServer` 的类层次结构如下图：
-![](https://www.wolfcstech.com/images/1315506-791dcd5f2574c420.png)
+![](../images/1315506-791dcd5f2574c420.png)
 
 要监听的 socket 以及 socket 上的 I/O 事件的处理程序是在 `DynamicRTSPServer` 创建的过程中注册给 `TaskScheduler` 的。`DynamicRTSPServer` 需要通过其静态函数 `createNew()` 创建，该函数定义如下：
 ```
@@ -514,7 +514,7 @@ RTSPServerSupportingHTTPStreaming::RTSPClientConnectionSupportingHTTPStreaming
 
 这里简单地创建一个 `RTSPClientConnectionSupportingHTTPStreaming` 类对象。在 live555 中，用 `GenericMediaServer` 的内部类 `GenericMediaServer::ClientConnection` 表示一个客户端连接。对于  "LIVE555 Media Server" 而言，这个类的继承层次体系结构如下图所示：
 
-![](https://www.wolfcstech.com/images/1315506-25767662578513fe.png)
+![](../images/1315506-25767662578513fe.png)
 
 `RTSPClientConnectionSupportingHTTPStreaming` 类对象构造函数调用其父类 `RTSPServer::RTSPClientConnection` 的构造函数，后者的实现为：
 ```

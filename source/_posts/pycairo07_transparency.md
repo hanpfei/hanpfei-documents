@@ -35,7 +35,7 @@ tags:
 ```
 这段代码创建了 10 个矩形，它们的 alpha 值分别为 0.1，...，1。
 
-![图：透明的矩形](https://www.wolfcstech.com/images/1315506-f61723c2c3f0ec24.jpg)
+![图：透明的矩形](../images/1315506-f61723c2c3f0ec24.jpg)
 
 # Puff 效果
 
@@ -199,7 +199,7 @@ class cv(object):
 ```
 我们用 `text_path()` 方法获取文字的 path。我们用 `clip()` 方法将绘制限定在当前的path。`paint_with_alpha()` 方法使用一个 alpha 值的 mask，在当前的裁剪区域内，绘制当前的 source。
 
-![图：Puff 效果](https://www.wolfcstech.com/images/1315506-b7498655449364d9.jpg)
+![图：Puff 效果](../images/1315506-b7498655449364d9.jpg)
 
 # 图像倒影
 
@@ -368,7 +368,7 @@ if __name__ == "__main__":
 ```
 这是最后的部分。我们使第二幅图片变得透明。但透明度不是固定的。这幅图片渐渐地褪色。倒影图像是一行接一行绘制的。`clip()` 方法将绘制限定在高度为 1 的矩形中。`paint_with_alpha()` 在绘制图像 surface 的当前裁剪区域时会将透明度也考虑进来。
 
-![图：倒影图像](https://www.wolfcstech.com/images/1315506-a31ab6a320e508f7.jpg)
+![图：倒影图像](../images/1315506-a31ab6a320e508f7.jpg)
 
 # 等待效果 Demo
 
@@ -540,7 +540,7 @@ class cv(object):
 ```
 在 `for` 循环中，我们用不同的透明度值，绘制了八条旋转的直线。线之间由 45 度角隔开。
 
-![图：等待效果 demo](https://www.wolfcstech.com/images/1315506-11696edaebc7c57d.jpg)
+![图：等待效果 demo](../images/1315506-11696edaebc7c57d.jpg)
 
 本章我们讨论了透明度。
 

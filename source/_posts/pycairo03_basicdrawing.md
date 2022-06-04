@@ -148,7 +148,7 @@ GTK 文档简单地声明了鼠标左键为数字 1，鼠标右键为数字 3。
 ```
 按下鼠标右键时，我们调用 `queue_draw()` 方法，它将重绘绘图区域。所有的点会连成线。
 
-![](https://www.wolfcstech.com/images/1315506-f62a0f03708d4020.png)
+![](../images/1315506-f62a0f03708d4020.png)
 图：直线
 
 # 填充和stroke
@@ -245,7 +245,7 @@ import math
 ```
 我们修改绘制的颜色，并使用 `fill()` 方法以一种新的颜色填充圆圈。
 
-![](https://www.wolfcstech.com/images/1315506-243253cc4b6cb342.jpg)
+![](../images/1315506-243253cc4b6cb342.jpg)
 图：填充 & Stroke
 
 # 笔破折号
@@ -293,7 +293,7 @@ import math
 ```
 我们在这儿创建一个对称的笔破折号模式，交替的一个点画，一个点不画。
 
-![](https://www.wolfcstech.com/images/1315506-2de941a54c040745.jpg)
+![](../images/1315506-2de941a54c040745.jpg)
 图：笔破折号
 
 # 线帽
@@ -306,7 +306,7 @@ import math
 
 Cairo 中有三种不同的线帽风格。
 
-![](https://www.wolfcstech.com/images/1315506-4a7b54fd6eb09897.png)
+![](../images/1315506-4a7b54fd6eb09897.png)
 图：方形，圆形和 butt 盖
 
 相对于线帽为 `cairo.LINE_CAP_BUTT` 的直线，线帽为 `cairo.LINE_CAP_SQUARE` 的直线具有不同的大小。如果直线是 x 单元宽的，线帽为 `cairo.LINE_CAP_SQUARE` 的直线在大小上要大整整 x 个单元；开始处 x/2 个单元，结尾处 x/2 个单元。
@@ -368,7 +368,7 @@ def on_draw(self, wid, cr):
 ```
 这是用于演示不同直线大小的三条垂直直线中的一条。
 
-![](https://www.wolfcstech.com/images/1315506-a88f470bf54056d2.jpg)
+![](../images/1315506-a88f470bf54056d2.jpg)
 图：线帽
 
 # 线连接
@@ -379,7 +379,7 @@ def on_draw(self, wid, cr):
  * cairo.LINE_JOIN_BEVEL
  * cairo.LINE_JOIN_ROUND
 
-![](https://www.wolfcstech.com/images/1315506-3dd2d6df15ac9833.jpg)
+![](../images/1315506-3dd2d6df15ac9833.jpg)
 图：Bevel，Round，Miter 线连接
 
 ```
@@ -412,7 +412,7 @@ def on_draw(self, wid, cr):
 ```
 此处我们绘制了一个线连接风格为 `cairo.LINE_JOIN_MITER` 的矩形。
 
-![](https://www.wolfcstech.com/images/1315506-610e5f9b8892f031.jpg)
+![](../images/1315506-610e5f9b8892f031.jpg)
 图：线连接
 
 # 贝塞尔曲线
@@ -434,7 +434,7 @@ curve_to(x1, y1, x2, y2, x3, y3)
 ```
 在这个例子中，通过 `curve_to()` 方法绘制一条贝塞尔曲线。
 
-![](https://www.wolfcstech.com/images/1315506-dbc0e4bca3fd7d30.png)
+![](../images/1315506-dbc0e4bca3fd7d30.png)
 图：贝塞尔曲线
 
 PyCairo 教程的这一章，我们做了一些基本的绘制。

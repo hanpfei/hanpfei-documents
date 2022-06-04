@@ -346,7 +346,7 @@ public final class UserCertificateSource extends DirectoryCertificateSource {
 
 相关的几个组件结构如下图：
 
-![CertificateSource](https://www.wolfcstech.com/images/1315506-03eeb26ab6b4fa1d.png)
+![CertificateSource](../images/1315506-03eeb26ab6b4fa1d.png)
 
 
 # 证书链合法性验证
@@ -1109,7 +1109,7 @@ public class TrustedCertificateStoreAdapter extends TrustedCertificateStore {
 ```
 
 不难看出 Android 中 Java 层证书验证的过程如下图所示：
-![57a8088064c6f4f0671ec61834688ca3.jpg](https://www.wolfcstech.com/images/1315506-6eb297cdb8af12d2.jpg)
+![57a8088064c6f4f0671ec61834688ca3.jpg](../images/1315506-6eb297cdb8af12d2.jpg)
 
 `OpenSSLSocketImpl.startHandshake()` 和 `NativeCrypto.SSL_do_handshake()` 执行完整的 SSL/TLS 握手过程。证书合法性验证作为 SSL/TLS 握手的一个重要步骤，通过本地层调用的 Java 层的回调方法 `SSLHandshakeCallbacks.verifyCertificateChain()` 完成，`OpenSSLSocketImpl` 实现这一回调。`OpenSSLSocketImpl.verifyCertificateChain()`、`Platform.checkServerTrusted()`、`RootTrustManager.checkServerTrusted()` 和`NetworkSecurityTrustManager.checkServerTrusted()` 用于将真正的根据系统根证书库执行证书合法性验证的 `TrustManagerImpl` 和 SSL/TLS 握手过程粘起来。`OpenSSLSocketFactoryImpl` 将 `OpenSSLSocketImpl` 和 `SSLParametersImpl` 粘起来。`SSLParametersImpl` 将 `OpenSSLSocketImpl` 和 `RootTrustManager` 粘起来。
 
@@ -1136,7 +1136,7 @@ com.android.okhttp.Connection.connectTls()
 
 Java 加密体系架构（JCA）是一个非常灵活的架构，它的整体结构如下图：
 
-![JCA](https://www.wolfcstech.com/images/1315506-32a5c3c78d634e3a.jpg)
+![JCA](../images/1315506-32a5c3c78d634e3a.jpg)
 
 Java 应用程序通过接口层访问加密服务，接口层的组成包括 JAAS（Java Authentication Authorization Service，Java验证和授权API）、JSSE（Java Secure Socket Extension，Java 安全 套接字扩展）、JGSS（Java Generic Security Service ）和 CertPath等。具体的组件如我们前面看到的 `CertificateFactory`、`TrustManagerFactory` 和 `SSLSocketFactory` 等。
 

@@ -55,7 +55,7 @@ PyCairo 教程的这个部分，我们将与文本打交道。
 ```
 我们通过为文本指定位置并调用 `show_text()` 方法将文本显示在窗口中。
 
-![图：灵魂伴侣](https://www.wolfcstech.com/images/1315506-3366e791a36703f3.jpg)
+![图：灵魂伴侣](../images/1315506-3366e791a36703f3.jpg)
 
 # 居中的文字
 
@@ -100,7 +100,7 @@ PyCairo 教程的这个部分，我们将与文本打交道。
 ```
 我们将文字定位在窗口的中间，并用 `show_text()` 显示它。
 
-![图：居中的文字](https://www.wolfcstech.com/images/1315506-729cd288af47698e.jpg)
+![图：居中的文字](../images/1315506-729cd288af47698e.jpg)
 
 # 阴影文字
 
@@ -137,7 +137,7 @@ PyCairo 教程的这个部分，我们将与文本打交道。
 ```
 第二段文字以一些灰色墨水绘制。它向右下边移动了 3px。
 
-![图：阴影文字](https://www.wolfcstech.com/images/1315506-3d4461bb03ce4c15.jpg)
+![图：阴影文字](../images/1315506-3d4461bb03ce4c15.jpg)
 
 # 渐变填充文字
 
@@ -189,7 +189,7 @@ PyCairo 教程的这个部分，我们将与文本打交道。
 ```
 文字被显示于窗口中。我们用渐变作为 source 来绘制。
 
-![图：渐变填充文字](https://www.wolfcstech.com/images/1315506-e29fc022ca7b280e.jpg)
+![图：渐变填充文字](../images/1315506-e29fc022ca7b280e.jpg)
 
 # 逐字符显示
 
@@ -309,7 +309,7 @@ if __name__ == "__main__":
 ```
 此处我们逐字符绘制文本。我们获取每个字符的宽度，然后计算沿 x 轴需要移动的距离。
 
-![图：逐字符显示](https://www.wolfcstech.com/images/1315506-af746100aa068168.jpg)
+![图：逐字符显示](../images/1315506-af746100aa068168.jpg)
 
 # Glyphs
 
@@ -347,7 +347,7 @@ glyphs 列表将存储三个整数值。第一个值是 glyph 在选中的字体
 ```
 `show_glyphs()`  方法在窗口中显示 glyphs。
 
-![图：Glyphs](https://www.wolfcstech.com/images/1315506-1b147074abf88f9e.jpg)
+![图：Glyphs](../images/1315506-1b147074abf88f9e.jpg)
 
 本章讨论了 PyCairo 中的文本。
 

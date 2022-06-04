@@ -42,7 +42,7 @@ Camera 可以提供一个适合于记录为视频的帧流。为了在屏幕上�
 
 * **MediaServer**。你可以以一个输入 Surface 配置 MediaCodec 编码器来创建视频。
 
-![continuous_capture_activity.png](https://www.wolfcstech.com/images/1315506-36c0f44d8a0765ea.png)
+![continuous_capture_activity.png](../images/1315506-36c0f44d8a0765ea.png)
 
 **图 1** Grafika 的持续捕获 activity。箭头表示从 camera 的数据传播，且 BufferQueue 是彩色的 (生产者是青色的，消费者是绿色的)。
 
@@ -56,7 +56,7 @@ Camera 可以提供一个适合于记录为视频的帧流。为了在屏幕上�
 
 Android 7.0 支持受保护视频内容的 GPU 后处理。这允许对复杂的非线性视频效果（比如 warps）使用 GPU，将受保护视频内容映射到纹理上以用于通用的图形场景（比如，使用 OpenGL ES），以及虚拟显示（VR）。
 
-![graphics_secure_texture_playback.png](https://www.wolfcstech.com/images/1315506-02d0d7ae0cbd651c.png)
+![graphics_secure_texture_playback.png](../images/1315506-02d0d7ae0cbd651c.png)
 
 **图 2.** 安全纹理视频播放
 

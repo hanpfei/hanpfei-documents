@@ -85,7 +85,7 @@ if __name__ == "__main__":
 ```
 我们将 source 绘制在窗口中。
 
-![图：展示一幅图片](https://www.wolfcstech.com/images/1315506-08ee8e2f154a99e8.jpg)
+![图：展示一幅图片](../images/1315506-08ee8e2f154a99e8.jpg)
 
 # 显示一幅 JPEG 图片
 
@@ -163,7 +163,7 @@ from gi.repository import Gtk, Gdk, GdkPixbuf
 ```
 `Gdk.cairo_set_source_pixbuf()` 方法将 pixbuf 设为 source 以用于绘制。
 
-![图：展示一幅图片](https://www.wolfcstech.com/images/1315506-2cb2ada8f6997fc3.jpg)
+![图：展示一幅图片](../images/1315506-2cb2ada8f6997fc3.jpg)
 
 # 水印
 
@@ -263,7 +263,7 @@ if __name__ == "__main__":
 ```
 最后，将图片 surface 绘制到窗口中。
 
-![图：水印](https://www.wolfcstech.com/images/1315506-ba8923d9fbe2ffb2.jpg)
+![图：水印](../images/1315506-ba8923d9fbe2ffb2.jpg)
 
 这一章，我们讨论了 PyCairo 中的图片。
 

@@ -138,7 +138,7 @@ if __name__ == "__main__":
 ```
 `paint()` 用当前的 source 描绘当前裁剪区域内的部分。
 
-![图：剪裁](https://www.wolfcstech.com/images/1315506-9b56d572891a7cb0.jpg)
+![图：剪裁](../images/1315506-9b56d572891a7cb0.jpg)
 
 # 屏蔽
 
@@ -205,7 +205,7 @@ if __name__ == "__main__":
 ```
 我们使用一幅图片作为 mask，这将会把它显示在窗口中。
 
-![图：屏蔽](https://www.wolfcstech.com/images/1315506-f63e460ce58521f2.jpg)
+![图：屏蔽](../images/1315506-f63e460ce58521f2.jpg)
 
 # Blind down 效果
 
@@ -350,7 +350,7 @@ blend down 效果背后的想法相当的简单。图像有 h 个像素高。我
 ```
 城堡的图片被设置为绘制时的 source。`mask_surface()` 绘制当前的 source，使用 surface 的 alpha 通道作为一个 mask。
 
-![图：Blind down](https://www.wolfcstech.com/images/1315506-b49cf2ab5ad9f6d3.jpg)
+![图：Blind down](../images/1315506-b49cf2ab5ad9f6d3.jpg)
 
 Blind down 是一种动画效果。
 

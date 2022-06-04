@@ -23,7 +23,7 @@ Gazebo 的安装方法如下。
 
 在 Gazebo 的 [下载页面](http://gazebosim.org/download) 下载 Gazebo 的 `.deb` 包。
 
-![Gazebo Download](https://www.wolfcstech.com/images/1315506-427e5a7473ff38b1.png)
+![Gazebo Download](../images/1315506-427e5a7473ff38b1.png)
 
 实际下载回来的是一个脚本文件。为该文件添加可执行权限：
 ```
@@ -212,7 +212,7 @@ Type gazebo to start the simulator.
 
 一大堆依赖会被安装。安装完成后，即可通过 `gazebo` 命令来启动 Gazebo 了。Gazebo 启动之后界面如下：
 
-![Gazebo Main GUI](https://www.wolfcstech.com/images/1315506-ffdffcf63f81489e.png)
+![Gazebo Main GUI](../images/1315506-ffdffcf63f81489e.png)
 
 Gazebo 是开源的，可以通过如下的方式来下载源码：
 ```

@@ -1218,11 +1218,11 @@ gralloc1_error_t Gralloc1On0Adapter::lock(
 
 总结一下 Android 图形系统中，对于 gralloc 接口的情况，与图形缓冲区分配、映射有关的组件之间的结构，如下图所示：
 
-![](https://www.wolfcstech.com/images/1315506-7182c5530b0cfa25.png)
+![](../images/1315506-7182c5530b0cfa25.png)
 
 如果是 gralloc1 接口的情况，则稍微有一点不同：
 
-![](https://www.wolfcstech.com/images/1315506-54007139e9f15b0b.png)
+![](../images/1315506-54007139e9f15b0b.png)
 
 此外，在前面 `BufferQueueCore` 中创建 `IGraphicBufferAlloc` 时，我们看到这个对象总是会通过 surfacefinger 创建，然后通过 Binder IPC 传递给创建 BufferQueue 的进程一个句柄。后续在创建 BufferQueue 的进程中的生产者要分配 `GraphicBuffer`，则这一分配过程实际也将发生在 surfaceflinger 进程中，创建的 `GraphicBuffer`经过序列化之后，传回给创建 BufferQueue 的进程。在 `GraphicBuffer` 对象真正创建的时候，也会直接为其分配图形缓冲区。也就是说，在 Android 系统中，真正会分配图形缓冲区的进程只有 surfaceflinger，尽管可能会创建 BufferQueue 的进程有多个。
 

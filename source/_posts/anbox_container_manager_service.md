@@ -364,7 +364,7 @@ $ sudo systemctl status snap.anbox.container-manager
 ```
 
 当 Anbox 的容器管理服务正常运行时，通过在应用列表中，点击 Anbox 应用，如下图这样：
-![Anbox Application](https://www.wolfcstech.com/images/1315506-a12d2c77565c111e.png)
+![Anbox Application](../images/1315506-a12d2c77565c111e.png)
 
 可以启动 Anbox 会话。
 
@@ -419,7 +419,7 @@ $ adb logcat
 ```
 
 当 Anbox 起动的 Android 系统内所需的应用程序都启动完毕时，通过 Anbox 应用将可以看到 Android 系统的桌面，可以看到 Android 系统中的应用，如下图：
-![](https://www.wolfcstech.com/images/1315506-dc70cce88058c6a8.png)
+![](../images/1315506-dc70cce88058c6a8.png)
 
 Anbox 项目写了一个名为 `org.anbox.appmgr` 的 Java 应用程序，用以替代原始 Android 系统中的 Launcher，以展示已安装应用列表。随后就可以像操作普通的桌面 Linux 系统中的应用那样操作 Android 内的应用了。
 

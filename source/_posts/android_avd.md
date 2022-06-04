@@ -477,7 +477,7 @@ qemu-system-i386: -drive if=none,overlap-check=none,cache=unsafe,index=1,id=cach
 
 # AVD 实例管理及用户数据隔离
 
-![image.png](https://www.wolfcstech.com/images/1315506-bf4704dc8fafa1a5.png)
+![image.png](../images/1315506-bf4704dc8fafa1a5.png)
 
 根据不同的场景，创建不同类型的 AVD 实例：可复用的 AVD 实例，即这种 AVD 实例仅提供试玩，每次 AVD 结束之后，生成的用户数据将被清除，下次有新的用户需要试玩时，可以复用这种 AVD 实例；用户 AVD 实例，即专门为特定用户分配的 AVD 实例，每次在 AVD 结束之后，用户数据将保存。
 

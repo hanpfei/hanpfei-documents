@@ -27,25 +27,25 @@ http://localhost:8080/greeting
 
 # 创建工程
 在菜单栏选择 File -> New -> Project... 打开创建工程的窗口，如下图：
-![](https://www.wolfcstech.com/images/1315506-12ac58e45b36f736.png)
+![](../images/1315506-12ac58e45b36f736.png)
 
 然后选中左边的 `Spring` 一项，在右边选择 `Spring`，以及 `Spring` 下的 `Spring MVC`。在选中 `Spring` 下的 `Spring MVC` 时， `Web Application` 也会被自动选中。选中之后，需要等 IntelliJ 加载一会儿组件的版本信息，在选中的组件后面出现括号包着的灰色版本号时，说明版本信息加载完成了。然后点击 `Next`，进入如下界面：
-![](https://www.wolfcstech.com/images/1315506-3026b355e4ef271d.png)
+![](../images/1315506-3026b355e4ef271d.png)
 
 输入工程名称，设置工程的根目录，并点击  `Finish`。此时 IntelliJ 将帮我们自动下载所需的 Jar 文件：
-![](https://www.wolfcstech.com/images/1315506-a5469d94befa6bf7.png)
+![](../images/1315506-a5469d94befa6bf7.png)
 
 下载完成之后，项目就建好了。整个项目的结构如下：
-![](https://www.wolfcstech.com/images/1315506-96351e2a1a8f518b.png)
+![](../images/1315506-96351e2a1a8f518b.png)
 
 lib 下存放我们下载的 jar 文件，以及其它在项目中要用到的第三方库文件。src 用于放置我们的 Java 代码，而 web 目录则存放我们的 Web 应用的配置文件等。
 
 # 新建包
 通过 IntelliJ 菜单的 `File` -> `New` -> `Package`打开创建包的窗口：
-![](https://www.wolfcstech.com/images/1315506-e927c90140d0c0cb.png)
+![](../images/1315506-e927c90140d0c0cb.png)
 
 输入包名 `com.hanpfei` 并点 `OK` 键。此时，工程的整个结构如下：
-![](https://www.wolfcstech.com/images/1315506-8f28f8585e32c5d8.png)
+![](../images/1315506-8f28f8585e32c5d8.png)
 
 包直接位于 `src` 目录下。
 
@@ -162,34 +162,34 @@ spring-boot-starter-web-1.5.1.RELEASE.jar
 方法是在 [Maven Repository](http://mvnrepository.com/artifact/org.springframework.boot) 找到这几组件，并下载适当的版本到 `HelloHanpfeiSpring/lib` 目录下。如果本地其它项目中已经有了这些文件，或者本地 Maven 仓库（位于 `~/.m2/repository/org/springframework/boot` ）中下载过了这些文件，也可以直接拷贝过去。
 
 有了需要的 Jar 包之后，还需要为项目添加对这些 Jar 包的依赖。方法是通过菜单栏 File -> Project Structure... （或使用 Ctrl + Alt + Shift + S ）打开如下对话框：
-![](https://www.wolfcstech.com/images/1315506-5149535e1a382cc9.png)
+![](../images/1315506-5149535e1a382cc9.png)
 
 选中左边的 `Libraries`，点击中间一栏上面的 "+" 号，选中其中的 `Java`，在弹出的文件选择对话框中，选中 `spring-boot-1.4.1.RELEASE.jar` 和 `spring-boot-autoconfigure-1.4.1.RELEASE.jar`：
-![](https://www.wolfcstech.com/images/1315506-a4b839944b2a18c7.png)
+![](../images/1315506-a4b839944b2a18c7.png)
 
 然后以同样的方法添加 `spring-boot-starter-1.5.1.RELEASE.jar` 和 `spring-boot-starter-web-1.5.1.RELEASE.jar`。引用的库的配置将如下图：
-![](https://www.wolfcstech.com/images/1315506-28757566ec529750.png)
+![](../images/1315506-28757566ec529750.png)
 
 点击 `OK` 键结束添加。
 
 ## 新建 Run/Debug Configuration
 为了使我们的 Web 应用可以跑起来，我们还需要创建一个 `Run/Debug Configuration`。方法为通过菜单的 Run -> Edit Configuratons ... 打开编辑配置对话框：
-![](https://www.wolfcstech.com/images/1315506-ae42ae12956ab118.png)
+![](../images/1315506-ae42ae12956ab118.png)
 
 点击右上角的 "+" 号，并在弹出的一列选项中，找到 `Spring Boot` 并选中，此时对话框将变成如下的样子：
-![](https://www.wolfcstech.com/images/1315506-8016887ae8866ca6.png)
+![](../images/1315506-8016887ae8866ca6.png)
 
 我们输入 Name，配置 Main class，最终将像下面这样：
-![](https://www.wolfcstech.com/images/1315506-3fb744eec40875e9.png)
+![](../images/1315506-3fb744eec40875e9.png)
 
 点击 OK 退出。此时我们就可以通过工具栏中的 `运行` 按钮来运行我们的 Web 应用了：
-![](https://www.wolfcstech.com/images/1315506-bd00f583ac9240e1.png)
+![](../images/1315506-bd00f583ac9240e1.png)
 
 此时我们点击 `运行` 按钮，结果如下：
-![](https://www.wolfcstech.com/images/1315506-2cd5f5911ee33142.png)
+![](../images/1315506-2cd5f5911ee33142.png)
 
 What a Terrible Failure！！！ Web 应用进程竟然在我们的请求还没发出的时候，就直接退出了，退出了，了，了。。。
-![](https://www.wolfcstech.com/images/1315506-289a03ae54a577b0.jpg)
+![](../images/1315506-289a03ae54a577b0.jpg)
 
 不着急。回想前文有提到，这样运行需要借助于 Tomcat 运行时。于是我们找到相关的几个 Jar 文件，像导入 SpringBoot 一样导入我们的工程（同样可以到 [Maven Respository](http://mvnrepository.com/search?q=tomcat-embed) 下载）：
 ```
@@ -199,11 +199,11 @@ tomcat-embed-websocket-8.5.11.jar
 ```
 
 再次运行我们的 Web 应用。终于欢快地跑起来了：
-![](https://www.wolfcstech.com/images/1315506-23e5dcce9ab05ec8.png)
+![](../images/1315506-23e5dcce9ab05ec8.png)
 
 # 测试服务
 接着我们来测试一下我们新建的 Web 应用。在浏览器的地址栏中输入 [http://localhost:8080/greeting](http://localhost:8080/greeting)，我们看到了：
-![](https://www.wolfcstech.com/images/1315506-e0f113b1d830af39.png)
+![](../images/1315506-e0f113b1d830af39.png)
 
 新手定律说得好，问题总是喜欢刁难初学者，这真是一点也不错。这不又出错了么。此时在 IntelliJ 的运行控制台，我们看到了如下的错误输出：
 ```
@@ -240,16 +240,16 @@ jackson-databind-2.8.6.jar
 安装配置 Tomcat 的方法可以参考 [Ubuntu 16.04 Tomcat 8安装指南](https://www.wolfcstech.com/2017/02/24/Install_Tomcat8_on_Ubuntu16.04/)。这里我们主要来看在 IntelliJ 中如何将我们的 Web 应用跑在 Tomcat上。
 
 首先我们需要创建一个`Application Server`。在菜单栏选择 File -> Settings ... ，然后选择 Build, Execution, Deployment -> Application Servers。点击中间一栏的 "+" 加号，在弹出的选项列表中选择 `Tomcat Server`，在弹出的对话框中配置 Tomcat 主目录：
-![](https://www.wolfcstech.com/images/1315506-34ea6372220ea7b0.png)
+![](../images/1315506-34ea6372220ea7b0.png)
 
 完成之后点击 "OK" 按钮。最终将像下面这样：
-![](https://www.wolfcstech.com/images/1315506-d254f4f9cc836af1.png)
+![](../images/1315506-d254f4f9cc836af1.png)
 
 然后添加一个 `Run/Debug Configuration`。通过菜单栏的  Run -> Edit Configuratons ... 打开编辑配置对话框，点击右上角的 "+" 号，并在弹出的一列选项中，找到 `Tomcat Server` -> `Local` 并选中。然后输入配置名称，并适当的配置 `Application server` 为我们之前创建的配置。结果如图所示：
-![](https://www.wolfcstech.com/images/1315506-4ffafab9c6383dca.png)
+![](../images/1315506-4ffafab9c6383dca.png)
 
 最下面可以看到 `Warning` 行，且左方的 `Tomcat-8.0.32` 图标上有一个错误标记，说明还没有配置完全。我们还需要将项目部署到 Tomcat 服务器中。点击 Deployment，再点击中间上方的 ”+“ 号，添加一个 Artifact，最终将像下面这样：
-![](https://www.wolfcstech.com/images/1315506-32342bdc28e92f8a.png)
+![](../images/1315506-32342bdc28e92f8a.png)
 
 再点击OK，整个Tomcat配置结束。
 
@@ -293,15 +293,15 @@ Using CLASSPATH:       /opt/tomcat/bin/bootstrap.jar:/opt/tomcat/bin/tomcat-juli
 	at org.apache.catalina.loader.WebappClassLoaderBase.loadClass(WebappClassLoaderBase.java:1142)
 ```
 即找不到 Spring 的一个 class `org.springframework.web.context.ContextLoaderListener`。在网上搜了半天，终于找到解法，[ClassNotFoundException:ContextLoaderListener](http://blog.csdn.net/lucklq/article/details/5868496)。解法其实简单，就是将下载的 Spring 的 lib 文件夹移到项目的 `web/WEB-INF/` 下。工程的结构将像下面这样：
-![](https://www.wolfcstech.com/images/1315506-befcb80e64a5e036.png)
+![](../images/1315506-befcb80e64a5e036.png)
 
 再次尝试在 Tomcat 中运行我们的 Web应用，结果如下：
-![](https://www.wolfcstech.com/images/1315506-db32dcf0f80e6d62.png)
+![](../images/1315506-db32dcf0f80e6d62.png)
 
 部署终于成功了。（通过菜单栏打开 File -> Project Structure... （或使用 Ctrl + Alt + Shift + S ）工程配置对话框，选中左边的 `Libraries`，重新配置之前我们导入的 Jar 包，将仍然可以 通过前面配置的 `Spring Boot` 运行配置运行我们的 Web 应用，否则将由于符号找不到而运行失败。）
 
 而当我们通过 `http://localhost:8080/greeting?name=hanpfei` 访问我们的 Web 服务，却发现返回了 404：
-![](https://www.wolfcstech.com/images/1315506-8976b85acb1493d7.png)
+![](../images/1315506-8976b85acb1493d7.png)
 
 # 配置 web.xml
 我们的 Web 服务没能在 Tomcat 中跑起来，不急，我们还没通过 web.xml 配置 Servlet 呢。
@@ -518,7 +518,7 @@ http://localhost:8080/greeting?name=hanpfei
 我们首先将 `HelloHanpfeiSpring/web/WEB-INF/lib` 目录整个删除，因为通过 Maven，我们无需在我们的工程中再放置任何 Jar 包，我们完全可以通过 Maven 的配置文件，来管理我们依赖的组件。
 
 然后按照 Maven 的工程结构惯例调整我们工程的工程结构，最终结果将如下面这样：
-![](https://www.wolfcstech.com/images/1315506-95b1cfb0de20a2c6.png)
+![](../images/1315506-95b1cfb0de20a2c6.png)
 
 Web应用的配置文件都被放入了 `HelloHanpfeiSpring/src/main/` 下面，`Java` 代码则被放入了 `HelloHanpfeiSpring/src/main/java` 下。
 
@@ -624,7 +624,7 @@ Web应用的配置文件都被放入了 `HelloHanpfeiSpring/src/main/` 下面，
 ```
 
 然后选择工作窗口最右侧的 `Maven Projects`，并点击弹出来的窗口左上角的刷新按钮，等待 Maven 帮我们刷新工程，下载依赖的所有包。最终整个工程的结构将如下面这样：
-![](https://www.wolfcstech.com/images/1315506-7bacab8fb0b86b33.png)
+![](../images/1315506-7bacab8fb0b86b33.png)
 
 我们可以通过最右侧 `Plugins` 下的 `war` 下的 `war:war` 来为我们的 Web 应用构建 war 包。构建之后，`.war` 文件将位于 `HelloHanpfeiSpring/target/` 目录下。
 

@@ -60,15 +60,15 @@ chmod +x myproject.git/hooks/post-receive
 
 这份教程专注于 PyCharm Community Edition（尽管这些说明也适用于更多 软件的高级版本）。如果你还没有安装，请安装 [PyCharm](https://www.jetbrains.com/pycharm/)。
 
-![welcome.png](https://www.wolfcstech.com/images/1315506-94e88b7b839aa553.png)
+![welcome.png](../images/1315506-94e88b7b839aa553.png)
 
 现在我们要做的是创建一份我们在 ev3dev 机器上创建的工程的 clone，以便我们可以在开发 PC 机上工作。在 PyCharm 的 Welcome 对话框中，选择：*Checkout from version control* > *Git*。现在输入 ev3dev 主机的主机名（主机名通常是 `ev3dev` 或 `ev3dev.local`），后面跟冒号，然后是工程名。在其它选项中选择一个适当的 parent 和工程目录。
 
-![clone-repo.png](https://www.wolfcstech.com/images/1315506-ac8a1124ff628c94.png)
+![clone-repo.png](../images/1315506-ac8a1124ff628c94.png)
 
 除了在 PyCharm 的 Welcome 界面外，还可以在 PyCharm 的主界面选择菜单选项 *VCS* > *Checkout from version control* > *Git*，打开与上面完全一样的对话框。如下图：
 
-![807193-20161121150956612-1541582462.png](https://www.wolfcstech.com/images/1315506-2adf88bd756630e2.png)
+![807193-20161121150956612-1541582462.png](../images/1315506-2adf88bd756630e2.png)
 
 然后按照与上面的说明一致的方法输入相关信息。
 
@@ -107,7 +107,7 @@ python3 run_motor.py
 
 我们之前保存代码的时候，你可能已经注意到了一个问题：PyCharm 在 ev3dev 库的 import 行下面放置了红色波浪线。
 
-![missing-lib.png](https://www.wolfcstech.com/images/1315506-97731e5df30a5a0e.png)
+![missing-lib.png](../images/1315506-97731e5df30a5a0e.png)
 
 这是由于在开发机上缺失了 ev3dev 库，因此 PyCharm 认为你的代码引用了不存在的类。我们可以通过在开发机上安装 ev3dev 库来解决这个问题：我们当然无法在桌面电脑上运行马达，但库中的文档和自动补全将被探测到，以便 PyCharm 可以帮助您。
 
@@ -123,7 +123,7 @@ $ sudo python3 /usr/local/bin/pip3 install python-ev3dev
 
 安装了库之后，红色的波浪线将消失，并且  ev3dev-python 命令的自动补全将会工作（非常方便）。
 
-![installed-lib.png](https://www.wolfcstech.com/images/1315506-c842dbde4cf76c8c.png)
+![installed-lib.png](../images/1315506-c842dbde4cf76c8c.png)
 
 # 使用IDE的强大功能
 
@@ -153,7 +153,7 @@ PyCharm 专业版（对于教育的场景或开源项目的顶级贡献者可以
  * 点击 `Deployment`
  * 点击 `+` 图标，并添加一个新的远程服务器，随意命名为你喜欢的名字（比如 `EV3`）
 
-![sftp-setup-1.png](https://www.wolfcstech.com/images/1315506-c50be24699f2fbee.png)
+![sftp-setup-1.png](../images/1315506-c50be24699f2fbee.png)
 
  * 选择 SFTP，然后设置如下的参数：
    - SFTP 主机：`ev3dev` 或 `ev3dev.local`，依赖于你的网络配置（如果你重命名了 EV3 的话将是不同的）
@@ -164,7 +164,7 @@ PyCharm 专业版（对于教育的场景或开源项目的顶级贡献者可以
    - 保存密码：选中此框以使自己更轻松。
    - 你也可以在顶部反选 ‘Visible only for this project’。
 
-![sftp-setup-2.png](https://www.wolfcstech.com/images/1315506-358218b1f72dd54e.png)
+![sftp-setup-2.png](../images/1315506-358218b1f72dd54e.png)
 
  * 点击 Mappings 标签（如果为空，点击 OK 回到这个 spot，有时它需要你先保存它）
    - 选择你的文件在 EV3 上的路径，比如
@@ -172,13 +172,13 @@ PyCharm 专业版（对于教育的场景或开源项目的顶级贡献者可以
    - 点击顶部的 `Use this server as default` 按钮
    - 点击 OK
 
-![sftp-setup-3.png](https://www.wolfcstech.com/images/1315506-09aa47fec9f6a421.png)
+![sftp-setup-3.png](../images/1315506-09aa47fec9f6a421.png)
 
  * 重新打开 *File* > *Settings* （在 Windows 和 Linux 上，或在 macOS 上 *PyCharm* > *Preferences*）区域（注意我们必须先保存之前的步骤）。
  * 展开  *Build, Execution, Deployment*，展开 *Deployment*，然后选择 *Options*
  * 在 `Upload changed files automatically to the default server` 上，选择 `On explicit save action`
 
-![sftp-setup-4.png](https://www.wolfcstech.com/images/1315506-9092ad31a466c13b.png)
+![sftp-setup-4.png](../images/1315506-9092ad31a466c13b.png)
 
 你可以在无需执行任何代码的情况下测试这个设置。做一个修改，保存文件，然后在你的 EV3 上看下文件是否同步。注意，为了运行测试，你需要一个 SSH 终端，你也可以在 PyCharm 中做这些（参考下一节的说明）。
 
@@ -188,7 +188,7 @@ PyCharm 专业版（对于教育的场景或开源项目的顶级贡献者可以
 
 它将提示你你想使用哪个远程服务器。选择 `EV3`（如果你重命名了它则使用那个）。接着它将展示一个对话框  “Connecting to Remote Host … Are you sure?”，点击 **Yes**。然后在新的终端标签中将打开一个到你的 EV3 的 SSH 连接。
 
-![ssh-setup-1.png](https://www.wolfcstech.com/images/1315506-28ac763d53335cad.png)
+![ssh-setup-1.png](../images/1315506-28ac763d53335cad.png)
 
 你甚至可以通过设置默认的部署服务器来跳过那些选择步骤（saves 1 click!）。
 
@@ -197,7 +197,7 @@ PyCharm 专业版（对于教育的场景或开源项目的顶级贡献者可以
  * 选择 `SSH Terminal`
  * 把部署服务器从 `Select server on every run` 修改为你配置的服务器（比如 `EV3`，如果你重命名了则使用那个）
 
-![ssh-setup-2.png](https://www.wolfcstech.com/images/1315506-e4221c6f809f47fd.png)
+![ssh-setup-2.png](../images/1315506-e4221c6f809f47fd.png)
 
 # 配置远程解释器
 

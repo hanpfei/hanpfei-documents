@@ -207,7 +207,7 @@ main (int argc, char **argv)
 
 通常情况下对于 Harfbuzz API 的使用，大体上如上面所述。用一张图来简单说明上面的过程：
 
-![](https://www.wolfcstech.com/images/1315506-2b0fb53e56818ed7.jpg)
+![](../images/1315506-2b0fb53e56818ed7.jpg)
 
 这样的用法，之所以称为基本用法，有如下这样一些原因：
 

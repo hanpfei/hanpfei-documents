@@ -16,7 +16,7 @@ live555 的库可以被用于处理 MPEG，H.265，H.264，H.263+，DV 或 JPEG 
 
 live555 的源代码是开放的，可以方便地供所有音视频开发研究爱好者学习研究，或者针对自己实际的项目进行扩展。其源码下载地址为 http://www.live555.com/liveMedia/public/ ：
 
-![](https://www.wolfcstech.com/images/1315506-0708b1e8de87f8ac.png)
+![](../images/1315506-0708b1e8de87f8ac.png)
 
 其中 [live555-latest.tar.gz](http://www.live555.com/liveMedia/public/live555-latest.tar.gz) 为最新版源码，[live.2017.07.18.tar.gz](http://www.live555.com/liveMedia/public/live.2017.07.18.tar.gz) 为最近一个正式的版本的源码。除了源码之外，live555 还提供了许多用于开发测试的音视频文件，如 `264` 目录下的是原始 H.264 码流测试文件， `265` 目录下的是原始 H.265 码流测试文件等。
 
@@ -125,13 +125,13 @@ $ ffplay rtsp://10.240.248.20:8000/raw_h264_stream.264
 # live555 源码结构
 接着来看 live555 的源码结构。首先为 live555 创建一个 Eclipse 的 C++ Project，方法为选择菜单栏的 File -> New -> C++ Project，弹出如下对话框：
 
-![](https://www.wolfcstech.com/images/1315506-e6d9248984b721ee.png)
+![](../images/1315506-e6d9248984b721ee.png)
 
 `Project Name: ` 一栏输入工程名字，这里用 `live555`；反选 `Use default location`，然后在 `Location: ` 一栏中输入 live555 源码的路径；在 `Project type: ` 下选择 `Makefile project` -> `Empty Project`；在 `Toolchains: ` 下选择 `Linux GCC`。
 
 然后点击右下角的 `Finish` 按钮，创建工程。live555 源码结构如下：
 
-![](https://www.wolfcstech.com/images/1315506-b9c143589ed1076b.png)
+![](../images/1315506-b9c143589ed1076b.png)
 
 live555 源码主要由八个部分组成：UsageEnvironment，BasicUsageEnvironment，groupsock，liveMedia，mediaServer，proxyServer，testProgs，WindowsAudioInputDevice。
 

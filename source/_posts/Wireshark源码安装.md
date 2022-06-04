@@ -11,7 +11,7 @@ tags:
 ## 编译安装Wireshark
 首先在Wireshark官网下载最新的源码包，[地址](https://www.wireshark.org/#download)。
 <!--more-->
-![Wireshark Download Site](https://www.wolfcstech.com/images/1315506-f8e80a7420fc6e47.png)
+![Wireshark Download Site](../images/1315506-f8e80a7420fc6e47.png)
 
 当前最新版是2.2.1。下载Wireshark：
 ```
@@ -201,7 +201,7 @@ Optional Packages:
 # 权限问题的解决
 通过在命令行中输入 `wireshark-gtk` ，可以执行我们刚刚安装的Wireshark。然而当我们选中一个网卡，想要启动抓包时，则获得了如下的报错：
 
-![](https://www.wolfcstech.com/images/1315506-39cc8f120c5fb959.png)
+![](../images/1315506-39cc8f120c5fb959.png)
 
 错误提示说缺乏足够的权限。在命令行中执行 `tshark` 时同样报错：
 ```

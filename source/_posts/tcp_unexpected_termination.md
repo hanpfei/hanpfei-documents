@@ -13,18 +13,18 @@ TCP 的异常终止是相对于正常释放 TCP 连接的过程而言的，我�
 
 在TCP异常终止的情况下，我们就需要有一种能够释放 TCP 连接的机制，这种机制就是 TCP 的 Reset 报文。Reset 报文是指 TCP 报头的标志字段中的 Reset 位设置为一的报文，如下图所示：
 
-![](https://www.wolfcstech.com/images/1315506-9dcac36fb9aede73.png)
+![](../images/1315506-9dcac36fb9aede73.png)
 
 我们在实际的工作环境中，导致某一方发送 Reset 报文的情形有多种。
 
 ## 服务器端口未对外提供服务
 客户端尝试与服务器未对外提供服务的端口建立 TCP 连接，服务器将会直接向客户端发送 Reset 报文。
 
-![](https://www.wolfcstech.com/images/1315506-46db03ea0ad67aae.png)
+![](../images/1315506-46db03ea0ad67aae.png)
 
 通过共享 WiFi 热点的方式，用 Wireshark 抓包来看这个过程中网络包的交互，在 Android 客户端 Java 代码中访问服务器一个不提供服务的端口 442：
 
-![](https://www.wolfcstech.com/images/1315506-116ae322c3296e16.png)
+![](../images/1315506-116ae322c3296e16.png)
 
 如上图，第 1 号和 2 号包，是客户端发向服务器，用于建立 TCP 连接的 SYN 包，随后立即就收到了服务器返回的 ***[RST，ACK]*** 包。
 
@@ -78,7 +78,7 @@ libcore.io.ErrnoException: isConnected failed: ECONNREFUSED (Connection refused)
 ## 通信某一方异常崩溃
 客户端和服务器的某一方在交互的过程中发生异常（如程序崩溃等），该方系统将向对端发送 TCP Reset 报文，告之对方释放相关的 TCP 连接，如下图所示：
 
-![](https://www.wolfcstech.com/images/1315506-8580694a402e4d3a.png)
+![](../images/1315506-8580694a402e4d3a.png)
 
 异常终止的一方，在进程退出时，释放占用的资源，包括 socket，TCP、UDP 端口等。站在异常退出的这一方的角度来看，对端是在访问一个没有打开的 socket。
 
@@ -93,7 +93,7 @@ libcore.io.ErrnoException: isConnected failed: ECONNREFUSED (Connection refused)
 ### HTTPS 请求-发送数据
 前面的操作过程中，执行 HTTPS 请求，通过 Wireshark 抓包，得到如下结果：
 
-![](https://www.wolfcstech.com/images/1315506-4b3570819c0bc3d8.png)
+![](../images/1315506-4b3570819c0bc3d8.png)
 
 第 116 号包，Android 手机发送 TCP SYN 包，与代理服务器建立 TCP 连接。到第 118 号包，完成 TCP 三次握手，连接建立完成。
 
@@ -141,7 +141,7 @@ libcore.io.ErrnoException: isConnected failed: ECONNREFUSED (Connection refused)
 
 修改前面的操作，让 Android 客户端直接与远程 HTTP 服务器连接，在连接建立完成的时候，杀掉 HTTP 服务进程，其它保持完全不变，则无论是抓到的包，还是 OkHttp 报出的异常，基本都没有改变。抓到的包如下：
 
-![](https://www.wolfcstech.com/images/1315506-9b5020536110a566.png)
+![](../images/1315506-9b5020536110a566.png)
 
 OkHttp 抛出的异常如下：
 ```
@@ -178,7 +178,7 @@ javax.net.ssl.SSLException: Connection closed by peer
 ### HTTP 请求-发送数据
 前面的操作过程中，使用代理时，执行 HTTP 请求，通过 Wireshark 抓包，得到如下结果：
 
-![2017-06-07 15-22-53屏幕截图.png](https://www.wolfcstech.com/images/1315506-83b6857bdce37697.png)
+![2017-06-07 15-22-53屏幕截图.png](../images/1315506-83b6857bdce37697.png)
 
 Android 客户端与代理服务器的连接建立完成之后，立即杀掉代理服务器进程，代理服务器向 Android 客户端发送了 **[FIN, ACK]** 以结束 TCP 连接。随后 Android 客户端发出 HTTP 请求，将立即收到代理服务器进程发回的 RST 包。
 
@@ -216,7 +216,7 @@ Caused by: java.io.EOFException: \n not found: size=0 content=…
 
 让 Android 客户端直接与远端 HTTP 服务器相连，则抓到的包如下：
 
-![](https://www.wolfcstech.com/images/1315506-274e3eb45994bfa3.png)
+![](../images/1315506-274e3eb45994bfa3.png)
 
 在服务器进程被杀掉的时候，同样发出了 ***[FIN ACK]*** 来结束 TCP 连接。此时 OkHttp 报出的异常将像下面这样：
 ```
@@ -260,7 +260,7 @@ Caused by: java.io.EOFException: \n not found: size=0 content=…
 
 按上面的操作，在接收响应的过程中，突然杀掉服务器进程，抓到的包如下：
 
-![](https://www.wolfcstech.com/images/1315506-f25d35e415900901.png)
+![](../images/1315506-f25d35e415900901.png)
 
 在这种情况下，服务器没有来得及给客户端发送 ***[FIN, ACK]*** 包结束 TCP 连接，而是客户端首先发出了 ***[FIN, ACK]*** 包 。
 
@@ -283,7 +283,7 @@ java.net.ProtocolException: unexpected end of stream
 
 如果前面的请求是 HTTP/2 请求，在接收响应的过程中，突然杀掉服务器进程，抓到的包则如下：
 
-![](https://www.wolfcstech.com/images/1315506-e53dd24e6c81ae3d.png)
+![](../images/1315506-e53dd24e6c81ae3d.png)
 
 服务器来不及结束 TCP 连接。客户端向服务器发送数据时，收到了服务器响应的 RST。OkHttp 抛出如下错误：
 ```
@@ -302,7 +302,7 @@ okhttp3.internal.http2.StreamResetException: stream was reset: CANCEL
 ### HTTP 请求 - 接收响应
 在接收响应的过程中，突然杀掉服务器进程，抓到的包如下：
 
-![](https://www.wolfcstech.com/images/1315506-a812b3c0bd10470b.png)
+![](../images/1315506-a812b3c0bd10470b.png)
 
 服务器正常结束掉了 TCP 连接。OkHttp 抛出如下错误：
 ```
@@ -324,23 +324,23 @@ java.net.ProtocolException: unexpected end of stream
 
 数据接收的一方终止连接的话，数据发送的一方将看到如下的景象：
 
-![image_20170527160621.png](https://www.wolfcstech.com/images/1315506-a4265ccaea530a7c.png)
+![image_20170527160621.png](../images/1315506-a4265ccaea530a7c.png)
 
 从抓到的包来看，HTTP 请求结束之前，客户端把连接关闭的话，TCP正常结束的挥手流程会走，FIN 会发给服务器。不过后续在服务器收到 FIN 之前发的数据还会继续到达，客户端收到这些包的时候会发送 RST
 
 3, 接收端收到TCP报文，但是发现该TCP的报文，并不在其已建立的TCP连接列表内，则其直接向对端发送reset报文，如下图所示：
 
-![](https://www.wolfcstech.com/images/1315506-d48d8f5f7a196fc2.png)
+![](../images/1315506-d48d8f5f7a196fc2.png)
 
 为什么会出现这种情况？TCP 报文，具体指那种类型的报文，SYN 还是 DATA？是 TCP 报文路由出错了，被发送给了错误的主机了么？还是 TCP 连接已经被接收数据的一方关掉了？
 
 4, 在交互的双方中的某一方长期未收到来自对方的确认报文，则其在超出一定的重传次数或时间后，会主动向对端发送reset报文释放该TCP连接，如下图所示：
 
-![](https://www.wolfcstech.com/images/1315506-93dbbbadee19939a.png)
+![](../images/1315506-93dbbbadee19939a.png)
 
 5, 有些应用开发者在设计应用系统时，会利用reset报文快速释放已经完成数据交互的TCP连接，以提高业务交互的效率，如下图所示：
 
-![](https://www.wolfcstech.com/images/1315506-bc7ae7d5a52f88d6.png)
+![](../images/1315506-bc7ae7d5a52f88d6.png)
 
 参考文档
 

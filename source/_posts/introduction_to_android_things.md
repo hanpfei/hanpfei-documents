@@ -11,7 +11,7 @@ tags:
 
 通过提供与 Android 开发相同的工具，一流的 Android 开发框架，以及 Google APIs这些使得开发者在移动平台上大获成功的东西，Android Things使开发连接的嵌入式变得简单。
 <!--more-->
-![Android Things Platform Architecture](https://www.wolfcstech.com/images/1315506-c906a6bcdd9dd803.png)
+![Android Things Platform Architecture](../images/1315506-c906a6bcdd9dd803.png)
 
 相对于手机和平板，嵌入式设备的 Apps 的开发者与硬件外围设备和驱动离得更近。此外，典型的嵌入式设备只呈现一个单独的 app 体验给用户。本文档介绍了核心Android开发和Android Things之间的主要的增加，省略和差异。
 

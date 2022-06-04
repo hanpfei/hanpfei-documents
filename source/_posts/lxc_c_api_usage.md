@@ -288,7 +288,7 @@ void lxc_log_close(void);
 ```
 
 `struct lxc_container` 结构的生命周期如下：
-![](https://www.wolfcstech.com/images/1315506-9d97e6656c872449.png)
+![](../images/1315506-9d97e6656c872449.png)
 
 即通过 `lxc_container_new()` 函数创建并初始化，通过 `lxc_container_get()` 增加结构的引用计数，然后通过结构的成员函数指针执行针对特定容器的操作，最后通过 `lxc_container_put()` 减小引用计数或释放结构体。`lxc_container_put()` 与 `struct lxc_container` 结构的 `destroy()` 的主要差别在于，后者是销毁磁盘上与特定容器有关的所有数据，而前者只是释放在内存中用于表示特定容器的结构体，而不会对磁盘上容器的数据产生影响。
 

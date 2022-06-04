@@ -17,7 +17,7 @@ $ ffplay rtsp://10.240.248.20:8554/raw_h264_stream.264
 
 其中 URI 中的 IP 地址为 `live555MediaServer` 运行的主机的 IP 地址，端口号为其采用的端口号。在 Wireshark 中，通过 `Display Filter` 过滤仅显示 RTSP/RTP/RTCP 包，将看到类似下面这样的包序列：
 
-![](https://www.wolfcstech.com/images/1315506-00dc2e4cc0704fa7.png)
+![](../images/1315506-00dc2e4cc0704fa7.png)
 
 可以看到，首先是 RTSP 数据的交互，建立媒体传输会话，随后开始通过 RTP/RTCP 传输数据。RTSP 协议在制定时较多地参考了 HTTP/1.1 协议，甚至许多内容与 HTTP/1.1 完全相同。与 HTTP/1.1 类似，RTSP 客户端首先向服务器发送请求，随后服务器发回响应，以此实现数据的交互。RTSP 同样定义了一系列方法，表示对 URI 标识的资源所执行的操作。RTSP 具体定义的方法有如下这些：
 ```
@@ -42,13 +42,13 @@ $ ffplay rtsp://10.240.248.20:8554/raw_h264_stream.264
 
 第 112 号包是 RTSP 服务器对客户端的 `OPTIONS` 请求的响应，其具体内容如下：
 
-![](https://www.wolfcstech.com/images/1315506-0439cca304032659.png)
+![](../images/1315506-0439cca304032659.png)
 
 服务器将该 URL 支持的方法的列表返回给客户端。对于这里的情况，也就是 `OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, GET_PARAMETER, SET_PARAMETER`。
 
 然后客户端向服务器发送了一个 `DESCRIBE` 请求，即第 116 号包，该请求内容如下：
 
-![](https://www.wolfcstech.com/images/1315506-3c6a4ca1d059c94b.png)
+![](../images/1315506-3c6a4ca1d059c94b.png)
 
 `DESCRIBE` 方法用于客户端提取由所请求的 URL 标识的表示或媒体对象的描述信息。它可以使用 `Accept` 头部指定客户端理解的描述格式。服务器则用所请求的资源的描述作为响应。`DESCRIBE` 应答响应对构成RTSP的媒体初始化阶段。
 
@@ -56,7 +56,7 @@ $ ffplay rtsp://10.240.248.20:8554/raw_h264_stream.264
 
 服务器以一个 RTSP/SDP 包作为响应，如图中的第 118 号包：
 
-![](https://www.wolfcstech.com/images/1315506-936ff8a7cf1d7567.png)
+![](../images/1315506-936ff8a7cf1d7567.png)
 
 这个 SDP 包实际内容的文本格式如下：
 ```
@@ -83,35 +83,35 @@ a=control:track1
 
 客户端在收到服务器发来的 SDP 包之后，会选择两个端口，分别用于 RTP 和 RTCP 包的收发，并发送了一个 `SETUP` 请求用于建立媒体会话，如第 119 号包：
 
-![](https://www.wolfcstech.com/images/1315506-21cc92d0f10a74da.png)
+![](../images/1315506-21cc92d0f10a74da.png)
 
 客户通过 `SETUP` 请求的 `Transport` 头部，将为 RTP 和 RTCP 选择的端口、协议及通信方式（UDP 单播还是多播）发送给客户端。这里可以看到，客户端选择了 19008 和 19009 两个端口来进行 RTP 和 RTCP 包的收发。
 
 随后服务器对 `SETUP` 请求做出了响应，如第121 号包：
 
-![](https://www.wolfcstech.com/images/1315506-1efad4d643f2e4b7.png)
+![](../images/1315506-1efad4d643f2e4b7.png)
 
 服务器通过这个响应，把它为媒体会话开启的用于收发 RTP、RTCP 包的端口，会话的标识符，超时时间等信息通知给客户端。随后，客户端分别在 RTP 和 RTCP 的端口上，向服务器的 RTP 和 RTCP 端口上发送了两个包，如第 122 号包和第 123 号包：
 
-![122 号包](https://www.wolfcstech.com/images/1315506-fa837cd6c6dcdc6a.png)
+![122 号包](../images/1315506-fa837cd6c6dcdc6a.png)
 
-![123 号包](https://www.wolfcstech.com/images/1315506-41911ad64de08e1c.png)
+![123 号包](../images/1315506-41911ad64de08e1c.png)
 
 这两个包中携带的都是无意义的数据。发送它们的目的，大概主要是为了 NAT 穿墙。
 
 随后客户端向服务器发送了一个 `PLAY` 请求，来启动播放，如第 124 号包：
 
-![](https://www.wolfcstech.com/images/1315506-c82f3b7744d08e00.png)
+![](../images/1315506-c82f3b7744d08e00.png)
 
 `PLAY` 请求中会携带从前面的 `SETUP` 请求的响应获得的会话标识符。
 
 随后服务器向客户端发送了一个 RTCP 包，如第 125 号包：
 
-![](https://www.wolfcstech.com/images/1315506-e5ed002ce2e1cbce.png)
+![](../images/1315506-e5ed002ce2e1cbce.png)
 
 在这个包中，服务器把 RTP 时间戳，服务器的 SSRC，服务器的 CNAME 等信息发送给客户端。之后，服务器发送了 `PLAY` 请求的响应：
 
-![](https://www.wolfcstech.com/images/1315506-37a6911d4a752f41.png)
+![](../images/1315506-37a6911d4a752f41.png)
 
 在这个包中，发送的 RTP 包的初始序列号，RTP 时间等重要信息被发送给客户端。
 
@@ -124,9 +124,9 @@ a=control:track1
 
 开始的两个 RTP 包，即第 127 号包和第 128 号包内容如下：
 
-![127 号包](https://www.wolfcstech.com/images/1315506-710a11b3fbdce915.png)
+![127 号包](../images/1315506-710a11b3fbdce915.png)
 
-![128 号包](https://www.wolfcstech.com/images/1315506-1ab67f546cf4724a.png)
+![128 号包](../images/1315506-1ab67f546cf4724a.png)
 
 它们的内容与 H.264 视频文件的前两个 NALU 的内容完全吻合，即 live555 通过两个 RTP 包发送了前两个 NALU SPS 和 PPS。
 
@@ -134,7 +134,7 @@ a=control:track1
 
 视频数据经过一端时间的稳定传输，最终以服务器向客户端发送的一个 RTCP BYE 包而结束，如第 6451 号包：
 
-![](https://www.wolfcstech.com/images/1315506-e51d6779509ea488.png)
+![](../images/1315506-e51d6779509ea488.png)
 
 总结一下这个过程：
 1. 客户端首先向服务器发送一个方法为 `OPTIONS` 的请求，了解服务器为 URL 提供了哪些方法的支持。

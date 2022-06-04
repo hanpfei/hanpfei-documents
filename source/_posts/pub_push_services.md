@@ -57,11 +57,11 @@ tags:
 
 小米推送通知栏消息格式如下图：
 
-![小米推送通知栏消息格式](https://www.wolfcstech.com/images/1315506-db7a737277fa84c6.png)
+![小米推送通知栏消息格式](../images/1315506-db7a737277fa84c6.png)
 
 ### 消息推送服务端操作
 
-![小米消息推送服务端操作](https://www.wolfcstech.com/images/1315506-6256bf45b1ad515e.png)
+![小米消息推送服务端操作](../images/1315506-6256bf45b1ad515e.png)
 
 ### 推送消息发送回执
 
@@ -173,10 +173,10 @@ JSON 对应的 http 参数名为 `data`，JSON数据格式如下：
 
 ### 魅族推送消息组成及行为控制选项
 
-![魅族推送消息组成及行为控制选项](https://www.wolfcstech.com/images/1315506-71ce7553e6232a91.png)
+![魅族推送消息组成及行为控制选项](../images/1315506-71ce7553e6232a91.png)
 
 ### 消息推送服务端操作
-![魅族消息推送服务端操作](https://www.wolfcstech.com/images/1315506-8deb2be2d516c118.png)
+![魅族消息推送服务端操作](../images/1315506-8deb2be2d516c118.png)
 
 关于魅族消息推送系统需要注意：
 
@@ -348,7 +348,7 @@ accessToken:2324515cf21b4ea2b6b916637b1a7c3b
 
 ### 推送消息结构
 
-![华为推送消息载荷组成](https://www.wolfcstech.com/images/1315506-73a51aa013b55921.png)
+![华为推送消息载荷组成](../images/1315506-73a51aa013b55921.png)
 
 ### 消息推送服务端操作
 

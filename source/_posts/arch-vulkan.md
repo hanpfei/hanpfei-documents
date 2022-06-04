@@ -20,7 +20,7 @@ Android 7.0 添加了对 [Vulkan](https://www.khronos.org/vulkan/) 的支持，�
 # Vulkan 组件
 Vulkan 支持包含如下组件：
 
-![](https://www.wolfcstech.com/images/1315506-d5dc09fd4a23f2cb.png)
+![](../images/1315506-d5dc09fd4a23f2cb.png)
 
 图 1：Vulkan 组件
 

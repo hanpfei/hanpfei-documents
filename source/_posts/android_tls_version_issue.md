@@ -53,13 +53,13 @@ Android 1.0 | 1 | [BASE](https://developer.android.com/reference/android/os/Buil
 
 Android 4.4.4 的设备与支持 TLSv1 的 HTTP 服务器建立连接时，其  ***Client Hello***  消息如下：
 
-![](https://www.wolfcstech.com/images/1315506-a6f3bf43f81f004a.png)
+![](../images/1315506-a6f3bf43f81f004a.png)
  
 SSL/TLS 握手可以正常完成，连接能够建立成功，并顺利完成数据传输。
 
 Android 4.4.4 的设备与最低支持 TLSv1.1 的 HTTP 服务器建立连接时，其网络包的交互则像下面这样：
 
-![](https://www.wolfcstech.com/images/1315506-4c6f2e534be8ae30.png)
+![](../images/1315506-4c6f2e534be8ae30.png)
 
 第 4 号包是 TCP 连接建立完成后， Android 客户端发向服务器的 ***Client Hello*** 消息，但服务器立即就回了一个 ***Alert*** 消息，并关闭了 TCP 连接。此时，用于执行 HTTP 请求的 OkHttp 库也将抛出异常并退出，异常为：
 ```

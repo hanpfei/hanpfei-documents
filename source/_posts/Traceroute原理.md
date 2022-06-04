@@ -25,7 +25,7 @@ Traceroute 程序首先向目标主机发出 TTL 为 1 的数据包，发送数�
 # Wireshark 抓包分析
 
 我们通过 Wireshark 抓包来看一下这个过程。我们追踪从我们的 PC 机到 `www.163.com` 之间的网络路径。打开 Wireshark，以如图所示的选项开始抓包：
-![](https://www.wolfcstech.com/images/1315506-640ab44e44f1cd0c.png)
+![](../images/1315506-640ab44e44f1cd0c.png)
 
 然后我们在命令行执行 `traceroute` 程序：
 ```
@@ -46,15 +46,15 @@ traceroute to www.163.com (183.131.124.101), 30 hops max, 60 byte packets
 ```
 
 这个过程中我们总共抓到了 67 个数据包。
-![](https://www.wolfcstech.com/images/1315506-65077453751b12a1.png)
+![](../images/1315506-65077453751b12a1.png)
 
 我们选中第 1 号包，也就是用于探测路径中第一个网关的 UDP 包，在下方的数据包详情中，可以看到 `Time to live` 值为 1。我们再选中用于探测路径中第二个网关的 UDP 包，即第 5 号包，可以看到 `Time to live` 值为 2：
-![](https://www.wolfcstech.com/images/1315506-a302b370ce50360e.png)
+![](../images/1315506-a302b370ce50360e.png)
 
 同时还能看到数据包发送的源端口为 UDP `34341`，目的端口为 `33438`。
 
 第 17 ～ 29 号包为中间路由节点发送回来的 TTL 超时 ICMP包。数据包被发送到目标主机时，目标主机将发回目标不可达的 ICMP 包，如下图：
-![](https://www.wolfcstech.com/images/1315506-e8c0c13cca0ab0d7.png)
+![](../images/1315506-e8c0c13cca0ab0d7.png)
 
 第 62 ～ 64 号包即为目标主机发回的数据包。
 
@@ -142,20 +142,20 @@ traceroute to www.qq.com (182.254.34.74), 30 hops max, 60 byte packets
 ```
 
 我们将抓到如下的网络数据包：
-![](https://www.wolfcstech.com/images/1315506-2bb60646b32e08aa.png)
+![](../images/1315506-2bb60646b32e08aa.png)
 
 首先是一堆的 TCP [SYN] 包，然后是中间网关返回的 ICMP TTL 超时。最后收到目标主机发回的 TCP [SYN ACK] 结束整个探测过程：
-![](https://www.wolfcstech.com/images/1315506-35e347c0cc87d71e.png)
+![](../images/1315506-35e347c0cc87d71e.png)
 
 如图中的第 82 和 第 84 号 TCP [SYN ACK] 包。从第 71 号包，可以看到，数据包都被发向了目标主机的 80 端口。
 
 如果我们以 `-I` 参数启动 `traceroute`，用 ICMP 来探测网络路径的话，抓到的包将如下面这样：
-![](https://www.wolfcstech.com/images/1315506-ab800063ade5ae0e.png)
+![](../images/1315506-ab800063ade5ae0e.png)
 
 这个过程将不断发送 TTL 递增的 ICMP ECHO Request (Ping) 的包，中间网关在发现数据包的 TTL 减到 0 时，向源主机发回 ICMP TTL 超时。
 
 整个过程以收到 ICMP Echo reply结束：
-![](https://www.wolfcstech.com/images/1315506-276c7b5838866e8b.png)
+![](../images/1315506-276c7b5838866e8b.png)
 
 如图中的第 87 ～ 93 号包。
 

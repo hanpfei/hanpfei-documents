@@ -20,7 +20,7 @@ Anbox 运行时主要由两个分开的实例构成：
 
 下图展示了一个总体的架构：
 
-![architecture.png](https://www.wolfcstech.com/images/1315506-c4c2bff682e4d697.png)
+![architecture.png](../images/1315506-c4c2bff682e4d697.png)
 
 # 应用映射
 

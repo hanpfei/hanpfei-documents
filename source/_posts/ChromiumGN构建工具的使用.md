@@ -9,7 +9,7 @@ tags:
 
 Chromium整体的构建过程大体如下：
 
-![Chromium build flow](https://www.wolfcstech.com/images/1315506-eba64e268085674c.png)
+![Chromium build flow](../images/1315506-eba64e268085674c.png)
 <!--more-->
 这个过程大体为，先由gn工具根据各个模块的.gn配置文件，或gyp工具根据各个模块的.gyp配置文件，产生.ninja文件，再由ninja工具产生最终的目标文件，比如静态库、动态库、exe可执行文件或者是apk文件等等。gyp工具是用Python写的，gn是用C写的，gn增量构建最快。整个Chromium项目，在构建系统方面，也是逐渐在全部转向gn构建。
 

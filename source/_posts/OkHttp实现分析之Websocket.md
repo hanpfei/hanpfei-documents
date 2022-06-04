@@ -695,7 +695,7 @@ final class WebSocketReader {
 在读取 Header 时，读的第一个字节是同步的不计超时时间的。`WebSocketReader` 从 Header 中，获取到这个帧是不是消息的最后一帧，消息的类型，是否有掩码字节，保留位，帧的长度，以及掩码字节等信息。WebSocket 通过掩码位和掩码字节来区分数据是从客户端发送给服务器的，还是服务器发送给客户端的。这里会根据协议，对这些信息进行有效性一致性检验，若不一致则会抛出 `ProtocolException`。
 
 `WebSocketReader` 同步读取时的调用栈如下：
-![Reader Thread](https://www.wolfcstech.com/images/1315506-8f154678806eaf05.png)
+![Reader Thread](../images/1315506-8f154678806eaf05.png)
 
 通过帧的 Header 确定了是数据帧，则会执行 `readMessageFrame()` 读取消息帧：
 ```

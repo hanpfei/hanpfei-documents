@@ -136,7 +136,7 @@ ndk.dir=${ndk.dir}
 请将上面 `${sdk.dir}` 和 `${ndk.dir}` 分别替换为本地 Android SDK 和 NDK 的路径。
 
 为 Demo 应用程序 SimpleperfExampleWithNative 安装 ConstraintLayout 支持库。
-![安装 ConstraintLayout 支持库](https://www.wolfcstech.com/images/1315506-5d1152cb2e5e1dd1.png)
+![安装 ConstraintLayout 支持库](../images/1315506-5d1152cb2e5e1dd1.png)
 
 通过如下命令编译并安装 SimpleperfExampleWithNative。
 ```
@@ -182,7 +182,7 @@ $ python /media/data/osprojects/extras/simpleperf/scripts/report_html.py --add_s
 ```
 不带参数时，`report_html.py` 用默认参数以 report.html 的形式生成报告，但也可以为它提供参数，以更好地控制它的行为。`report_html.py` 生成报告之后，会弹出一个浏览器标签来展示它，如下图这样：
 
-![](https://www.wolfcstech.com/images/1315506-4a487bce3958a206.png)
+![](../images/1315506-4a487bce3958a206.png)
 
 ### 记录并报告调用图
 
@@ -241,7 +241,7 @@ $ python report.py -g --gui
 
 如下图：
 
-![截图_2018-03-05_16-03-28.png](https://www.wolfcstech.com/images/1315506-333b14d9252f803c.png)
+![截图_2018-03-05_16-03-28.png](../images/1315506-333b14d9252f803c.png)
 
 以 html 文件的形式报告调用图：
 ```

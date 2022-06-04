@@ -77,7 +77,7 @@ $ sudo nginx
 
 随后，就可以通过 http://yourhost URL，经过 nginx 访问 Jenkins 服务了。登陆之后，打开 Jenkins 左上角的 ***Jenkins*** -> ***Manage Jenkins*** -> ***Configure System*** Jenkins 全局配置页面，滚动到 ***Jenkins Location*** 的部分，正确配置 ***Jenkins URL***：
 
-![](https://www.wolfcstech.com/images/1315506-445e10a5742089cb.jpg)
+![](../images/1315506-445e10a5742089cb.jpg)
 
 Jenkins 作为一个强大的持续集成平台，其强大之处的重要体现就是，支持许许多多的插件，可以将功能强大的第三方工具集成进来，代码质量保障相关的工具，比如代码的静态检查工具，是其中比较常用的一些。常用的代码静态检查工具有 PMD，FindBugs，Android Lint，CheckStyle 和 SonarQube Scanner 等。
 
@@ -98,11 +98,11 @@ CPD，复制粘贴探测器，查找多种语言的重复代码：
 
 在正式开始集成 PMD 之前，首先需要通过 Jenkins 左上角的 ***Jenkins*** -> ***Manage Jenkins*** -> ***Manage Plugins***，在 Jenkins 中安装 PMD 的插件：
 
-![](https://www.wolfcstech.com/images/1315506-c98b2e793e1bec91.png)
+![](../images/1315506-c98b2e793e1bec91.png)
 
 我们通过为 Jenkins Project 添加 Post-build Action 来集成 PMD。打开 Jenkins  Project 的主页，点击左边的 `Configure` 打开工程的配置页面，找到页面最下边的 `Post-build Actions`，点击 `Add post-build action` 的下拉箭头，并找到 `Publish PMD analysis results`，添加 PMD post-build action，如下图：
 
-![](https://www.wolfcstech.com/images/1315506-0376c9b201833b8f.png)
+![](../images/1315506-0376c9b201833b8f.png)
 
 在 `PMD results` 输入框中输入 PMD 检查结果文件的路径，这个结果文件需要我们在构建期间调用 PMD 工具生成。配置了 PMD post-build action 之后，点击左下角的 `Save` 按钮保存退出配置。
 
@@ -136,11 +136,11 @@ def run_pmd(wrapper_module_name, target_module_name):
 
 Jenkins 工程在构建结束之后，将根据配置的 `PMD results` 路径查找 PMD 检查的结果，并将结果展示在 Jenkins 工程的主页面上，如下图所示：
 
-![](https://www.wolfcstech.com/images/1315506-2d0b3e8a817bb7e7.png)
+![](../images/1315506-2d0b3e8a817bb7e7.png)
 
 点击 `PMD Trend` 将可以看到 PMD 检查的详细结果，如下图：
 
-![](https://www.wolfcstech.com/images/1315506-8c1b42e146acb8d2.png)
+![](../images/1315506-8c1b42e146acb8d2.png)
 
 关于 PMD 工具用法更详细的内容，可以参考它的 [主页](https://pmd.github.io/pmd-6.2.0/) 和 [官方文档](https://pmd.github.io/pmd-6.2.0/)。
 
@@ -150,11 +150,11 @@ FindBugs 是另一个强大的静态代码检查工具，它主要用于查找 *
 
 与在 Jenkins 中集成 PMD 类似，同样需要先在 Jenkins 中为 FindBugs 安装插件：
 
-![](https://www.wolfcstech.com/images/1315506-e4769bf6fde33ca5.png)
+![](../images/1315506-e4769bf6fde33ca5.png)
 
 然后配置 Jenkins 工程，添加 post-build action `Publish FindBugs analysis results`，如下图：
 
-![](https://www.wolfcstech.com/images/1315506-0ee0700fe76db0ef.png)
+![](../images/1315506-0ee0700fe76db0ef.png)
 
 `FindBugs results` 输入框中需要输入 FindBugs 工具代码检查的结果文件。Jenkins 将在构建结束之后，扫描这个文件，并在页面中展示出来。
 
@@ -187,11 +187,11 @@ def run_findbugs(wrapper_module_name, target_module_name):
 
 在 Jenkins 的构建任务结束之后，它扫描 FindBugs 的检查结果，并展示出来：
 
-![截图_2018-04-03_11-00-44.png](https://www.wolfcstech.com/images/1315506-29758e2e07b59a6c.png)
+![截图_2018-04-03_11-00-44.png](../images/1315506-29758e2e07b59a6c.png)
 
 点进去可以查看更详细的找到的问题：
 
-![](https://www.wolfcstech.com/images/1315506-eb0216367b88b45e.png)
+![](../images/1315506-eb0216367b88b45e.png)
 
 关于 FindBugs 更详细的内容，可以参考其[主页](http://findbugs.sourceforge.net/)和[文档](http://findbugs.sourceforge.net/manual/index.html)。
 
@@ -244,7 +244,7 @@ def run_checkstyle(wrapper_module_name, target_module_name):
 
 Jenkins 在工程构建结束之后，扫描 Checkstyle 的检查报告，并展示出来：
 
-![截图_2018-04-03_11-34-05.png](https://www.wolfcstech.com/images/1315506-55b435b08191794b.png)
+![截图_2018-04-03_11-34-05.png](../images/1315506-55b435b08191794b.png)
 
 Checkstyle 更详细的用法可以参考其[主页](http://checkstyle.sourceforge.net/) 和它的 [命令行用法说明文档](http://checkstyle.sourceforge.net/cmdline.html)。
 
@@ -262,7 +262,7 @@ def run_android_lint(target_module_name):
 
 Android Lint 的检查结果类似于下面这样：
 
-![](https://www.wolfcstech.com/images/1315506-916733363733cf6f.png)
+![](../images/1315506-916733363733cf6f.png)
 
 # SonaQube Scanner
 
@@ -283,7 +283,7 @@ $ sonarqube-6.7.2/bin/linux-x86-64/sonar.sh start
 
 SonarQube 自带数据库和 Web 服务器，因而通过上面简单的两条命令，就可以将 SonaQube 服务运行起来了。默认情况下，SonaQube 服务运行于 9000 端口上：
 
-![](https://www.wolfcstech.com/images/1315506-491c8b952e81fad0.png)
+![](../images/1315506-491c8b952e81fad0.png)
 
 但需要注意不能以 root 用户启动 SonaQube 服务，否则将启动失败。通过 `sonarqube-6.7.2/logs/` 目录下的 ElasticSearch 日志文件 es.log 和 SonaQube 日志文件 sonar.log 可以看到这一点。为了获得更好的性能和稳定性，可以使用外部的数据库服务， SonaQube 服务对此提供了良好的支持。关于 SonaQube 服务安装配置更详细的过程，可以参考 SonaQube 的官方文档 [Installing the Server](https://docs.sonarqube.org/display/SONAR/Installing+the+Server)。
 
@@ -329,13 +329,13 @@ sonar.password=blank/passwd
 
 同样需要先为 SonaQube Scanner 安装插件，这次为 `SonarQube Scanner for Jenkins`。然后以管理员身份登录 Jenkins，并进入 ***Manage Jenkins*** > ***Configure System***。向下滚动到 ***SonarQube configuration*** 的部分，点击 ***Add SonarQube***，然后按提示输入对应的值，如下图这样：
 
-![](https://www.wolfcstech.com/images/1315506-5c1a68eeacad2f58.png)
+![](../images/1315506-5c1a68eeacad2f58.png)
 
 其中 `Name` 一栏输入 SonaQube 的名称，名称任意取。`Server URL` 一栏输入 SonaQube 服务的 Url。`Server authentication token` 输入用户认证 token，这个 token 是由 SonaQube 服务生成的。
 
 登录 SonaQube 服务（如第一次以 admin（用户名）/admin（密码）登录 SonaQube 服务）之后，点击右上角的用户图标，选择 ***My Account***，打开账户主页，并选择 ***Security***：
 
-![](https://www.wolfcstech.com/images/1315506-61712adb0ee66fb6.png)
+![](../images/1315506-61712adb0ee66fb6.png)
 
 在 ***Generate New Token:*** 输入框中输入 token 名称，token 名称可任意选择，然后点击 ***Generate*** 生成 token。如 SonaQube 服务给出的提示，生成的 token 需要复制出去，这个 token 将无法被再次看到。这个 token 即是前面需要提供给 Jenkins 的 `Server authentication token`。
 
@@ -350,7 +350,7 @@ sonar.password=blank/passwd
 2. 为 Jenkins 工程的构建添加 *SonarQube Scanner* 构建步骤。
 3. 配置 SonarQube 分析属性。也可以指向一个已有的 *sonar-project.properties* 文件或直接在 ***Analysis properties*** 字段设置分析属性，如下图：
 
-![](https://www.wolfcstech.com/images/1315506-99cf50f73e0855e8.png)
+![](../images/1315506-99cf50f73e0855e8.png)
 
 然后点击左下角的 `Save`，保存并结束配置。后面在执行 Jenkins Project 的构建任务时，SonarQube Scanner 将执行，生成分析报告并发送给 SonaQube 服务，报告有 SonaQube 解析并展示。更多内容请参考 [Analyzing with SonarQube Scanner for Jenkins](https://docs.sonarqube.org/display/SCAN/Analyzing+with+SonarQube+Scanner+for+Jenkins)。
 

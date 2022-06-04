@@ -79,7 +79,7 @@ import cairo
 ```
 `write_to_png()` 方法把 surface 的内容写入 PNG 图像。
 
-![](https://www.wolfcstech.com/images/1315506-e1b833fb5bf550e1.jpg)
+![](../images/1315506-e1b833fb5bf550e1.jpg)
 
 图：Image Viewer 中的 PNG 图像
 
@@ -130,7 +130,7 @@ if __name__ == "__main__":
 ```
 `show_page()` 结束 PDF 文件的渲染。
 
-![](https://www.wolfcstech.com/images/1315506-ee6bb79d6d6734af.jpg)
+![](../images/1315506-ee6bb79d6d6734af.jpg)
 图：文档查看器中的 PDF 文件
 
 # SVG 文件
@@ -175,7 +175,7 @@ if __name__ == "__main__":
 
 要在 PyCairo 中创建一个 SVG 文件，我们必须使用 `cairo.SVGSurface` 对象创建一个 SVG surface。
 
-![](https://www.wolfcstech.com/images/1315506-dff9d30a2f9959a9.jpg)
+![](../images/1315506-dff9d30a2f9959a9.jpg)
 图： Chrome 中的 SVG 文件
 
 # GTK窗口
@@ -261,7 +261,7 @@ import cairo
 ```
 在 `expose()` 回调中，我们创建 Cairo 上下文。然后，绘制的动作在 `on_draw()` 方法的内部完成。第三个参数是 Cairo 上下文，由 `expose()` 创建。Cairo 库是 GTK 系统内建的。
 
-![102014_zQsC_919237.jpg](https://www.wolfcstech.com/images/1315506-0b3d64bd1e1a4402.jpg)
+![102014_zQsC_919237.jpg](../images/1315506-0b3d64bd1e1a4402.jpg)
 图: GTK 窗口
 
 在本章中，我们已经覆盖了 PyCairo 支持的所有后端。

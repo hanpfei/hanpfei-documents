@@ -730,7 +730,7 @@ RTSPServer::createNewClientSession(u_int32_t sessionId) {
 
 live555 中 `GenericMediaServer::ClientSession` 的继承层次结构如下：
 
-![](https://www.wolfcstech.com/images/1315506-1ec111f30d81ac1a.png)
+![](../images/1315506-1ec111f30d81ac1a.png)
 
 有了 `RTSPServer::RTSPClientSession` 之后，则通过它的 `handleCmd_SETUP()` 处理 `SETUP` 请求。同时根据会话的设置，设置 `playAfterSetup`。
 

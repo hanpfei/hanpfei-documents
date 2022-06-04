@@ -646,7 +646,7 @@ FU 载荷由被分片的 NAL 单元的载荷的片段组成，使得如果连续
 一端的接收者或 MANE 中可以聚合 NAL 单元的前面 n - 1 个片段为一个（不完整的）NAL 单元，即使那个 NAL 单元的片段 n 没有收到。在这种情况下，NAL 单元的 forbidden_zero_bit 必须被设置为 1 以表示语法违规。
 
 # NAL 单元类型码
-![NAL 单元类型码](https://www.wolfcstech.com/images/1315506-475027950d4a524d.png)
+![NAL 单元类型码](../images/1315506-475027950d4a524d.png)
 
 ### [打赏](https://www.wolfcstech.com/about/donate.html)
 

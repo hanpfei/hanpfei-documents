@@ -27,7 +27,7 @@ Android 实现者可以使用  [drawElements Quality Program](https://source.an
 
 下面的图展示了关键组件如何一起工作：
 
-![ape_fwk_graphics.png](https://www.wolfcstech.com/images/1315506-66a2aeedf0bd905a.png)
+![ape_fwk_graphics.png](../images/1315506-66a2aeedf0bd905a.png)
 
 **图 1.** surfaces 如何渲染
 
@@ -62,7 +62,7 @@ Android 实现者可以使用  [drawElements Quality Program](https://source.an
 
 参看下图来获得 Android 图形流水线的描述：
 
-![](https://www.wolfcstech.com/images/1315506-8e6633ba459ba6b7.png)
+![](../images/1315506-8e6633ba459ba6b7.png)
 
 **图 2.** Android 中的图形数据流
 
@@ -73,7 +73,7 @@ BufferQueues 提供了 Android 图形组件之间的胶水。有一对队列中�
 
 参考下面的图来了解 BufferQueue 的通信过程。
 
-![](https://www.wolfcstech.com/images/1315506-0c6a0f79be572037.png)
+![](../images/1315506-0c6a0f79be572037.png)
 
 **图 3.** BufferQueue 的通信过程
 

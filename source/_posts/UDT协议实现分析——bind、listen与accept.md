@@ -744,6 +744,6 @@ UDTSOCKET accept(UDTSOCKET u, struct sockaddr* addr, int* addrlen) {
 
 总结一下这几个操作与Listening Socket状态变化之间的关系，如下图所示：
 
-![](https://www.wolfcstech.com/images/1315506-2b8081c3aea0670d.png)
+![](../images/1315506-2b8081c3aea0670d.png)
 
 Done.

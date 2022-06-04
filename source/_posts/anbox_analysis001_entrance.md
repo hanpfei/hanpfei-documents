@@ -97,7 +97,7 @@ int Daemon::Run(const std::vector<std::string> &arguments) try {
 
 Anbox 的设计通过组合模式来组织各个命令，相关各个类的类图如下：
 
-![Anbox Command Class Diagram](https://www.wolfcstech.com/images/1315506-8c796ad9f159f629.png)
+![Anbox Command Class Diagram](../images/1315506-8c796ad9f159f629.png)
 
 Anbox 的这些 `Command` 类的基类 `anbox::cli::Command` 定义（位于 `anbox/src/anbox/cli.h`）如下：
 ```

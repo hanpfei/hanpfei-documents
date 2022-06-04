@@ -87,7 +87,7 @@ Input #0, h264, from 'raw_h264_stream.raw':   0KB sq=    0B f=0/0
 ```
 `ffplay` 还会打印与视频相关的一些信息，如 H.264 的编码配置，图像格式，分辨率等等。此外，默认还会输出所用的 ffmpeg 库的配置信息。`ffplay` 界面如下图：
 
-![](https://www.wolfcstech.com/images/1315506-41ce3a2987780248.png)
+![](../images/1315506-41ce3a2987780248.png)
 
 相对于许多其它面向普通用户的播放器而言，`ffplay` 在用户操作上是简陋了点，几乎没有为用户提供任何对视频播放的控制功能，但还是为音视频的开发提供了极大的方便。
 
@@ -108,11 +108,11 @@ VLC media player 2.2.2 Weatherwax (revision 2.2.2-0-g6259d80)
 
 即使是对于 H.264 裸流，vlc 也提供了进度控制等功能：
 
-![](https://www.wolfcstech.com/images/1315506-aaa3672d5fe0171f.png)
+![](../images/1315506-aaa3672d5fe0171f.png)
 
 进度时间总是显示为 0。如果真的去拖动进度条的话，画面还可能会花掉：
 
-![](https://www.wolfcstech.com/images/1315506-0643adc7a8d7525b.png)
+![](../images/1315506-0643adc7a8d7525b.png)
 
 ### [打赏](https://www.wolfcstech.com/about/donate.html)
 

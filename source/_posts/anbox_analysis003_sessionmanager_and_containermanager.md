@@ -8,7 +8,7 @@ tags:
 
 Anbox 通过一个可执行文件，实现多个不同的应该用逻辑。在启动 Anbox 可执行文件时，通过为它提供不同的命令行参数来确定具体执行哪个命令。Anbox 中这些不同的命令实例之间，整体的通信架构如下图这样：
 <!--more-->
-![Communication in Anbox](https://www.wolfcstech.com/images/1315506-beb1c58a9988124d.png)
+![Communication in Anbox](../images/1315506-beb1c58a9988124d.png)
 
 这些不同的命令实例之间通信的过程大体如下：
 
@@ -127,7 +127,7 @@ void Service::new_client(std::shared_ptr<boost::asio::local::stream_protocol::so
 
 Anbox 的容器管理器和会话管理器通过基于 Protobuf 设计的 RPC 进行通信。`anbox::container::Service` 中处理收到的消息及接受 RPC 调用的相关组件的设计框架如下：
 
-![Anbox Container Service](https://www.wolfcstech.com/images/1315506-3e7dadf1f085f0a7.png)
+![Anbox Container Service](../images/1315506-3e7dadf1f085f0a7.png)
 
 ***在 Anbox 的设计中，`anbox::rpc::Channel` 及 `anbox::rpc::PendingCallCache` 本来主要用于 RPC 调用发起端的消息收发，但在 `anbox::container::Service::new_client()` 中，同样为新连接创建了这两个类的对象，这显得有点多次一举。***
 
@@ -499,7 +499,7 @@ void ManagementApiSkeleton::stop_container(
 
 至此整个 RPC 调用接受处理流程结束。整个流程如下图所示：
 
-![Anbox RPC - Service Process](https://www.wolfcstech.com/images/1315506-38cf3ff3ad5de78e.png)
+![Anbox RPC - Service Process](../images/1315506-38cf3ff3ad5de78e.png)
 
 # 会话管理器发起 RPC 调用
 
@@ -592,7 +592,7 @@ void Client::on_read_size(const boost::system::error_code &error,
 
 `anbox::container::Client` 中处理 RPC 调用的发起的相关组件的设计框架如下：
 
-![Anbox Container Client](https://www.wolfcstech.com/images/1315506-d15316f4575c0a1b.png)
+![Anbox Container Client](../images/1315506-d15316f4575c0a1b.png)
 
 `anbox::container::Client` 直接使用 `anbox::container::ManagementApiStub` 执行 RPC 调用，这个类的定义（位于 `anbox/src/anbox/container/management_api_stub.h`）如下：
 ```
@@ -1039,9 +1039,9 @@ std::uint32_t Channel::next_id() {
 
 Anbox 中会话管理器与容器管理器通过两个 RPC 调用进行通信，在调用发起端的整个处理过程如下图：
 
-![Start Container Process](https://www.wolfcstech.com/images/1315506-3963e61469988d3b.png)
+![Start Container Process](../images/1315506-3963e61469988d3b.png)
 
-![Stop Container Process](https://www.wolfcstech.com/images/1315506-c7ecc094bd317088.png)
+![Stop Container Process](../images/1315506-c7ecc094bd317088.png)
 
 ### [打赏](https://www.wolfcstech.com/about/donate.html)
 

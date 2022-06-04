@@ -307,7 +307,7 @@ Starting Gerrit Code Review: OK
 
 可以看到 Gerrit Server 成功启动了。此时通过浏览器，打开 `http://review.virtcloudgame.com:8080` 将可以看到如下这样的页面：
 
-![2017-11-27 15-11-01屏幕截图.png](https://www.wolfcstech.com/images/1315506-27e86131e47160c1.png)
+![2017-11-27 15-11-01屏幕截图.png](../images/1315506-27e86131e47160c1.png)
 
 # 修改认证方式和反向代理
 为了通过更为强大的 Web 服务器来对外提供服务，同时方便 Gerrit Server 的 HTTP 用户认证方式可以正常工作，需要设置反向代理。这里使用 nginx 作为 Web 服务器。
@@ -481,7 +481,7 @@ replication 插件在执行过程中，产生的日志文件位于 `~/review_sit
 
 # Gerrit 工程的创建
 用前面创建的 `admin` 用户登录，它将自动获得管理员权限，可以以这个用户创建工程。登录之后，选择 `Projects` -> `Create New Project`：
-![](http://www.wolfcstech.com/images/1315506-f1a3fd848fab6968.png)
+![](../images/1315506-f1a3fd848fab6968.png)
 
 在 `Project Name:` 一栏输入工程的名字，并点击 `Create Project` 按钮即可完成工程的创建。在 Gerrit 的配置文件 `review_site/etc/gerrit.config` 中，`basePath` 定义了这些工程的位置。
 
@@ -495,7 +495,7 @@ $ git clone --bare ssh://git@g.hz.netease.com:22222/cloudgame/cloudgame_tools.gi
 ```
 
 在工程的主页，可以找到 clone 工程的命令。直接复制命令，然后将工程 clone 到本地：
-![](https://www.wolfcstech.com/images/1315506-0105a12ab738c99a.png)
+![](../images/1315506-0105a12ab738c99a.png)
 
 像下面这样 Clone Gerrit 上的工程：
 ```
@@ -534,7 +534,7 @@ To ssh://admin@review.virtcloudgame.com:29418/EventServer
 ```
 
 在 Gerrit 上将看到刚刚提交的代码：
-![2017-11-24 19-03-56屏幕截图.png](https://www.wolfcstech.com/images/1315506-74cf614902a345dc.png)
+![2017-11-24 19-03-56屏幕截图.png](../images/1315506-74cf614902a345dc.png)
 
 Code Review 结束之后，Submit 代码，代码将被提交到 Gerrit 的 Git 仓库，同时被复制到 GitLab 的对应仓库中。
 

@@ -267,7 +267,7 @@ sms = ServerMediaSession::createNew(env, fileName, fileName, descStr);\
 
 `H264VideoFileServerMediaSubsession` 有着如下图所示的继承体系：
 
-![](https://www.wolfcstech.com/images/1315506-1e2dfc17512a3909.png)
+![](../images/1315506-1e2dfc17512a3909.png)
 
 在这个继承体系中，`ServerMediaSubsession` 定义了可以对单个流执行的操作，类的定义如下：
 ```

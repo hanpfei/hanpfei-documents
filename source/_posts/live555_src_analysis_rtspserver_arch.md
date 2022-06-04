@@ -12,7 +12,7 @@ tags:
 <!--more-->
 live555 中 RTSP 处理有关组件关系如下图：
 
-![](https://www.wolfcstech.com/images/1315506-5ae0f80b706b414b.png)
+![](../images/1315506-5ae0f80b706b414b.png)
 
 事件和执行流程的源头在 `TaskScheduler`。`GenericMediaServer` 对象在创建的时候，会向 `TaskScheduler` 注册一个 server socket 及处理该 socket 上的事件的处理程序 `GenericMediaServer::incomingConnectionHandler(void* instance, int /*mask*/)`。
 

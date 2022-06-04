@@ -9,7 +9,7 @@ tags:
 
 QUIC (Quick UDP Internet Connections，快速 UDP 网络连接) 是一个新的默认加密的互联网传输协议，它提供了大量改进用于加速 HTTP 流量并使它更安全，以实现最终在 Web 上替换 TCP 和 TLS 的目标。这篇博文中我们将概述 QUIC 的一些关键特性，及它们如何使 Web 受益，以及在支持这个基础的新协议上的一些挑战。
 <!--more-->
-![QUIC-Badge-Dark-RGB-Horiz](https://www.wolfcstech.com/images/1315506-31ecbef4d0bd517e.png)
+![QUIC-Badge-Dark-RGB-Horiz](../images/1315506-31ecbef4d0bd517e.png)
 
 事实上有两个协议，它们共享相同的名字： “Google QUIC”（简称 “gQUIC”）是 Google 的工程师在几年前设计的最初的协议，它在经过了几年的实验之后，现在已经被 [IETF](https://ietf.org/) (Internet Engineering Task Force，互联网工程任务组) 采纳为标准。
 
@@ -25,9 +25,9 @@ QUIC (Quick UDP Internet Connections，快速 UDP 网络连接) 是一个新的�
 
 这不仅确保连接总是认证且加密的，它还使最初的连接建立更快速：典型的 QUIC 握手只耗费客户端和服务端之间一个单独的往返来完成，对比 TCP 和 TLS 1.3 握手合起来所需的两次往返。
 
-![http-request-over-tcp-tls@2x](https://www.wolfcstech.com/images/1315506-917d5ab441347a35.png)
+![http-request-over-tcp-tls@2x](../images/1315506-917d5ab441347a35.png)
 
-![http-request-over-quic@2x](https://www.wolfcstech.com/images/1315506-b0b5c8bbc7632475.png)
+![http-request-over-quic@2x](../images/1315506-b0b5c8bbc7632475.png)
 
 但 QUIC 甚至走得更远，它还加密了额外的连接元数据，这些元数据可能被中间人滥用来干扰连接。例如，当使用连接迁移时，链路上的被动攻击者可以使用包号关联多个网络路径上的用户活动（见下面）。通过加密包号，QUIC 确保它们不会被除连接的端点外的任何实体用来关联用户活动。
 
@@ -39,7 +39,7 @@ QUIC (Quick UDP Internet Connections，快速 UDP 网络连接) 是一个新的�
 
 这对于当时的现状而言是巨大的改进，如果应用想要并发地处理多个 HTTP/1.1 请求，其需要应用初始化多个 TCP + TLS 连接（比如当浏览器需要同时获取 CSS 和 Javascript 资源渲染网页时）。创建新连接需要重复初始握手多次，也需要经历初始拥塞窗口爬坡，这意味着网页渲染变慢了。多路复用 HTTP 交换避免了这一点。
 
-![multiplexing.png](https://www.wolfcstech.com/images/1315506-5bd6918f2d6c78ce.png)
+![multiplexing.png](../images/1315506-5bd6918f2d6c78ce.png)
 
 然而这也有不利之处：由于多个请求/响应由相同的 TCP 连接传输，它们会同等地受到丢包影响（比如由于网络拥塞），即使数据丢失只影响到一个单独的请求。这称为“队首阻塞”。
 
@@ -63,7 +63,7 @@ QUIC 设计基于 UDP 数据报传输，这是为了简化部署并避免丢弃�
 
 当发生 NAT 重绑定时（比如由于超时），NAT 边界外的端点将看到包来自于一个不同的源端口，而不是连接最初建立时所观察到的哪个，这使得只使用 4 元组追踪连接变得不可能。
 
-![NAT-timeout-@2x](https://www.wolfcstech.com/images/1315506-0fc054630aad7df5.png)
+![NAT-timeout-@2x](../images/1315506-0fc054630aad7df5.png)
 
 还不只是 NAT！QUIC 想要提供的一个特性称为“连接迁移”，它允许 QUIC 端点随意迁移连接到不同的 IP 地址和网络路径。比如，一个移动客户端将能够在无线数据网络和 WiFi 之间迁移 QUIC 连接，当一个已知的 WiFi 网络可用时（比如当它的用户进入他们最喜爱的咖啡店时）。
 
@@ -71,7 +71,7 @@ QUIC 试图通过引入连接 ID 的概念来解决这个问题：可变长度�
 
 然而，这也给使用 anycast 寻址和 [ECMP 路由](https://blog.cloudflare.com/path-mtu-discovery-in-practice/) 的网络运营商带来了一个问题，即一个目标 IP 地址可能潜在地标识数百甚至数千台服务器。由于这些网络使用的边缘路由器还不知道如何处理 QUIC 流量，可能发生的一种情况是属于相同 QUIC 连接（即具有相同的连接 ID）的 UDP 数据包具有不同的 4 元组（由于 NAT 重绑定或连接迁移），它们可能最终被路由到不同的服务器，这就打破了连接。
 
-![image](https://www.wolfcstech.com/images/1315506-0101fb592ddf7b90.png)
+![image](../images/1315506-0101fb592ddf7b90.png)
 
 为了解决这个问题，网络运营商可能需要使用更智能的 4 层负载均衡解决方案，这可以用软件实现并在无需触碰边缘路由器的情况下部署（请参考 Facebook 的 [Katran](https://github.com/facebookincubator/katran) 项目作为例子）。
 
@@ -97,7 +97,7 @@ QUIC 可以在不同的流中独立地传输多个 HTTP 请求（或响应），
 
  [基于 UDP 的](https://blog.cloudflare.com/ssdp-100gbps/) [协议](https://blog.cloudflare.com/memcrashed-major-amplification-attacks-from-port-11211/) 的一个常见问题是它们对于[反射攻击](https://blog.cloudflare.com/reflections-on-reflections/)的敏感性，其中攻击者欺骗原本无辜的服务器向第三方受害者发送大量数据，通过欺骗针对服务器的数据包的源 IP 地址，使它们看起来像是来自受害者。
 
-![ip-spoofing](https://www.wolfcstech.com/images/1315506-55d9a2aa5e1e77a3.png)
+![ip-spoofing](../images/1315506-55d9a2aa5e1e77a3.png)
 
 当服务器发送的响应恰巧比它接收的请求大时，这种攻击可能非常有效，在这种情况下，我们谈论的是“放大”。
 

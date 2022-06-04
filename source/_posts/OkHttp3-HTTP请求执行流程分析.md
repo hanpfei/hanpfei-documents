@@ -670,7 +670,7 @@ originalRequest = {Request@830033700704} "Request{method=GET, url=http://ip.taob
 retryAndFollowUpInterceptor = {RetryAndFollowUpInterceptor@830033700816} 
 ```
 由此可见OkHttp中，Http请求的实际处理流程将大致如下图这样：
-![okhttp3.jpg](https://www.wolfcstech.com/images/1315506-10e49a8770cec26b.jpg)
+![okhttp3.jpg](../images/1315506-10e49a8770cec26b.jpg)
 
 ## RetryAndFollowUpInterceptor
 具体这些Interceptor中每一个都会做些什么事情呢？我们后面再来详细地做分析。

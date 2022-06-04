@@ -273,7 +273,7 @@ connect() to unix:///home/www-data/www/mysite/mysite.sock failed (13: Permission
 ```
 访问Django应用的接口，报出502 Bad Gateway错误：
 
-![Bad Gateway](https://www.wolfcstech.com/images/badgateway.png)
+![Bad Gateway](../images/badgateway.png)
 
 则添加socket权限再次运行：
 
@@ -335,7 +335,7 @@ uwsgi --ini mysite_uwsgi.ini # the --ini option is used to specify a file
 
 最后，通过访问Django提供的接口接口服务，检查上面的所有配置，如在浏览器中输入`http://www.wolfcstech.com:8000/admin`，应该可以看到如下的页面：
 
-![Django admin page](https://www.wolfcstech.com/images/djang_admin.png)
+![Django admin page](../images/djang_admin.png)
 
 ### uWSGI后台运行
 前面介绍的uWSGI运行方式是在终端前台运行，终端关闭的话，uWSGI进程也都会跟着结束掉。可我们也不能总是为uWSGI开一个终端啊。我们可以配置uWSGI后台运行。需要在mysite_uwsgi.ini配置文件中添加：

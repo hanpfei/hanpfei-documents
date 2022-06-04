@@ -362,15 +362,15 @@ http://server_domain_or_IP:8080
 ```
 
 你看到的界面应该和你之前测试时看到的一样：
-![](https://www.wolfcstech.com/images/1315506-dfe2a2e4799196f7.png)
+![](../images/1315506-dfe2a2e4799196f7.png)
 
 然后我们看一下 **Manager App** ，可通过链接 http://localhost:8080/manager/html 访问。你将需要键入给 **tomcat-users.xml** 文件添加的账户和密码。然后你将看到类似下面的页面：
-![](https://www.wolfcstech.com/images/1315506-9291c6bfebd586a3.png)
+![](../images/1315506-9291c6bfebd586a3.png)
 
 Web应用管理用于管理你的 Java 应用。你可以在这里启动，停止，重新加载，部署，取消部署。你也可以运行关于你的 apps 的诊断 (如，查找内存泄漏)。最后，在这个页面的底部可以找到关于你的服务器的信息。
 
 现在让我们看一下 **Host Manager**，可通过 http://localhost:8080/host-manager/html 访问：
-![](https://www.wolfcstech.com/images/1315506-e46708796c8a7d70.png)
+![](../images/1315506-e46708796c8a7d70.png)
 
 这样 Tomcat 就安装好了。
 

@@ -12,7 +12,7 @@ tags:
 
 <!--more-->
 
-![OkHttp Flow](https://www.wolfcstech.com/images/1315506-8492fecef4238d86.png)
+![OkHttp Flow](../images/1315506-8492fecef4238d86.png)
 
 这些Interceptor中每一个的职责，这里不再赘述。
 
@@ -372,7 +372,7 @@ Internal.instance的实现在OkHttpClient 中：
 
 OkHttp内部对`ConnectionPool`的访问总是通过Internal.instance来进行。整个OkHttp中也只有`StreamAllocation` 存取了 `ConnectionPool`，也就是我们前面列出的`StreamAllocation.findConnection()` 方法，相关的组件之间的关系大体如下图：
 
-![OkHttp Connection Pool](https://www.wolfcstech.com/images/1315506-6a60bf781625e166.png)
+![OkHttp Connection Pool](../images/1315506-6a60bf781625e166.png)
 
 ## RealConnection的清理
 `ConnectionPool` 中对于 `RealConnection` 的清理在put()方法中触发，执行 `cleanupRunnable` 来完成清理动作：
@@ -1255,6 +1255,6 @@ TLS扩展相关方法的OptionalMethod创建过程也在AndroidPlatform中：
 
 总结一下，OkHttp中，IO相关的组件的其关系大体如下图所示：
 
-![Connection Component](https://www.wolfcstech.com/images/1315506-338a7a0b0a39a278.png)
+![Connection Component](../images/1315506-338a7a0b0a39a278.png)
 
 Done。

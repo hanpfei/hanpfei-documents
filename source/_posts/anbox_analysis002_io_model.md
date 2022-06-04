@@ -342,7 +342,7 @@ void TcpSocketConnector::on_new_connection(
 
 Anbox 中，监听 Socket 相关（包括对 Unix 域 Socket 的监听和对 TCP Socket 的监听）的类结构如下：
 
-![Anbox Connector](https://www.wolfcstech.com/images/1315506-6bc2288274987ea5.png)
+![Anbox Connector](../images/1315506-6bc2288274987ea5.png)
 
 # 处理从监听的 Unix 域 Socket 接受的 Unix 域 Socket
 
@@ -666,7 +666,7 @@ void AdbMessageProcessor::on_host_read_size(const boost::system::error_code &err
 
 Anbox 中与监听的 Socket 上新接受的连接的处理有关的组件如下图所示：
 
-![Anbox Connection Handler](https://www.wolfcstech.com/images/1315506-ba86f2cfdc75d46a.png)
+![Anbox Connection Handler](../images/1315506-ba86f2cfdc75d46a.png)
 
 `Connector` 接受新连接之后，将为新连接创建的 Socket 传给 `ConnectionCreator`。Anbox 中的几个 `ConnectionCreator` 实现对新连接的处理方式类似：为新连接创建 `SocketMessenger`，用于将新连接加入底层 I/O 多路复用器，从新连接读取数据，或者向连接中写入数据。使用者可以在启动对 Socket 上的读事件进行监听时，传入 `AnboxReadHandler` 回调，在数据到达时得到通知并对数据做一些处理。`SocketConnection` 为连接管理提供了一些方便，它封装
  `SocketMessenger`，并可以在收到数据时，通过另外的一个回调 `MessageProcessor` 将接收到的数据通知出去。更上层通过实现 `AnboxReadHandler` 或 `MessageProcessor` 来拿到接收到的数据并做处理。

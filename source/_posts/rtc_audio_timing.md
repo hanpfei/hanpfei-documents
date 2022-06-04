@@ -15,11 +15,11 @@ tags:
 
 考虑人的耳朵，它无时无刻不从外界接收着音频信号并送进大脑进行处理，外界音频信号的一些甚至很微小的变化也将被人耳感知到。音频数据处理的一些常见的时序及数据连续性问题，如部分音频数据丢失，音频信号有明显的间断，这种情况的音频信号波形图如下（图中上部为正常的音频信号波形）：
 
-![部分音频数据缺失](https://www.wolfcstech.com/images/1315506-b7f9ec1931da1687.png)
+![部分音频数据缺失](../images/1315506-b7f9ec1931da1687.png)
 
 再如音频数据不够，或到达的不及时（如果播放设备播放音频数据时卡顿，对于人耳和人脑来说，属于此种情况），而在正常的音频数据中间被插入了值全为 0 的空数据，这种情况的音频信号波形图如下（图中上部为正常的音频信号波形）：
 
-![插入空音频数据帧](https://www.wolfcstech.com/images/1315506-ccd400413b666955.png)
+![插入空音频数据帧](../images/1315506-ccd400413b666955.png)
 
 在波形图上，插入空音频数据帧看上去更明显一点。
 
@@ -35,40 +35,40 @@ tags:
 
 考虑这样的一种情况。由于播放的节奏相对较慢，某一时刻参考信号缓冲区被拿空，此时读指针和写指针指向参考信号环形缓冲区相同的位置，假设这个位置为 6：
 
-![参考信号缓冲区被拿空](https://www.wolfcstech.com/images/1315506-9a81ace13588f6bd.png)
+![参考信号缓冲区被拿空](../images/1315506-9a81ace13588f6bd.png)
 
 AEC 对于这种情况的处理是，前移读指针，假设将读指针向前移 3 个块，移到位置 3：
 
-![读指针往前移](https://www.wolfcstech.com/images/1315506-07aaebe0f13cb61a.png)
+![读指针往前移](../images/1315506-07aaebe0f13cb61a.png)
 
 随后播放数据到达，被写入参考信号环形缓冲区，随后写指针被更新：
 
-![新的参考信号到达](https://www.wolfcstech.com/images/1315506-8ae7fe168201b88e.png)
+![新的参考信号到达](../images/1315506-8ae7fe168201b88e.png)
 
 处理一帧录制数据，从参考信号环形缓冲区取走部分数据，随后，读指针更新，假设此时读指针指向位置 5：
 
-![处理一帧录制数据之后读指针后移](https://www.wolfcstech.com/images/1315506-2912021eb150a8d9.png)
+![处理一帧录制数据之后读指针后移](../images/1315506-2912021eb150a8d9.png)
 
 随后播放数据很快被录制进来，保存在位置 6 处的播放数据，它被录制进来后做回声消除时，看到读指针位于位置 5，出现非因果：
 
-![播放的参考信号被录制到](https://www.wolfcstech.com/images/1315506-7939e664306f50d0.png)
+![播放的参考信号被录制到](../images/1315506-7939e664306f50d0.png)
 
 录制设备启动较慢时也可能出现非因果。考虑这样一种情况，某个时刻参考信号缓冲区被塞了好多数据。状态如下图：
 
-![参考信号缓冲区](https://www.wolfcstech.com/images/1315506-2e7fb2208cd1b9f3.png)
+![参考信号缓冲区](../images/1315506-2e7fb2208cd1b9f3.png)
 
 录制设备启动时，参考信号缓冲区中前面的一些数据早就被播放完了，因而，录制设备录到的数据，假设是包含了块 6 中的数据的，此时做回声消除出现非因果：
 
-![回声消除时非因果](https://www.wolfcstech.com/images/1315506-98b98a59ce2584fc.png)
+![回声消除时非因果](../images/1315506-98b98a59ce2584fc.png)
 
 正常情况下，做回声消除时，参考信号和录制信号大体应该像下面这样（参考信号在上，录制信号在下）：
 
-![正常回声消除信号波形图](https://www.wolfcstech.com/images/1315506-c1970f6fb515cfba.png)
+![正常回声消除信号波形图](../images/1315506-c1970f6fb515cfba.png)
 
 可以看到，参考信号基本上都是在录制信号前面的。
 
 做回声消除出现非因果时，参考信号和录制信号则可能像下面这样（参考信号在上，录制信号在下）：
-![非因果回声消除信号波形图](https://www.wolfcstech.com/images/1315506-4baa830a2a7f2f9b.png)
+![非因果回声消除信号波形图](../images/1315506-4baa830a2a7f2f9b.png)
 
 可以看到，录制信号跑到了参考信号的前面。
 
@@ -98,7 +98,7 @@ RTC 中，接收端接收远端主播通过网络发送过来编码音频数据�
 
 对于音频裸数据的处理的整体结构如下图：
 
-![下载.png](https://www.wolfcstech.com/images/1315506-1246e5d8a9f190a0.png)
+![下载.png](../images/1315506-1246e5d8a9f190a0.png)
 
 SDK 用户通过 `AudioPcmDataSender` 将 PCM 音频数据灌进 SDK，这些数据随后在 `AudioNodePcmSource` 中被转为时长均匀的 10ms 数据帧，随后通过 `AudioNodeFilter` 做音效处理，之后数据被送进 `AudioNodeMixerSource`，等着被 AudioMixer 拿走做混音。`AudioNodeMixerSource` 即为我们前面提到的暂存数据的缓冲区，它还是发生线程转换的地方。对于播放，`AudioNodeMixerSource` 被接进 `PlaybackPcmSourceAudioMixer`，对于发送 `AudioNodeMixerSource` 被接进 `TxAudioMixer`。对于播放，播放线程驱动 `PlaybackPcmSourceAudioMixer` 完成混音，从 `PlaybackPcmSourceAudioMixer` 拿到混音之后的数据，并完成之后的处理播放过程。对于发送，`TxAudioMixer` 内部将启动一个线程，驱动混音过程，拿到混音之后的数据推出去。
 
@@ -126,7 +126,7 @@ SDK 用户通过 `AudioPcmDataSender` 将 PCM 音频数据灌进 SDK，这些数
 
 互动连麦处理的整体结构如下图：
 
-![互动连麦处理的整体结构](https://www.wolfcstech.com/images/1315506-1fbcfec1c6a76d63.png)
+![互动连麦处理的整体结构](../images/1315506-1fbcfec1c6a76d63.png)
 
 音频数据的发送和接收有一个耦合点，即用于完成 3A 处理的 AudioProcessing。互动连麦回声消除的时序问题，对于音频架构来说，主要是我们前面提到的几种非因果的情况。
 
@@ -146,7 +146,7 @@ SDK 用户通过 `AudioPcmDataSender` 将 PCM 音频数据灌进 SDK，这些数
 
 声卡采集处理双 APM 方案的整体结构如下图：
 
-![声卡采集的处理](https://www.wolfcstech.com/images/1315506-8e0a9d1672e83efd.png)
+![声卡采集的处理](../images/1315506-8e0a9d1672e83efd.png)
 
 声卡采集回声消除的时序问题主要是两个回声消除模块的非因果问题。用于消除声卡采集中 SDK 播放的从远端接收的音频数据的 APM，逻辑上不太容易出现分因果的问题。消除麦克风录制的音频数据中的回声的 APM，在声卡采集被开启时，其参考信号源做过一次切换，相对比较容易出现非因果。
 

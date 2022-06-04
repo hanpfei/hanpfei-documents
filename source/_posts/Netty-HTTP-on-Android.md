@@ -15,7 +15,7 @@ Netty是一个NIO的客户端服务器框架，它使我们可以快速而简单
 
 Netty的结构大体如下图这样：
 
-![Netty Structure](https://www.wolfcstech.com/images/1315506-317c8abe3082b0bb.png)
+![Netty Structure](../images/1315506-317c8abe3082b0bb.png)
 
 就设计而言，Netty给不同的传输类型，不管是阻塞的还是非阻塞的，提供了统一的接口。它基于一个灵活的和可扩展的事件模型，这使得处理不同逻辑的部分可以有效的隔离开来。它具有高度可定制的线程模型 - 单线程，一个或多个线程池，比如SEDA。它还提供无连接的datagram socket支持。
 

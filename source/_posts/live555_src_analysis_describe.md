@@ -498,7 +498,7 @@ public:
 
 对于我们由文件创建的 H.264 流媒体子会话而言，`ServerMediaSubsession` 为 `H264VideoFileServerMediaSubsession`，它有着如下图所示的继承体系：
 
-![](https://www.wolfcstech.com/images/1315506-912929536d7c724f.png)
+![](../images/1315506-912929536d7c724f.png)
 
 由图可知，H.264 流媒体子会话所特有的 SDP 内容将来自于 `OnDemandServerMediaSubsession::sdpLines()`：
 ```

@@ -527,13 +527,13 @@ STUN终端会从类型10的消息的响应中获得相同的本地网络地址�
 先说明一下，stund的STUN Server需要部署在一台具有双网卡且每个网卡都有一个自己公网IP地址的主机上。STUN Server的两个IP可以称为IPAddr1（primary IP）和IPAddr2（alt IP），两个端口可以称为Port1（primary port）和Port2（alt port），这两个端口默认分别为3478和3479。STUN Server会打开4个sockets，每个IP两个分别对应两个不同的端口。
 
 首先是消息1：
-![160644_Zta3_919237.png](https://www.wolfcstech.com/images/1315506-0cc7ee1e1172630e.png)
+![160644_Zta3_919237.png](../images/1315506-0cc7ee1e1172630e.png)
 
 消息1从客户端的第一个端口Port1发向STUN Server的IPAddr1:Port1，响应中则会携带客户端发送消息的端口的出口网络地址，及IPAddr2:Port2，以为后续发送消息10及消息11做准备。
 
 消息2：
 
-![161232_AfFx_919237.png](https://www.wolfcstech.com/images/1315506-eb230a257fa1e413.png)
+![161232_AfFx_919237.png](../images/1315506-eb230a257fa1e413.png)
 
 消息2从客户端的第二个端口，发向STUN Server的IPAddr1:Port1，这个消息请求STUN Server将响应从它的IPAddr2:Port1发送回来，也就是相对于接收数据包的网络地址而言切换一下IP地址的网络地址。
 
@@ -542,7 +542,7 @@ STUN终端会从类型10的消息的响应中获得相同的本地网络地址�
 这里为什么要从第二个端口发送消息呢？这主要是因为，类型10的消息会发向IPAddr2:Port1，这实际上会对消息2的响应的接收产生干扰。如果一个地址向IPAddr2:Port1发送了消息，即使当前节点连接的NAT的类型不是全锥型的，从IPAddr2:Port1发回来的消息也可能被接收到。
 
 消息3：
-![161329_M7lo_919237.png](https://www.wolfcstech.com/images/1315506-296abb99d7e35fe0.png)
+![161329_M7lo_919237.png](../images/1315506-296abb99d7e35fe0.png)
 
 消息3同样从客户端的第二个端口发出，且同样发向STUN Server的IPAddr1:Port1，但这个消息请求STUN Server将响应从它的IPAddr1:Port2发送回来，也就是相对于接收数据包的网络地址而言切换一下端口的网络地址。
 
@@ -550,7 +550,7 @@ STUN终端会从类型10的消息的响应中获得相同的本地网络地址�
 
 消息4：
 
-![161413_TSdS_919237.png](https://www.wolfcstech.com/images/1315506-c25556d26a673188.png)
+![161413_TSdS_919237.png](../images/1315506-c25556d26a673188.png)
 
 # 针对多主机部署的STUN Server优化
 
@@ -558,7 +558,7 @@ STUN终端会从类型10的消息的响应中获得相同的本地网络地址�
 
 因而一种用于stund的STUN Server的优化设计应运而生，结构如下图：
 
-![162407_B2RO_919237.png](https://www.wolfcstech.com/images/1315506-925e86f486bf2f54.png)
+![162407_B2RO_919237.png](../images/1315506-925e86f486bf2f54.png)
 
 这种设计主要是让STUN Server只绑定一个IP上的两个端口，同时在STUN之间建立一个通信信道，以便于类型2的消息能得到合适的处理。
 
@@ -775,7 +775,7 @@ void stunBuildReqSimple(StunMessage* msg, const StunAtrString& username, bool ch
 }
 ```
 由这些函数的实现，当不难理出来STUN请求消息的格式大体为：
-![170658_ZxCq_919237.png](https://www.wolfcstech.com/images/1315506-e41e08f77775e8a6.png)
+![170658_ZxCq_919237.png](../images/1315506-e41e08f77775e8a6.png)
 
 整体来看，STUN请求消息分为两个部分，一部分是Header，另一部分是Attr的List。
 
@@ -991,7 +991,7 @@ bool stunServerProcessMsg(char* buf, unsigned int bufLen, StunAddress4& from, St
 ```
 由这个函数的实现，我们不难看出STUN Server发回给客户端的响应的消息格式与请求的格式大体一样，但消息的具体内容有一些区别。消息的格式大体为：
 
-![174120_pPyU_919237.png](https://www.wolfcstech.com/images/1315506-c79de928bf28d9d7.png)
+![174120_pPyU_919237.png](../images/1315506-c79de928bf28d9d7.png)
 
 这个消息里的内容要多一点。
 
@@ -1001,7 +1001,7 @@ bool stunServerProcessMsg(char* buf, unsigned int bufLen, StunAddress4& from, St
 
 借助于stund的这些良好设计，可以大大简化我们的可双主机部署的STUN server的设计与实现。STUN server间的消息格式可以为：
 
-![182922_6Bzw_919237.png](https://www.wolfcstech.com/images/1315506-99a7260fc25aa891.png)
+![182922_6Bzw_919237.png](../images/1315506-99a7260fc25aa891.png)
 
 也就是说，当STUN Server收到类型2的消息时，构造一个格式如上图的消息，并将该消息转发给另为一个STUN Server。其中MappedAddress和ResponseAddress Attr的值都是消息的from地址，即客户端发送消息的端口的出口公网地址。
 
@@ -1239,6 +1239,6 @@ bool stunServerProcessMsg(StunServerInfo& info, char* buf, unsigned int bufLen, 
 
 主要的改动即是在发现客户端请求改变IP地址发回响应时，构造如上图中的消息，并发给另一个STUN Server。从而，对于消息2，数据包的流转过程大体如下：
 
-![140802_Enu2_919237.png](https://www.wolfcstech.com/images/1315506-57bdb56fa33986de.png)
+![140802_Enu2_919237.png](../images/1315506-57bdb56fa33986de.png)
 
 Done。

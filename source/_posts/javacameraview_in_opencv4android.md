@@ -11,7 +11,7 @@ OpenCV4Android中，主要用 `org.opencv.android.JavaCameraView`（后面用`Ja
 
 <!--more-->
 
-![](https://www.wolfcstech.com/images/1315506-3f340cdb398ce0e8.png)
+![](../images/1315506-3f340cdb398ce0e8.png)
 
 大体上可以认为，`CameraBridgeViewBase` 主要是借助于 `SurfaceView` 的功能，来完成图像显示相关的功能。而 `JavaCameraView` 则主要用于与 Camera 硬件设备进行交互。而从线程的角度来分析，则这里也是一种生产者消费这模型。生产者线程在
  `onPreviewFrame()` 回调方法中将 camera preview 的一帧帧数据压缩进类型为 Mat 的缓冲区中。而消费者线程则取出这些 Mat 图像，先是传递给 app 注册的 listener 做一些特定于应用的图像处理操作，然后把处理后的图像显示出来。在此处，我们也主要从生产者-消费者模型的角度来分析相关这些类的实现。
@@ -20,7 +20,7 @@ OpenCV4Android中，主要用 `org.opencv.android.JavaCameraView`（后面用`Ja
 
 对于生产者线程，我们可以简单的将它理解为，当 Camera preview 的一帧数据准备好了的时候，它会去调用 `onPreviewFrame()` 回调方法将一帧图像压缩进 Mat 的缓冲区。具体 `onPreviewFrame()` 回调方法的调用流程，则大致如下面的这个 backtrace 所示的那样：
 
-![](https://www.wolfcstech.com/images/1315506-c6b6e787c435a7eb.png)
+![](../images/1315506-c6b6e787c435a7eb.png)
 
 由此我们不难理解，生产者这一角色其实是由应用程序的主线程来担任的。我们还可以看一下在 `JavaCameraView.onPreviewFrame(byte[], Camera)` 里面具体都做了些什么：
 ```
@@ -333,7 +333,7 @@ OpenCV4Android中，主要用 `org.opencv.android.JavaCameraView`（后面用`Ja
 
 再来看一下这个方法被调用到时的调用栈：
 
-![](https://www.wolfcstech.com/images/1315506-df472fc92db931f1.png)
+![](../images/1315506-df472fc92db931f1.png)
 
 对照前面调用 `connectCamera()` 的过程的分析，大概也不需要做过多的说明。
 
@@ -505,7 +505,7 @@ OpenCV4Android中，主要用 `org.opencv.android.JavaCameraView`（后面用`Ja
 
 就会出现一个像下面这样的Exception：
 
-![](https://www.wolfcstech.com/images/1315506-2417a3efe87dcc85.png)
+![](../images/1315506-2417a3efe87dcc85.png)
 
 在把 `SurfaceTexture` 交给 `TextureView` 显示之前，我们还需要先将`SurfaceTexture` detach from GL context，像下面这样：
 ```

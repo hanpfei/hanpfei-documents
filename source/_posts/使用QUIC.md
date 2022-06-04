@@ -69,15 +69,15 @@ cd -
 
 一种比较简单的管理证书的方法是使用chrome浏览器。在地址栏中输入 `chrome://settings/search#ssl`，然后点击“管理证书”：
 
-![SSL Management](https://www.wolfcstech.com/images/1315506-a39ee579a3606059.png)
+![SSL Management](../images/1315506-a39ee579a3606059.png)
 
 在弹出的窗口中选择 “授权中心”，如下图：
 
-![Import Certificate](https://www.wolfcstech.com/images/1315506-8512bcbe2d529253.png)
+![Import Certificate](../images/1315506-8512bcbe2d529253.png)
 
 然后点击 “导入...” 按钮，此时将弹出一个文件选择对话框，我们选中所需要导入的根证书文件，也就是 `net/tools/quic/certs/out/2048-sha256-root.pem`，此时将有如下提示：
 
-![](https://www.wolfcstech.com/images/1315506-deed629c07d27313.png)
+![](../images/1315506-deed629c07d27313.png)
 
 勾选其中的第一项，“信任该证书，以标识网站的身份。”，然后点击 “确定” 按钮结束导入。
 

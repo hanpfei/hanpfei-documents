@@ -444,9 +444,9 @@ summit  1
 这里，第一列是 `java.lang.String` 格式的 Kafka 消息 key，第二列是 `java.lang.Long` 格式的消息值。注意，输出实际上是一个持续更新的流，其中每个数据记录（比如，上面最初的输出中的每行）是单个单词更新后的个数，比如 "kafka" 这样的 aka 记录 key。对于相同 key 的多个记录，每个后面的记录是前一个的更新。
 
 下面的两个图说明了幕后发生的事情。第一列展示了计数 `count` 的单次出现的 `KTable<String, Long>` 的当前状态的发展。第二列展示了改变记录导致 KTable 的状态更新，且被发送到输出 Kafka topic **streams-wordcount-output**。
-![](https://www.wolfcstech.com/images/1315506-36bbd3d502fc1322.png)
+![](../images/1315506-36bbd3d502fc1322.png)
 
-![](https://www.wolfcstech.com/images/1315506-1e6a10aae3383f6b.png)
+![](../images/1315506-1e6a10aae3383f6b.png)
 
 首先，文本行 “all streams lead to kafka” 被处理。`KTable` 被创建，每个新单词导致一个新表项（由绿色背景高亮），然后一个对应的修改记录被发送给下游的 `KStream`。
 

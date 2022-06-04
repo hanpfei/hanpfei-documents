@@ -32,11 +32,11 @@ ROS 的安装步骤如下。
 
 配置 Ubuntu 仓库，以允许 "restricted"，"universe" 和 "multiverse"。打开 新立得包管理器，如下图：
 
-![新立得包管理器](https://www.wolfcstech.com/images/1315506-0fb6e90c3631d23c.png)
+![新立得包管理器](../images/1315506-0fb6e90c3631d23c.png)
 
 选择 设置 -> 软件库(R)，弹出如下对话框：
 
-![Ubuntu 仓库](https://www.wolfcstech.com/images/1315506-82755b8ea03fe580.png)
+![Ubuntu 仓库](../images/1315506-82755b8ea03fe580.png)
 
 打开 "Ubuntu 软件" Tab 页，勾选 "restricted"，"universe" 和 "multiverse" 等选项，如上图所示。通常情况下，这些选项都是默认选中的，因此这一步一般不会遇到什么问题。
 
@@ -473,7 +473,7 @@ started core service [/rosout]
 ```
 
 `turtlesim` 测试如下：
-![Turtlesim](https://www.wolfcstech.com/images/1315506-000c62e7a4440c3f.png)
+![Turtlesim](../images/1315506-000c62e7a4440c3f.png)
 
 注意 `turtlesim` 的运行依赖于 `roscore` 的运行，因此在测试 `turtlesim` 需要同时运行 `roscore`。
 

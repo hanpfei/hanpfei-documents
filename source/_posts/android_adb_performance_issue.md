@@ -88,7 +88,7 @@ $ numactl -m 0 -C 0 emulator -gpuserveraddr 10.240.209.153 -gpuserverport 6230 -
 从 top 命令的输出结果可以看到，多个 emulator 的进程 CPU 占用率仍然较高。
 
 `htop` 命令执行的结果如下：
-![](https://www.wolfcstech.com/images/1315506-440d1f11e905e493.png)
+![](../images/1315506-440d1f11e905e493.png)
 
 emualtor 进程使得 CPU 持续处于异常繁忙的状态同样得到验证。
 
@@ -142,7 +142,7 @@ $ adb kill-server
 从上面的输出中可以看到，除了进程号为 42980 的进程外，其它的 emulator 进程的 CPU 占用率都恢复到比较低的状态。
 
 `htop` 命令的输出如下：
-![](https://www.wolfcstech.com/images/1315506-92090b1329bf0688.png)
+![](../images/1315506-92090b1329bf0688.png)
 
 从上面的输出可以看到，除占用第 15 号 CPU 的进程 CPU 占用率总是非常高，接近 100% 之外，整个世界都平静了。不难猜测，这里占用第 15 号 CPU 的进程正是上面看到的进程号为 42980 的进程。
 

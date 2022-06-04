@@ -139,7 +139,7 @@ AudioRecorder::AudioRecorder(SampleFormat *sampleFormat, SLEngineItf slEngine)
 
 上面这段代码创建的 recording pipeline 大体如下：
 
-![Recording Pipeline](https://www.wolfcstech.com/images/1315506-65561e38f99339af.png)
+![Recording Pipeline](../images/1315506-65561e38f99339af.png)
 
 配置 OpenSL ES recorder 从录音设备拿到音频数据，放入缓冲区，这些数据再由缓冲区对象通过回调传给外界。Android OpenSL ES 中用 `SLAndroidSimpleBufferQueueItf` 对象描述缓冲区，这个缓冲区本身不包含用于存放音频数据的内存，而是需要外部分配内存，并将分配好的内存给到缓冲区对象。
 
@@ -359,7 +359,7 @@ AudioPlayer::AudioPlayer(SampleFormat *sampleFormat, SLEngineItf slEngine)
 
 创建 Player 的过程与创建 Recorder 的过程类似，同样要定义流水线，只是流水线的样子有差别。Player 的流水线如下面这样：
 
-![OpenSL ES Playout Pipeline](https://www.wolfcstech.com/images/1315506-f2cf929373fc28ba.png)
+![OpenSL ES Playout Pipeline](../images/1315506-f2cf929373fc28ba.png)
 
 这个过程最终获得类型为 `SLPlayItf` 的 `playItf_` 来控制播放。
 
@@ -546,7 +546,7 @@ JNIEXPORT void JNICALL MainActivity_deleteSLEngine(
 
 OpenSL ES 的对象可以大体总结如下：
 
-![opensles_object.png](https://www.wolfcstech.com/images/1315506-2d386de7005916c7.png)
+![opensles_object.png](../images/1315506-2d386de7005916c7.png)
 
 上面的示例代码只是展示了 OpenSL ES 可以搭建的一种流水线，对于 OpenSL ES API 的其它使用方式可以参考官方的文档。
 

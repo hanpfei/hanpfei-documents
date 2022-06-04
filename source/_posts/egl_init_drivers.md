@@ -1142,7 +1142,7 @@ Android 的 OpenGL ES 图形系统涉及多个库，根据设备类型的不同�
 当为模拟器开启了 OpenGL ES 的 GPU 硬件模拟，实际的 EGL 和 OpenGL ES 实现库会采用由 `android-7.1.1_r22/device/generic/goldfish-opengl` 下的源码编译出来的几个库文件，即 `libGLESv2_emulation.so`、`libGLESv1_CM_emulation.so` 和 `libEGL_emulation.so`。此时，OpenGL ES 图形库结构如下：
 
 
-![2017-09-16 11-19-05屏幕截图.png](https://www.wolfcstech.com/images/1315506-2f2b3af4a60e835f.png)
+![2017-09-16 11-19-05屏幕截图.png](../images/1315506-2f2b3af4a60e835f.png)
 
 
 对于真实的物理 Android 设备，OpenGL ES 图形库结构如下：

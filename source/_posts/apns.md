@@ -13,7 +13,7 @@ tags:
 <!--more-->
 连接的另一半用于发送通知 —— provider 服务器和 APNs 之间持久，安全的通道 —— 需要在你的线上[开发者帐号](https://developer.apple.com/account/)中进行配置并使用苹果提供的加密证书。Provider 是一个服务器，由你部署并管理，由你配置来与 APNs 协同工作。图 6-1 展示了远程通知的传送路径。
 
-![图 6-1 从 provider 到应用程序的远程通知传递](https://www.wolfcstech.com/images/1315506-6fc462531ec421e4.png)
+![图 6-1 从 provider 到应用程序的远程通知传递](../images/1315506-6fc462531ec421e4.png)
 
 在你的 provider 中和你的应用程序中配置完了通知设置之后，你的 providers 就可以给 APNs 发送通知请求了。APNs 传递对应的通知载荷给每个目标设备。收到通知后，系统将载荷传递给设备上适当的应用程序，并管理与用户的交互。
 
@@ -37,7 +37,7 @@ tags:
 
 图 6-2 描述了 APNs 为设备上运行的你的应用程序支持的虚拟网络的种类。为了处理通知负载，你将需要部署多个 providers，每个都有它自己到 APNs 的持久和安全连接。每个 provider可以以该 provider 具有其有效设备令牌的设备为目标发送通知请求。
 
-![图 6-2 从多个 providers 到多个设备的推送远程通知](https://www.wolfcstech.com/images/1315506-91e5a7a925b06f19.png)
+![图 6-2 从多个 providers 到多个设备的推送远程通知](../images/1315506-91e5a7a925b06f19.png)
 
 # 服务质量，存储和转发，和合并通知
 
@@ -102,7 +102,7 @@ APNs 可以由于多个原因签发一个新的设备令牌：
 
 图 6-3 描述了使用基于 HTTP/2 的 APNs provider API 建立信任，并使用 JWT provider 认证令牌发送通知。
 
-![图 6-3 建立并使用基于令牌的 provider 连接信任](https://www.wolfcstech.com/images/1315506-63cce907a4a89dba.png)
+![图 6-3 建立并使用基于令牌的 provider 连接信任](../images/1315506-63cce907a4a89dba.png)
 
 如图 6-3 所示那样，基于令牌的 provider 信任工作过程如下：
 
@@ -122,7 +122,7 @@ APNs 可以由于多个原因签发一个新的设备令牌：
 
 图 6-4 描述了使用 Apple 签发的 SSL 证书来建立 provider 和 APNs 之间的信任。不像 [吐 6-3](https://developer.apple.com/library/archive/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/APNSOverview.html#//apple_ref/doc/uid/TP40008194-CH8-SW3)，这幅图没有展示通知推送本身，但在 TSL 连接建立时终止。在基于证书的信任方案中，推送通知请求未经过身份验证，但使用随附的设备令牌对其进行验证。
 
-![图 6-4 建立基于证书的 provider 连接信任](https://www.wolfcstech.com/images/1315506-a25e62e7c69f356d.png)
+![图 6-4 建立基于证书的 provider 连接信任](../images/1315506-a25e62e7c69f356d.png)
 
 如图 6-4 所示，基于证书的 provider 与 APNs 信任工作过程如下：
 
@@ -138,7 +138,7 @@ APNs 与每个设备的信任是自动建立地，无需你的应用程序参与
 
 每个设备具有一个加密的证书，和一个私有加密密钥，由操作系统在最初设备激活时提供，并存储在设备的 keychain 中。在激活期间，APNs 认证并验证与设备的连接，基于证书和密钥，如图 6-5 所示。
 
-![图 6-5 建立设备和 APNs 之间的连接信任](https://www.wolfcstech.com/images/1315506-576f7b9b90d2adc1.png)
+![图 6-5 建立设备和 APNs 之间的连接信任](../images/1315506-576f7b9b90d2adc1.png)
 
 如图 6-5 所示的那样，APNs 与设备的信任工作过程如下：
 
@@ -153,7 +153,7 @@ APNs 与每个设备的信任是自动建立地，无需你的应用程序参与
 
 用户是否是第一次激活设备，或者 APNs 是否已经签发了一个新的设备令牌，过程都是类似的，如图 6-6 所示。
 
-![图 6-6 管理设备令牌](https://www.wolfcstech.com/images/1315506-99f44880086eb222.png)
+![图 6-6 管理设备令牌](../images/1315506-99f44880086eb222.png)
 
 获得并处理一个应用特有设备令牌的工作过程如下：
 
@@ -167,7 +167,7 @@ APNs 设备令牌的长度是可变的。不要硬编码它们的大小。
 
 当你的 provider 发送通知请求给 APNs 时，它包含标识一个唯一的应用程序-设备组合的设备令牌。这个步骤如图 6-7 中 provider 和 APNs之间的  “Token, Payload” 箭头所示。APNs 解密令牌以确保请求的有效性，并决定目标设备。如果 APNs 确定发送者和接收者是合法的，它将发送通知给标识的设备。
 
-![图 6-7 从 provider 到设备的远程通知路径](https://www.wolfcstech.com/images/1315506-a94482039cb9e6c4.png)
+![图 6-7 从 provider 到设备的远程通知路径](../images/1315506-a94482039cb9e6c4.png)
 
 设备收到通知之后（且在图 6-7 中所示的最后一步之后），系统转发远程通知给你的应用程序。
 

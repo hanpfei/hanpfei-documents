@@ -106,7 +106,7 @@ MuPDF 的 Android 核心库又由三个部分组成，分别为它所依赖的�
 
 MuPDF Android 查看器的整体组件结构如下图所示：
 
-![截图_2018-06-07_17-18-34.png](https://www.wolfcstech.com/images/1315506-50e57820c1107be9.png)
+![截图_2018-06-07_17-18-34.png](../images/1315506-50e57820c1107be9.png)
 
 MuPDF UI 控件库的代码位于 `mupdf-android-viewer/lib`，它连接了上层的 Android 应用程序和下层的 MuPDF 核心库，其中 MuPDFCore 类封装了 MuPDF 核心库用 JNI 封装的底层 MuPDF 库的 Java 接口；`ReaderView`、`PageAdapter`、`PageView`、`SearchTask` 和 `SearchTaskResult` 基于 MuPDFCore 类实现 Android 应用程序的 UI 组件，以方便在 Android 应用中查看 PDF 文件；DocumentActivity 和 `OutlineActivity` 是两个 Activity，这两个页面分别用于显示 PDF 文档及 PDF 文档的目录。
 

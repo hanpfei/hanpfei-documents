@@ -58,7 +58,7 @@ Ogg 考虑了所有这些设计因素。Ogg 以不超过接近 1 - 2% 的开销�
 
 Ogg 文件组成的逻辑描述：
 
-![Ogg 文件组成的逻辑描述](https://www.wolfcstech.com/images/1315506-1dfffb42927afec8.png)
+![Ogg 文件组成的逻辑描述](../images/1315506-1dfffb42927afec8.png)
 
 # 4. Ogg 流格式
 

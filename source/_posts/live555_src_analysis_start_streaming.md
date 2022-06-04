@@ -328,7 +328,7 @@ void FramedSource::getNextFrame(unsigned char* to, unsigned maxSize,
 
 live555 中众多的 `FramedSource` 类之间的关系大概如下图所示：
 
-![](https://www.wolfcstech.com/images/1315506-0b28491d52695852.png)
+![](../images/1315506-0b28491d52695852.png)
 
 上面的调用栈，也主要根据 `FramedSource` 的包装关系，由虚线分割为几个不同的阶段。
 

@@ -1112,7 +1112,7 @@ buildTunneledConnection()用于建立隧道连接：
 ```
 一个隧道请求的例子如下：
 
-![Tunnel Request](https://www.wolfcstech.com/images/1315506-f2b7ee35c56c732b.jpg)
+![Tunnel Request](../images/1315506-f2b7ee35c56c732b.jpg)
 
 请求的"Host" header中包含了目标HTTP服务器的域名。建立socket连接的过程这里不再赘述。
 

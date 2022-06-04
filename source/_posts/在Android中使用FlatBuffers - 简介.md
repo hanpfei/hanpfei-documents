@@ -130,7 +130,7 @@ $ ./flatc -j -b repos_schema.fbs repos_json.json
 # Android app
 
 现在让我们来创建我们的示例app，来看下FlatBuffers格式是如何在实际中使用的。这是它的截屏：
-![screenshot.png](https://www.wolfcstech.com/images/1315506-412dbddb94e2d3bd.png)
+![screenshot.png](../images/1315506-412dbddb94e2d3bd.png)
 
 ProgressBar将仅被用于展示不正确的数据处理（在UI线程中）可以如何影响用户界面的流畅度。
 
@@ -271,11 +271,11 @@ FlatBuffers - 5ms (范围：3ms - 10ms) - FlatBuffers二进制文件（大小：
 
 ### JSON加载
 
-![json.gif](https://www.wolfcstech.com/images/1315506-38130dd2acaebf01.png)
+![json.gif](../images/1315506-38130dd2acaebf01.png)
 
 ### FlatBuffer加载
 
-![Paste_Image.png](https://www.wolfcstech.com/images/1315506-98a87c349eb1e6f9.png)
+![Paste_Image.png](../images/1315506-98a87c349eb1e6f9.png)
 
 看到差别了么？Json加载的ProgressBar停了一会儿，使我们的界面出现了不愉快的情形（操作耗时超过了 16ms）。
 
