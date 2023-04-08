@@ -1,3 +1,12 @@
+---
+title: Android Automotive 调节音量的过程
+date: 2023-03-02 20:21:43
+categories: 音视频开发
+tags:
+- 音视频开发
+- Android 系统开发
+---
+
 Android Automotive OS (AAOS) 是在核心 Android 系统的基础之上打造而成，以支持将 Android 系统用作车辆信息娱乐系统的场景。AAOS 的音频系统对核心 Android 音频系统做了扩充，创建了新的概念和抽象，如音区等，提供了新的 API 接口，添加了的新的服务，以支持智能座舱的特殊需要。Google Android 官方文档 [Automotive](https://source.android.com/docs/devices/automotive?hl=zh-cn) 和 [车载音频](https://source.android.com/docs/devices/automotive/audio?hl=zh-cn) 提供了对 AAOS 系统架构和 AAOS 音频子系统架构的清晰而权威描述。
 
 这里从 AAOS 的系统应用 Settings 中调节音量的部分入手，来看下 AAOS 中调节音量操作的实现。即 Settings 系统应用 UI 中如下的这个部分：
