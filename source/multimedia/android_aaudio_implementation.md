@@ -1,3 +1,12 @@
+---
+title: Android AAudio 的实现分析
+date: 2023-03-16 20:03:36
+categories: 音视频开发
+tags:
+- 音视频开发
+- Android 系统开发
+---
+
 AAudio 是一个自 Android O 引入的新的 Android C API。它主要是为需要低延迟的高性能音频应用设计的。应用程序通过直接从流中读取或向流中写入数据来与 AAudio 通信，但它只包含基本的音频输入输出能力。Android 的官方文档 [AAudio](https://developer.android.com/ndk/guides/audio/aaudio/aaudio) 对 AAudio 的 API 及设计思想做了良好的介绍，这里来看一下 AAudio 的实现。后面的代码分析基于 android-12.1.0_r27 进行。
 
 AAudio 在应用程序和 Android 设备上的音频输入输出之间移动音频数据。应用程序传入音频流和从音频流读取数据来实现这种音频数据的传递。AAudio 的实现围绕音频数据传递，围绕音频流进行。
