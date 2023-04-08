@@ -1,3 +1,12 @@
+---
+title: Android 中 libnbaio 库的设计和实现
+date: 2023-04-03 20:24:14
+categories: 音视频开发
+tags:
+- 音视频开发
+- Android 系统开发
+---
+
 Android 中的 **libnbaio** (**Non-Blocking Audio I/O** 的缩写) 库主要是为非阻塞的音频 I/O 设计的，但现在它也包含了一些接口的阻塞实现，因而它的主要作用也变成了为各种音频 I/O 设施提供统一的读写接口。**libnbaio** 库主要用在 **audioflinger** 和一些音频 HAL 模块的实现中。**libnbaio** 库提供的主要组件是 `Pipe` 和 `MonoPipe`，其中 `Pipe` 支持单个写者，和 N 个读者，`MonoPipe` 支持单个写者和单个读者。
 
 `Pipe` 支持的特性如下：
