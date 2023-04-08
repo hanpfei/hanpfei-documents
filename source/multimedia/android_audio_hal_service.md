@@ -1,3 +1,12 @@
+---
+title: Android Audio HAL 服务
+date: 2023-03-07 19:36:43
+categories: 音视频开发
+tags:
+- 音视频开发
+- Android 系统开发
+---
+
 在 Android 系统中，Audio HAL 服务用于管理对音频硬件的访问，AudioFlinger 通过 Audio HAL 服务访问音频硬件。这里以 Android Automotive (AAOS) 版模拟器为例，来看 Audio HAL 服务的设计、实现和访问，代码分析基于 android-12.1.0_r27 进行。
 
 AAOS 版模拟器的 Audio HAL 服务的实现位于 *device/generic/car/emulator/audio/halservice*，在 android 设备中，它将以名为 **android.hardware.audio.service-caremu** 的进程存在，这个进程的主函数定义 (位于 *device/generic/car/emulator/audio/halservice/service.cpp*) 如下：
