@@ -1,3 +1,12 @@
+---
+title: Android 音频设备信息加载
+date: 2023-03-21 20:06:20
+categories: 音视频开发
+tags:
+- 音视频开发
+- Android 系统开发
+---
+
 Android 系统的守护进程 audioserver 中运行着多个与音频相关的系统服务，主要包括 `AudioFlinger` 和 `AudioPolicyService`，当需要支持 AAudio 的 MMap 模式时，会运行 `AAudioService`。需要启动  `MediaLogService` 服务时，audioserver 程序会 fork 一个进程运行其它那些系统服务，在父进程中运行 `MediaLogService`，并将进程名修改为 **media.log**。audioserver 程序的主函数代码如下 (位于 *frameworks/av/media/audioserver/main_audioserver.cpp*) 所示：
 ```
 int main(int argc __unused, char **argv)
