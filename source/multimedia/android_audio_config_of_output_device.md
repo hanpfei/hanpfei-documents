@@ -1,3 +1,12 @@
+---
+title: Android 中打开音频流所用的配置
+date: 2023-04-04 22:02:05
+categories: 音视频开发
+tags:
+- 音视频开发
+- Android 系统开发
+---
+
 我们在 `AudioPolicyManager::onNewAudioModulesAvailableInt(DeviceVector *newDevices)` 函数中看到它创建了 `SwAudioOutputDescriptor` 对象，后者的构造函数的定义 (位于 `frameworks/av/services/audiopolicy/common/managerdefinitions/src/AudioOutputDescriptor.cpp`) 如下：
 ```
 AudioOutputDescriptor::AudioOutputDescriptor(const sp<PolicyAudioPort>& policyAudioPort,
