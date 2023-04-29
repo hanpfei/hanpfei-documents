@@ -1,3 +1,12 @@
+---
+title: Android Java 音频采集 AudioRecord
+date: 2023-04-16 17:53:19
+categories: 音视频开发
+tags:
+- 音视频开发
+- Android 系统开发
+---
+
 在 Android Java 应用中，一般用 `AudioRecord` 管理从平台的音频输入设备采集音频数据所需的资源。音频采集和音频播放密切关系，Android 系统中 Java `AudioRecord` 和 `AudioTrack` 在许多方面，都有着很高的相似性，无论是代码的目录组织，还是整个类的接口设计和实现结构，但它们也有着不小的区别。对比来看 Java `AudioRecord` 和 `AudioTrack` 的实现，有助于我们对音频的播放和采集做更好地理解。`AudioRecord` 的 Java 代码位于 *frameworks/base/media/java/android/media*，它的 JNI 代码位于 *frameworks/base/core/jni*。Java 层 `AudioRecord` 类实现基于 ***libaudioclient*** 库，该库位于 *frameworks/av/media/libaudioclient*。
 
 ## Java AudioRecord 基本使用
