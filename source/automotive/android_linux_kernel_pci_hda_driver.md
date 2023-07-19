@@ -1,3 +1,11 @@
+---
+title: Android Linux 内核音频 PCI/HDA 设备驱动实现分析
+date: 2023-04-29 14:51:29
+categories: Linux 内核
+tags:
+- Linux 内核
+---
+
 这里的代码分析基于 Android 通用 Linux 内核的版本 common-android12-5.10，这个版本的 Linux 内核代码的获取方法可参考 [Build Android system and Kernel images](https://www.codeinsideout.com/blog/android/build-aosp/)。
 
 ## PCI 总线注册
