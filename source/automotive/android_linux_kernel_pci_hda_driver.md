@@ -5135,4 +5135,5 @@ static int snd_open(struct inode *inode, struct file *file)
 ```
 
 在这里，它会根据传入的次设备号，在 `snd_minors` 表中查找对应的设备好文件操作，并替换文件结构的文件操作，这样也就把具体的设备驱动提供的文件操作和设备文件关联起来了。
-。
+
+Done.

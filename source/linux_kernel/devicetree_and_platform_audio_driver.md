@@ -346,7 +346,7 @@ void *__unflatten_device_tree(const void *blob,
 }
 ```
 
-在创建 `struct device_node` 树的过程中，会检查设备树中节点的状态，即其 **"status"** 属性的值，如果这个属性值不是 **"ok"** 或 **"ok"** (大小写敏感)，则不会为该设备树节点创建 `struct device_node` 对象。
+在创建 `struct device_node` 树的过程中，会检查设备树中节点的状态，即其 **"status"** 属性的值，如果这个属性值不是 **"ok"** 或 **"okay"** (大小写敏感)，则不会为该设备树节点创建 `struct device_node` 对象。
 
 在 `populate_node()` 函数中，为 `struct device_node` 对象分配内存空间，并解析设备树节点的属性。
 
@@ -933,7 +933,7 @@ I2S 一般是 ASoC 中的 CPU DAI 设备。声卡驱动程序，也就是 ASoC �
 	};
 ```
 
-下面是另一个声卡驱动的执行过程，其 `compatible` 为 **"rockchip,multicodecs-card"**，其设备树节点如下：
+下面是另一个声卡驱动的执行过程，其 `compatible` 为 **"rockchip,multicodecs-card"**，设备树节点如下：
 ```
 	nau8822_sound: nau8822-sound {
 		status = "okay";
@@ -1555,7 +1555,4 @@ I2S 一般是 ASoC 中的 CPU DAI 设备。声卡驱动程序，也就是 ASoC �
 [    9.148257] ret_from_fork+0x10/0x30
 ```
 
-
-
-
-
+Done.
