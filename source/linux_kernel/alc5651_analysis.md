@@ -94,55 +94,57 @@ ALC5651 共有 9 个模拟 I/O 引脚，它们分别是：
 
 在上面 ALC5651 的连接结构图中，可以看到，接了 3 个麦克风设备，分别是耳机麦克风，接在 IN3P 引脚；模拟麦克风，接在 IN2P 和 IN2N 引脚；及数字麦克风，接在 IN1P/DMIC_DAT 和 GPIO2/DMIC_SCL 引脚。上面的硬件系统，接了两个播放设备，耳机和扬声器都接在 HPO_R 和 HPO_L 引脚。有线播放输出、I2S2 和 PDM 有关的引脚没有接任何设备。
 
+ALC5651 的数字 I/O 引脚主要连接主控 SoC 和 CPU，模拟 I/O 引脚则连接与外部物理自然环境交互的设备。
+
 ## ALC5651 的内部功能结构
 
-来看一下 ALC5651 的内部功能框图：
+来看一下 ALC5651 的内部功能块图：
 
 ![ALC5651 Function Block](images/1315506-6a354b506f121a7a.png)
 
-对于音频录制，四个模拟音频输入，即麦克风 1、麦克风 2、有线输入和麦克风 3 接在称为 REC Mixer 的模拟混音器中，REC Mixer 混音之后的信号被送进 ADC L/ADC R，经过 ADC L/ADC R 的处理，模拟音频信号变为数字音频信号，数字音频信号被送进一个数字混音器。另外，数字麦克风的数字信号直接送进数字混音器。数字混音器混音数字麦克风和 ADC L/ADC R 输出的数字信号，生成最终的数据，之后通过音频信号处理，并通过 I2S 数字总线，送进 SoC、CPU 和内存。
+对于音频录制，有四个模拟音频输入，即麦克风 1、麦克风 2、有线输入和麦克风 3 接在称为 REC Mixer 的模拟混音器，REC Mixer 混音之后的音频信号被送进 ADC L/ADC R，经过 ADC L/ADC R 的处理，模拟音频信号变为数字音频信号，数字音频信号被送进一个数字混音器。另外，数字麦克风的数字信号直接送进数字混音器。数字混音器混音数字麦克风和 ADC L/ADC R 输出的数字信号，生成最终的数据，之后通过音频信号处理，并通过 I2S 数字总线，送进 SoC、CPU 和内存。
 
-对于音频播放，数字音频信号，从 SoC、CPU 和内存经 I2S 进入 ALC5651 的音频信号处理模块，随后经 DAC 音量调节和高通滤波器，然后经 DACL1/DACR1，数字信号变为模拟器信号，模拟信号进入输出混音器。输出混音器有另外的音频源 AIN，这是指麦克风录制的模拟音频信号。输出混音器混音之后，音频信号被送进有线输出和耳机输出。
+对于音频播放，数字音频信号，从 SoC、CPU 和内存经 I2S 进入 ALC5651 的音频信号处理模块，随后经 DAC 音量调节和高通滤波器，然后经 DACL1/DACR1，数字信号变为模拟信号，模拟信号进入输出混音器。***输出混音器有另外的音频源 AIN，这是麦克风录制的模拟音频信号。*** 输出混音器混音之后，音频信号被送进有线输出和耳机输出。
 
 ## ALC5651 内部的模拟混音器
 
-ALC5651 内部，模拟混音器更详细的结构如下面两幅图。录制的模拟混音器详细结构如下图：
+在上面的 ALC5651 的内部功能块图中，看到的 REC Mixer 和输出混音器为模拟混音器。ALC5651 内部，模拟混音器更详细的结构如下面两幅图。录制的模拟混音器详细结构如下图：
 
 ![Analog Audio Mixer Path 1](images/1315506-eb7b167112eb0a6b.png)
 
-四个模拟音频源，各通过一个开关连接到一个增益模块，这大概用来实现音量调节。增益模块出来的信号进入模拟器混音器 RECMIXL/RECMIXR，在软件中，可以配置这些开关的连接或断开，来决定对应的音频源是否接入混音器。从图中可以看到，除了有线输入之外，其它音频源都是同一路音频信号，被分别送进左右声道的混音器 RECMIXL 和 RECMIXR，只有有线输入是不同的两路音频信号被送进 RECMIXL 和 RECMIXR。也就是说，有线输入是真正的立体声输入。
+四个模拟音频源，各通过一个开关连接到一个增益模块，这大概用来实现音量调节。增益模块出来的信号进入模拟混音器 RECMIXL/RECMIXR。在软件中，可以配置这些开关的连接或断开，来决定对应的音频源是否接入混音器。从图中可以看到，除了有线输入之外，其它音频源都是同一路音频信号，被分别送进左右声道的混音器 RECMIXL 和 RECMIXR，只有有线输入是不同的两路音频信号被送进 RECMIXL 和 RECMIXR。也就是说，只有有线输入是真正的立体声输入，其它都不是。
 
-RECMIXL 和 RECMIXR 处理之后的信号，被送进 ADC，以做进一步的处理。在 RECMIXL 和 RECMIXR 的后面，各引了一根线出来。
+RECMIXL 和 RECMIXR 处理之后的音频信号，被送进模数转换组件 ADC_L/ADC_R，以做进一步的处理。在 RECMIXL 和 RECMIXR 的后面，各引了一根线出来，后面将看到它们被接到了那里。
 
 播放的模拟混音器详细结构如下图：
 
 ![Analog Audio Mixer Path 2](images/1315506-bca29216dddea933.png)
 
-音频信号处理模块出来的信号，进入过滤器和数字音量模块，之后进入 DAC 模块。DAC 模块将数字信号转换为模拟信号，模拟信号通过一个开关连接到一个增益模块，进而连接到模拟混音器 OUTMIXL/OUTMIXR。除了 DACL1/DACR1，OUTMIXL/OUTMIXR 还有四路音频源，分别是 BST1、BST2、INL1/INR1 和 RECMIXL/RECMIXR。四路模拟录制音频源中的三路，通过一个开关接入了输出模拟混音器 OUTMIXL/OUTMIXR，模拟录制混音器 RECMIXL/RECMIXR 出来的信号，通过另一个开关接入了输出模拟混音器。这也就意味着，录制的音频信号，通过控制这些开关，可以再通过耳机或扬声器播放出来。
+音频信号处理模块出来的信号，进入过滤器和数字音量模块，之后进入 DAC_L1/DAC_R1 模块。DAC_L1/DAC_R1 模块将数字信号转换为模拟信号，模拟信号通过一个开关连接到一个增益模块，进而连接到模拟混音器 OUTMIXL/OUTMIXR。除了 DACL1/DACR1，OUTMIXL/OUTMIXR 还有四路音频源，分别是 BST1、BST2、INL1/INR1 和 RECMIXL/RECMIXR。四路模拟录制音频源中的三路，除了 IN3P 外，通过一个开关接入了输出模拟混音器 OUTMIXL/OUTMIXR，模拟录制混音器 RECMIXL/RECMIXR 出来的信号，通过另一个开关接入了输出模拟混音器。这也就意味着，录制的音频信号，通过控制这些开关，可以再通过耳机或扬声器播放出来。ALC5651 在硬件上可以支持类似耳返的场景。
 
-输出模拟混音器 OUTMIXL/OUTMIXR 出来的信号，被送进耳机输出音量模块 HPOVOLL/HPOVOLR 和有线输出音量模块 OUTVOLL/OUTVOLR，之后音频信号通过开关接入增益模块，进而接入另一个模拟混音器。HPOVOLL/HPOVOLR 出来的音频信号接入 HPOLMIX/HPORMIX 混音器。OUTVOLL/OUTVOLR 出来的音频信号接入 LOUTMIX 混音器。HPOLMIX/HPORMIX 混音器出来的音频信号进入耳机输出 HPOL/HPOR 播放出来，LOUTMIX 混音器出来的音频信号进入有线输出 LOUTL/P 和 LOUTR/N 播放出来。
+输出模拟混音器 OUTMIXL/OUTMIXR 出来的音频信号，被送进耳机输出音量模块 HPOVOLL/HPOVOLR 和有线输出音量模块 OUTVOLL/OUTVOLR，之后音频信号通过开关接入增益模块，进而接入另一个模拟混音器。HPOVOLL/HPOVOLR 出来的音频信号接入 HPOLMIX/HPORMIX 模拟混音器。OUTVOLL/OUTVOLR 出来的音频信号接入 LOUTMIX 模拟混音器。HPOLMIX/HPORMIX 模拟混音器出来的音频信号进入耳机输出 HPOL/HPOR 播放出来，LOUTMIX 模拟混音器出来的音频信号进入有线输出 LOUTL/P 和 LOUTR/N 播放出来。
 
-HPOLMIX/HPORMIX 混音器和 LOUTMIX 混音器都有另一路音频源，即 DAC 模块出来的 DACL1/DACR1。这意味着，DAC 模块出来的 DACL1/DACR1 音频信号，可以绕开中间的输出音量模块，直通最后的耳机输出或有线输出。
+HPOLMIX/HPORMIX 模拟混音器和 LOUTMIX 模拟混音器都有另一路音频源，即 DAC_L1/DAC_R1 模块出来的 DACL1/DACR1。这意味着，DAC_L1/DAC_R1 模块出来的 DACL1/DACR1 音频信号，可以绕开中间的输出音量等组件，直通最后的耳机输出或有线输出。
 
-ALC5651 内部总共有 4 个模拟混音器，录制一个，为 RECMIXL/RECMIXR，播放 3 个，分别为 OUTMIXL/OUTMIXR、HPOLMIX/HPORMIX 和 LOUTMIX。
+ALC5651 内部总共有 4 组模拟混音器，录制一组，为 RECMIXL/RECMIXR；播放 3 组，分别为 OUTMIXL/OUTMIXR、HPOLMIX/HPORMIX 和 LOUTMIX。
 
 ## ALC5651 内部的数字混音器
 
-ALC5651 里，在上图中的 ADC —— Audio Signal Processing —— DAC 之间，有着更为复杂精细的结构，其中包含多个数字混音器。
+ALC5651 里，在上图中的 ADC_L/ADC_R —— Audio Signal Processing —— DAC_L1/DAC_R1 之间，有着更为复杂精细的结构，其中包含多组数字混音器。
 
 数字混音器相关结构如下图：
 
 ![Audio Digital Mixer Path](images/1315506-ae1f2145793057ab.png)
 
-对于录制，在 ADC 之后，对于播放，在 DAC 之前，音频信号都有两条路径，一条经过音频信号处理模块，另一条则不经过，更快地连接到 I2S。
+对于录制，在 ADC_L/ADC_R 之后，对于播放，在 DAC_L1/DAC_R1 之前，音频信号都有两条路径，一条经过音频信号处理模块，另一条则不经过，更快地连接到 I2S 或音频输出。
 
 先来看录制的音频信号。ADC_L/ADC_R 出来的音频信号分成两路，上面的一路最终可能经过音频信号处理模块，下面的一路不经过。
 
-对于上面的一路音频信号，它和 DMIC_L/DMIC_R 及 DD_MIXL/DD_MIXR 一起，被送进两组多路复用器。这两组多路复用器从 ADC_L/ADC_R、DMIC_L/DMIC_R 和 DD_MIXL/DD_MIXR 三路音频源中，选出其中的两个 (这两个可以同时为 DD_MIXL/DD_MIXR)，送进一组数字混音器。数字混音器出来的音频信号被送进风噪过滤器，进一步送进一个音量模块，之后通过一个开关，连接到音频信号处理模块。音频信号处理模块出来的音频信号，一路通过开关接入另一组数字混音器，另一路称为 Stereo1_ADC_Mixer_L/Stereo1_ADC_Mixer_R。
+对于上面的一路音频信号，它和 DMIC_L/DMIC_R 及 DD_MIXL/DD_MIXR 一起，被送进两组多路复用器。这两组多路复用器从 ADC_L/ADC_R、DMIC_L/DMIC_R 和 DD_MIXL/DD_MIXR 三路音频源中，选出其中的两个 (这两个可以同时为 DD_MIXL/DD_MIXR)，送进一组数字混音器。数字混音器出来的音频信号被送进风噪过滤器，进一步送进一个音量模块，之后通过一个开关，连接到音频信号处理模块。音频信号处理模块出来的音频信号，一路通过开关接入另一组数字混音器；另一路称为 Stereo1_ADC_Mixer_L/Stereo1_ADC_Mixer_R。
 
 对于下面的一路音频信号，它和 DMIC_L/DMIC_R 及 DD_MIXL/DD_MIXR 一起，被送进另外两组多路复用器。这两组多路复用器从 ADC_L/ADC_R、DMIC_L/DMIC_R 和 DD_MIXL/DD_MIXR 三路音频源中，选出其中的两个 (这两个可以同时为 DD_MIXL/DD_MIXR)，送进另一组数字混音器。数字混音器出来的音频信号被送进一个音量模块，之后经过一个开关，这路音频信号称为 Stereo2_ADC_Mixer_L/Stereo2_ADC_Mixer_R。后面将看到 DD_MIXL/DD_MIXR 是怎么产生的。
 
-Stereo1_ADC_Mixer_L/Stereo1_ADC_Mixer_R 通过 IF1_ADC1 连接到 I2S1 外面的多路复用器，Stereo2_ADC_Mixer_L/Stereo2_ADC_Mixer_R 则通过 IF1_ADC2 连接到 I2S1 外面的多路复用器。多路复用器在 IF1_ADC1 和 IF1_ADC2 之间选择一路，送进 I2S1。IF1_ADC1 和 IF1_ADC2 也会被送进 I2S2 外面的多路复用器。这也就意味着 I2S2 录制的音频信号，可能和 I2S1 是一样的。
+Stereo1_ADC_Mixer_L/Stereo1_ADC_Mixer_R 通过 IF1_ADC1 连接到 I2S1 外面的多路复用器，Stereo2_ADC_Mixer_L/Stereo2_ADC_Mixer_R 则通过 IF1_ADC2 连接到 I2S1 外面的多路复用器。多路复用器在 IF1_ADC1 和 IF1_ADC2 之间选择一路，送进 I2S1。IF1_ADC1 和 IF1_ADC2 也会被送进 I2S2 外面的多路复用器。这也就意味着 I2S2 录制的音频信号，可能和 I2S1 是完全一样的，I2S2 没有独立音频录制通路。
 
 对于播放，从 I2S1 中出来的音频信号被分成两路，一路称为 IF1_DAC1_L/IF1_DAC1_R，另一路称为 IF1_DAC2_L/IF1_DAC2_R。IF1_DAC1_L/IF1_DAC1_R 将经过音频信号处理模块，IF1_DAC2_L/IF1_DAC2_R 不经过。从 I2S2 中出来的音频信号，称为 IF2_DAC_L/IF2_DAC_R，它们不经过音频信号处理模块。
 
@@ -156,6 +158,7 @@ Stereo_DAC_MIXL/Stereo_DAC_MIXR 和 DD_MIXL/DD_MIXR 音频信号的另一个去�
 
 参考文档：
 [Rockchip RK3399 - Codec驱动（ Realtek ALC5651）](https://www.cnblogs.com/zyly/p/17591411.html)
+
 [Rockchip RK3399 - ALC5651音频调试](https://www.cnblogs.com/zyly/p/17591417.html)
 
 Done.
