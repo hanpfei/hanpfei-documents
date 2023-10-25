@@ -238,9 +238,9 @@ Stall 模型是允许请求调页类型的模型。如果启用了 Stall 模型�
 
 ### 页请求接口
 
-如果只有 ATS 接口，为了提高 DMA 的效率，软件需要钉住 DMA 使用的内存。也就是说，内存被锁定在适当的位置，这样它就不能被系统的动态分页机制换出。与固定内存相关的开销可能不大。然而将一大部分内存从可分页池中移除，对系统性能的负面影响可能会很大。相关的页面请求接口 (PRI) 为 PCIe 功能块增加了将 DMA 定位到未固定的动态分页内存的能力。请参阅 [PCI Express 基本规范](https://pcisig.com/specifications) 了解更多关于 PRI 机制的信息。
+如果只有一个 ATS 接口，为了提高 DMA 的效率，软件需要钉住 DMA 使用的内存。也就是说，内存被锁定在适当的位置，这样它就不能被系统的动态分页机制换出。与钉住内存相关的开销可能不大。然而将一大部分内存从可分页池中移除，对系统性能的负面影响可能会很大。相关的页面请求接口 (PRI) 为 PCIe 功能块增加了将 DMA 定位到未固定的动态分页内存的能力。请参阅 [PCI Express 基本规范](https://pcisig.com/specifications) 了解更多关于 PRI 机制的信息。
 
-为了支持 PRI，SMMUv3 架构引入了一个可选的 PRI 队列来存储来自于 PCIe 根端口的 PRI 页请求 (PPR)。[PRI 队列](https://developer.arm.com/documentation/109242/0100/Operation-of-an-SMMU/Page-Request-Interface?lang=en#md271-page-request-interface__fig:pri_queue) 一节展示了 PRI 队列的数据结构。PPR 包含诸如 StreamID、SubstreamID 和页面地址之类的信息。软件可以使用这些信息来定位目标页。
+为了支持 PRI，SMMUv3 架构引入了一个可选的 PRI 队列来存储来自 PCIe 根端口的 PRI 页请求 (PPR)。[PRI 队列](https://developer.arm.com/documentation/109242/0100/Operation-of-an-SMMU/Page-Request-Interface?lang=en#md271-page-request-interface__fig:pri_queue) 一节展示了 PRI 队列的数据结构。PPR 包含诸如 StreamID、SubstreamID 和页面地址之类的信息。软件可以使用这些信息来定位目标页。
 
 ![PRI 队列](images/1315506-784ee8bbc7291c2a.png)
 
