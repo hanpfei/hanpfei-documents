@@ -1,3 +1,11 @@
+---
+title: SMMU 软件指南
+date: 2023-10-22 19:07:29
+categories: Linux 内核
+tags:
+- Linux 内核
+---
+
 ## 概述
 
 这份指南描述 ARM 系统内存管理单元版本 3 (SMMUv3) 的基本操作和 SMMUv3 的使用场景。它包括：
@@ -16,7 +24,7 @@
 
 SMMU 执行的任务类似于 PE 中的 MMU。在将来自系统 I/O 设备的 DMA 请求传递到系统互连之前，它会转换请求的地址。SMMU 只为来自客户端设备的事务提供转换服务，而不为到客户端设备的事务提供转换服务。从系统或 PE 到客户端设备的事务由其它方式管理，例如 PE MMU。图 **SMMU 的角色** 展示了 SMMU 在系统中的角色。
 
-![SMMU 的角色](https://upload-images.jianshu.io/upload_images/1315506-a1a65726e5f2e118.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![SMMU 的角色](images/1315506-a1a65726e5f2e118.png)
 
 ARM SMMU 提供如下服务：
 
@@ -36,7 +44,7 @@ ARM SMMU 提供如下服务：
 
 SMMU 为 I/O 设备的内存管理提供了一种灵活且可扩展的方法。它支持的系统范围从只有一台设备到具有许多设备的大型系统。图 **包含 SMMU 的系统拓扑的简化示例** 显示了连接到两个设备的 SMMU：GPU 和 DMA 引擎。你可以将每个设备配置为拥有自己的一组转换表。
 
-![包含 SMMU 的系统拓扑的简化示例](https://upload-images.jianshu.io/upload_images/1315506-a13cfcc725707558.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![包含 SMMU 的系统拓扑的简化示例](images/1315506-a13cfcc725707558.png)
 
 SMMU 可以选择以与支持虚拟化扩展的 PE 类似的方式支持两个阶段的转换。你可以独立地开关每个转换阶段。在阶段 1 中，传入地址在逻辑上从虚拟地址 (VA) 转换为中间物理地址 (IPA)，然后将 IPA 输入到阶段 2，阶段 2 将 IPA 转换为输出物理地址 (PA)。第 1 阶段供软件实体使用，例如操作系统或用户空间应用程序。它为实体的物理地址空间内的缓冲区提供隔离或转换，例如操作系统的物理地址空间内的 DMA 隔离。第 2 阶段适用于支持虚拟化扩展的系统，旨在将设备 DMA 虚拟化到客户端系统 VM 地址空间。
 
@@ -56,7 +64,7 @@ SMMU 可以选择以与支持虚拟化扩展的 PE 类似的方式支持两个�
 
 图 **简化的 SMMU 转换流程** 显示了每个传入事务所经历的简化的流程。本节描述顶层的转换过程。
 
-![简化的 SMMU 转换流程](https://upload-images.jianshu.io/upload_images/1315506-edbe5665d5a32683.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![简化的 SMMU 转换流程](images/1315506-edbe5665d5a32683.png)
 
 传入事务遵循以下步骤：
 
@@ -128,7 +136,7 @@ SubstreamID 可以选择性地提供给实现第 1 阶段转换的 SMMU。子流
 
 考虑运行多个应用程序的虚拟机。你可能希望一个 DMA 通道由一个应用程序使用，而另一个 DMA 通道由另一个应用程序使用。这些应用程序位于同一虚拟机内，因此它们具有相同的第 2 阶段转换。然而它们有不同的第一阶段转换。SMMUv3 使每个流能够拥有多个子流。所有子流共享相同的第 2 阶段转换，但每个子流都有自己的第 1 阶段转换。例如，如果具有固定 StreamID 的 DMA 引擎具有多个通道，则不同的 SubstreamID 可能会应用于不同的通道。
 
-![SubstreamID 的角色](https://upload-images.jianshu.io/upload_images/1315506-8bbafa2ba6867a93.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![SubstreamID 的角色](images/1315506-8bbafa2ba6867a93.png)
 
 当 SubstreamID 与事务一起提供并且配置启用子流时，SubstreamID 索引 CD 表以选择阶段 1 转换上下文。请参考 **CD** 一节。
 
@@ -136,7 +144,7 @@ SubstreamID 可以选择性地提供给实现第 1 阶段转换的 SMMU。子流
 
 图 **SMMU 故障记录和报告** 展示了 SMMU 记录和报告故障的流程。
 
-![SMMU 故障记录和报告](https://upload-images.jianshu.io/upload_images/1315506-cbad5b9560bff5c8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![SMMU 故障记录和报告](images/1315506-cbad5b9560bff5c8.png)
 
 传入的事务在继续进入系统之前会经历几个逻辑阶段。如果由于 **实现定义** 的原因，SMMU 不支持事务类型或属性，则会记录 **不支持的上游事务故障 (F_UUT)** 事件，并通过 **中止** 终止事务。请参考 **事件队列** 一节。
 
@@ -205,7 +213,7 @@ Stall 模型是允许请求调页类型的模型。如果启用了 Stall 模型�
 
 地址转换服务 (ATS) 扩展了 PCIe 协议以支持提前转换 DMA 地址的 SMMU。转换后的地址随后缓存在 PCIe 设备的本地 TLB 中。本地 TLB 被称为地址转换缓存 (ATC)。在设备中定位转换后的地址旨在减少延迟并提供可扩展的分布式缓存系统，从而提高 I/O 性能。请参阅 [PCI Express 基本规范](https://pcisig.com/specifications) 了解更多关于 ATS 机制的信息。
 
-![ATS 机制](https://upload-images.jianshu.io/upload_images/1315506-313c94685e501a78.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![ATS 机制](images/1315506-313c94685e501a78.png)
 
 图 **ATS 机制** 展示了 ATS 如何工作。PCIe 功能块生成 ATS 转换请求，该请求通过 PCIe 层次结构发送到根端口，然后根端口将其转发到 SMMU。当收到 ATS 转换请求时，SMMU 执行以下基本步骤：
 
@@ -228,7 +236,7 @@ Stall 模型是允许请求调页类型的模型。如果启用了 Stall 模型�
 
 为了支持 PRI，SMMUv3 架构引入了一个可选的 PRI 队列来存储来自于 PCIe 根端口的 PRI 页请求 (PPR)。[PRI 队列](https://developer.arm.com/documentation/109242/0100/Operation-of-an-SMMU/Page-Request-Interface?lang=en#md271-page-request-interface__fig:pri_queue) 一节展示了 PRI 队列的数据结构。PPR 包含诸如 StreamID、SubstreamID 和页面地址之类的信息。软件可以使用这些信息来定位目标页。
 
-![PRI 队列](https://upload-images.jianshu.io/upload_images/1315506-784ee8bbc7291c2a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![PRI 队列](images/1315506-784ee8bbc7291c2a.png)
 
 以下过程描述了 PRI 的工作原理：
 
@@ -254,7 +262,7 @@ Stall 模型是允许请求调页类型的模型。如果启用了 Stall 模型�
 
 图 **SMMU 寄存器映射页** 展示了 SMMU 寄存器映射页。
 
-![SMMU 寄存器映射页](https://upload-images.jianshu.io/upload_images/1315506-db3771a89975da5c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![SMMU 寄存器映射页](images/1315506-db3771a89975da5c.png)
 
 SMMU 寄存器占用了两个连续的 64K 页，SMMU 寄存器页 0 和 SMMU 寄存器页 1，这是架构上需要的。可能会出现用于可选的或 **实现定义** 的特性的附加页面：
 
@@ -314,7 +322,7 @@ SMMU 使用内存中的一组数据结构来定位转换数据。请参考 **转
 
 线性流表是连续的 STE 数组，按 StreamID 从 0 开始索引。数组的大小可配置为 STE 大小的 2 的 n 次方倍，最多可达 SMMU 硬件支持的最大 StreamID 位数。
 
-![线性流表](https://upload-images.jianshu.io/upload_images/1315506-df0cc7a06e452575.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![线性流表](images/1315506-df0cc7a06e452575.png)
 
 要定位事务的 STE，流表通过事务的 StreamID 进行索引：
 ```
@@ -325,7 +333,7 @@ STE_addr = STRTAB_BASE.ADDR + StreamID * sizeof(STE)
 
 2 级流表由一个顶级表组成，该顶级表包含指向多个二级表的描述符，这些 2 级表包含 STE 的线性数组。你可以将整个结构覆盖的 StreamID 范围配置为 SMMU 支持的最大 StreamID。但是，二级表不必完全填充，并且大小可能会有所不同。这可以节省内存并避免对非常大的 StreamID 空间进行大量物理连续的内存分配的要求。
 
-![SPLIT == 8 时的 2 级流表示例](https://upload-images.jianshu.io/upload_images/1315506-3861c2c7ebd79a8e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![SPLIT == 8 时的 2 级流表示例](images/1315506-3861c2c7ebd79a8e.png)
 
 2 级流表对于 StreamID 宽度较大，或者无法轻松分配那么多连续内存，或者 StreamID 的分布相对稀疏的软件很有用。例如，对于 PCIe 等用例，最多支持 256 条总线，并且 RequesterID 或 StreamID 空间至少为 16 位。请参考下文的 **PCIe 注意事项** 一节。然而，由于每个 PCIe 链路通常有一个 PCIe 总线，并且每个总线可能有一个设备，因此在最坏的情况下，可能在每 256 个可能的 StreamID 中只有一个有效的 StreamID。例如，如果 StreamID 的个数为 16 位的，则第一个有效的 StreamID 为 0，第二个有效的 StreamID 为256，第三个有效的 StreamID 为 512，以此类推。
 
@@ -348,7 +356,7 @@ L2 流表不必覆盖 L1STD 表示的整个 StreamID 范围。L1STD 包含一个
 
 图 **L1 流表描述符** 展示了 L1STD 的字段。
 
-![L1 流表描述符](https://upload-images.jianshu.io/upload_images/1315506-2378e4cb10686f5d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![L1 流表描述符](images/1315506-2378e4cb10686f5d.png)
 
 | 字段 | 描述 |
 |--|--|
@@ -409,13 +417,13 @@ CD 将 StreamID 与阶段 1 转换表基指针关联起来，以便针对每个�
 
 图 **配置结构示例** 展示了一个示例配置，其中 StreamID 从线性流表中选择一个 STE。STE 指向了一个第 2 阶段的转换表，并指向了第 1 阶段配置的单个 CD。CD 指向第 1 阶段转换表。
 
-![配置结构示例](https://upload-images.jianshu.io/upload_images/1315506-b6dc4d5cb00d8242.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![配置结构示例](images/1315506-b6dc4d5cb00d8242.png)
 
 #### 单级 CD 表
 
 图 **子流的多上下文描述符** 展示了一个配置，其中 STE 指向多个 CD 的数组。传入的 SubstreamID 选择其中一个 CD，因此 SubstreamID 确定事务使用哪个阶段 1 转换。
 
-![子流的多上下文描述符](https://upload-images.jianshu.io/upload_images/1315506-0876894aa8a348cb.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![子流的多上下文描述符](images/1315506-0876894aa8a348cb.png)
 
 #### 2 级 CD 表
 
@@ -423,7 +431,7 @@ CD 将 StreamID 与阶段 1 转换表基指针关联起来，以便针对每个�
 
 图 **配置结构示例** 展示了一个复杂的布局，其中使用了 2 级流表。其中两个 STE 指向单个 CD 或 CD 的平面数组。第三个 STE 指向 2 级 CD 表。通过多个级别，可以在没有大型物理连续表的情况下支持许多流和许多子流。
 
-![配置结构示例](https://upload-images.jianshu.io/upload_images/1315506-ad4d486bdff68dcb.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![配置结构示例](images/1315506-ad4d486bdff68dcb.png)
 
 L1 表是由 SubstreamID 的高位索引的 L1CD 的连续数组。L1 表中的每个 **L1CD.L2Ptr** 配置有线性二级、L2、CD 表的地址。L2 表是由 SubstreamID 的低位索引的连续 CD 数组。用于 L1 和 L2 索引的 SubstreamID 位范围由 **STE.S1Fmt** 配置。
 
@@ -445,7 +453,7 @@ SMMU 通过内存中的一个环形命令队列控制。例如，当软件更改
 
 在 SMMUv3.3 之前，每个安全状态有一个命令队列。实现 SMMUv3.3 的 SMMU 可以选择支持多个命令队列，以减少并发向 SMMU 提交命令的多个 PE 之间的争用。
 
-![命令队列](https://upload-images.jianshu.io/upload_images/1315506-32fc9280fa467c07.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![命令队列](images/1315506-32fc9280fa467c07.png)
 
 **SMMU_CMDQ_BASE** 存储命令队列的基地址和大小。软件在向命令队列添加新命令之前，需要先检查命令队列中是否有空间。当软件向队列添加一个或多个命令时，它会更新 **SMMU_CMDQ_PROD** 指针以告诉 SMMU 有新命令可用。当 SMMU 处理命令时，它会更新 **SMMU_CMDQ_CONS** 指针。软件读取 **SMMU_CMDQ_CONS** 指针以确定命令已使用且空间已释放。
 
@@ -506,7 +514,7 @@ CMD_SYNC
 
 每个安全状态有一个事件队列。当事件队列从空转变为非空时，SMMU 生成中断。事件队列的结构与命令队列相同，只是生产者和消费者的角色颠倒了。对于命令队列，SMMU 是消费者，然而对于事件队列，SMMU 是生产者。
 
-![事件队列](https://upload-images.jianshu.io/upload_images/1315506-bbb5a0d13446cdd8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![事件队列](images/1315506-bbb5a0d13446cdd8.png)
 
 如果事件消耗得不够快，由传入事务引起的一系列故障或错误可能会填满事件队列并导致其溢出。如果事件队列已满，则由停滞的故障事务产生的事件永远不会被丢弃。当事件队列中的条目被消耗并且接下来的空间变得可用时，则记录它们。如果事件队列已满，其它类型的事件将被丢弃。系统软件应快速消耗事件队列中的条目，以避免正常操作期间溢出。
 
@@ -651,11 +659,11 @@ SMMU 的架构输入地址大小为 64 位。 如果出现以下任何一种情�
 
 连接在 SMMU 后面的设备无法包含与系统其余部分完全一致的缓存，因为监听与物理缓存线相关，但 SMMU 无法进行从 PA 到 VA 的反向转换。设备可能包含不支持硬件一致性的缓存，此类缓存必须由软件维护。
 
-![包括具有非一致性缓存的加速器的系统拓扑的简化示例](https://upload-images.jianshu.io/upload_images/1315506-90f4fdcd8ff3ec28.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![包括具有非一致性缓存的加速器的系统拓扑的简化示例](images/1315506-90f4fdcd8ff3ec28.png)
 
 然而，包含使用 ATS 从 SMMU 填充的 TLB 的客户端设备可能会维护完全一致的物理地址缓存，在执行缓存访问之前使用 TLB 将内部地址转换为物理地址。SMMU 上游的任何物理地址缓存必须是一致的。例如，使用 ATS 转换虚拟地址和一致的物理地址缓存的 **CXL.cache** 或 **CCIX** 客户端设备。
 
-![包括具有一致性缓存的 CXL 加速器的系统拓扑的简化示例](https://upload-images.jianshu.io/upload_images/1315506-317e65eb577464d3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![包括具有一致性缓存的 CXL 加速器的系统拓扑的简化示例](images/1315506-317e65eb577464d3.png)
 
 ### PCIe 注意事项
 
