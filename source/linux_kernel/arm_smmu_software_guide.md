@@ -117,25 +117,24 @@ SMMU 可以选择性地支持两阶段转换，以与 PE 支持虚拟化扩展�
 
 ### 流标识
 
-一个系统可能有多个设备共享同一个 SMMU。通常不同的转换用于不同的设备。比如，在图 **包含 SMMU 的系统拓扑的简化示例** 展示的系统中，虚拟机 A 可以使用 DMA 引擎，虚拟机 B 可以使用 GPU。SMMU 需要识别连接到它的不同设备，并将设备流量和事务关联起来。
+系统中可能有多个设备共享同单个 SMMU。通常不同的转换用于不同的设备。比如，在图 **包含 SMMU 的系统拓扑简化示例** 展示的系统中，虚拟机 A 可以使用 DMA 引擎，虚拟机 B 可以使用 GPU。SMMU 需要识别与它连接的不同设备，并将设备流量和事务关联起来。
 
 #### StreamID 是什么？
 
-StreamID 是 SMMU 区分不同客户端设备的方式。最简单的情况下，一台设备可以有一个 StreamID。但是，设备可能能够生成多个 StreamID，并根据 StreamID 应用不同的转换。例如，对于支持多个通道的 DMA 引擎，不同的 StreamID 可能会应用于不同的通道。
+StreamID 是 SMMU 区分不同客户端设备的方式。最简单的情况下，一台设备可以有一个 StreamID。但是，设备可能能够生成多个 StreamID，并基于 StreamID 应用不同的转换。例如，对于支持多个通道的 DMA 引擎，不同的 StreamID 可能应用于不同的通道。
 
-StreamID 的形成方式由 **实现定义**。通常它是边带信号的组合。
+StreamID 如何构成由 **实现定义**。通常它是边带信号的组合。
 
-每个安全状态都有一个单独的 StreamID 命名空间，即：
+每个安全状态有一个单独的 StreamID 命名空间，即：
 
  * 安全 StreamID 0 是与非安全 StreamID 0 不同的 StreamID。
  * Realm StreamID 0 是与安全 StreamID 0 不同的 StreamID。
 
-然而，Realm 和非安全 StreamID 命名空间是共享的。可以在非安全和 Realm 
- 状态下运行的设备必须在两种状态下具有相同的 StreamID。
+然而，Realm 和非安全 StreamID 共享同一个命名空间是。可以在非安全状态和 Realm 状态下操作的设备必须在两种状态下具有相同的 StreamID。
 
-StreamID 在流表中选择一个 STE，其中包含每个设备的配置设置。请参考 **流表** 一节。
+StreamID 在流表中选择一个 STE (STE 里面有什么？SMMU 又如何基于 STE 完成地址转换？)，其中包含每个设备的配置设置。请参考 **流表** 一节。
 
-RME 扩展了 SMMU 架构以支持没有 StreamID 的事务。这些事务受 GPC 约束，但不受第 1 阶段或第 2 阶段转换的约束。ARM 预计此支持将用于 GIC 和调试访问端口等设备。也就是说，此支持用于传统上不会连接到 SMMU，但其访问需要粒度保护检查 (Granule Protection Checks，GPC) 的设备。
+RME 扩展了 SMMU 架构以支持没有 StreamID 的事务。这些事务受 GPC 约束，但不受第 1 阶段或第 2 阶段转换的约束。ARM 预期此支持将用于 GIC 和调试访问端口等设备。也就是说，此支持用于传统上不会连接到 SMMU，但其访问需要粒度保护检查 (Granule Protection Checks，GPC) 的设备。
 
 #### SubstreamID 的角色
 
