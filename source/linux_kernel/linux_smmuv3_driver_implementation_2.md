@@ -790,9 +790,9 @@ SMMUv3 设备驱动程序 `probe` 时，执行系统 I/O 设备的 SMMU 探测�
 
 对于 SMMUv3 设备驱动程序的实现，这里被调用的 IOMMU 回调，不一定都有对应的实现。
 
-### 系统 I/O 设备和其对应的驱动程序绑定时执行系统 I/O 设备的 IOMMU 探测
+### 系统 I/O 设备探测时执行系统 I/O 设备的 IOMMU 探测
 
-系统 I/O 设备和其对应的驱动程序绑定时执行系统 I/O 设备的 IOMMU 探测，入口是 `of_dma_configure()`/`of_dma_configure_id()` 函数，它们用于建立 DMA 配置。`of_dma_configure()` 函数定义 (位于 *include/linux/of_device.h* 文件中) 如下：
+系统 I/O 设备探测时执行系统 I/O 设备的 IOMMU 探测，入口是 `of_dma_configure()`/`of_dma_configure_id()` 函数，它们用于建立 DMA 配置，但最终会执行系统 I/O 设备的 IOMMU 探测。`of_dma_configure()` 函数定义 (位于 *include/linux/of_device.h* 文件中) 如下：
 ```
 int of_dma_configure_id(struct device *dev,
 		     struct device_node *np,
@@ -927,9 +927,9 @@ int of_dma_configure_id(struct device *dev, struct device_node *np,
 EXPORT_SYMBOL_GPL(of_dma_configure_id);
 ```
 
-`of_dma_configure_id()` 函数做了如下几件事情：
+`of_dma_configure_id()` 函数做了这样几件事情：
 
-1. 调用 `of_dma_get_range()` 函数获得设备的 DMA 范围信息，并把它们放进一个 map 数组中。设备的 DMA 范围信息在设备树文件中，由设备节点的 "dma-ranges" 属性定义，像下面 (位于 *arch/arm64/boot/dts/apm/apm-storm.dtsi* 文件中) 这样：
+1. 调用 `of_dma_get_range()` 函数获得系统 I/O 设备的 DMA 范围信息，并把它们放进一个 map 数组。系统 I/O 设备的 DMA 范围信息在设备树文件中，由系统 I/O 设备节点的 "dma-ranges" 属性定义，像下面 (位于 *arch/arm64/boot/dts/apm/apm-storm.dtsi* 文件中) 这样：
 ```
 		pcie0: pcie@1f2b0000 {
  . . . . . .
@@ -1029,9 +1029,9 @@ out:
 ```
 
 2. 计算所有 DMA 区域整体的边界和大小。
-3. 初始化设备的 `dma_mask`，及总线 DMA 限制。
-4. 调用 `of_iommu_configure()` 函数为设备执行 IOMMU 配置。
-5. 调用 `arch_setup_dma_ops()` 函数为设备设置 DMA 操作回调。
+3. 初始化系统 I/O 设备的 `dma_mask`，及总线 DMA 限制。
+4. 调用 `of_iommu_configure()` 函数为系统 I/O 设备执行 IOMMU 配置。
+5. 调用 `arch_setup_dma_ops()` 函数为系统 I/O 设备设置 DMA 操作回调。
 
 `of_iommu_configure()` 函数定义 (位于 *drivers/iommu/of_iommu.c* 文件中) 如下：
 ```
@@ -1179,7 +1179,7 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
 }
 ```
 
-这里主要关注非 PCIe 设备的情况。`struct iommu_fwspec` 对象包含每设备的 IOMMU 实例数据。`of_iommu_configure()` 函数执行过程如下：
+这里主要关注非 PCIe 设备的情况。`struct iommu_fwspec` 对象包含各个系统 I/O 设备的 IOMMU 实例数据。`of_iommu_configure()` 函数执行过程如下：
 
 1. 尝试从系统 I/O 设备获得它的 `struct iommu_fwspec` 对象。`dev_iommu_fwspec_get(dev)` 函数定义 (位于 *include/linux/iommu.h* 文件中) 如下：
 ```
@@ -1197,12 +1197,31 @@ static inline void dev_iommu_fwspec_set(struct device *dev,
 	dev->iommu->fwspec = fwspec;
 }
 ```
-`dev_iommu_fwspec_get(dev)` 函数通过系统 I/O 设备的 `struct dev_iommu *iommu` 获得其 `struct iommu_fwspec` 对象，但系统 I/O 设备的 `struct dev_iommu *iommu` 在 IOMMU 配置设备时，或系统 I/O 设备的 IOMMU 探测时创建。如果这里成功获得了系统 I/O 设备的 `struct iommu_fwspec` 对象，且其 IOMMU 回调有效，则直接返回其 IOMMU 回调。为系统 I/O 设备调用 `of_dma_configure_id()` 函数时，已经对系统 I/O 设备执行过了 IOMMU 初始化时，会发生这种情况。如果这里成功获得了系统 I/O 设备的 `struct iommu_fwspec` 对象，但其 IOMMU 回调无效，`struct iommu_fwspec` 对象会被先释放掉。
+`dev_iommu_fwspec_get(dev)` 函数通过系统 I/O 设备的 `struct dev_iommu *iommu` 获得其 `struct iommu_fwspec` 对象，但系统 I/O 设备的 `struct dev_iommu *iommu` 在 IOMMU 配置设备时 (`of_iommu_configure_device(dev)` 函数中)，或系统 I/O 设备的 IOMMU 探测时 (`__iommu_probe_device()` 函数中) 创建。如果这里成功获得了系统 I/O 设备的 `struct iommu_fwspec` 对象，且其 IOMMU 回调有效，则直接返回其 IOMMU 回调。为系统 I/O 设备调用 `of_dma_configure_id()` 函数时，已经对系统 I/O 设备执行过了 IOMMU 初始化时，会发生这种情况。如果这里成功获得了系统 I/O 设备的 `struct iommu_fwspec` 对象，但其 IOMMU 回调无效，`struct iommu_fwspec` 对象会被先释放掉。
 
-2. 通过 `of_iommu_configure_device()` 函数，从设备树的设备节点中获得它连接的 IOMMU 设备的句柄，并为系统 I/O 设备调用 `of_iommu_xlate()` 函数执行 iommu xlate 操作。`of_iommu_xlate()` 函数执行过程如下：
+2. 通过 `of_iommu_configure_device()` 函数，从设备树的设备节点中获得它连接的 IOMMU 设备的句柄及其 StreamID，并为系统 I/O 设备调用 `of_iommu_xlate()` 函数执行 iommu xlate 操作。`of_iommu_xlate()` 函数执行过程如下：
      - 在 IOMMU 子系统的所有 IOMMU 设备列表中查找与获得的 IOMMU 设备句柄匹配的 IOMMU 设备的 IOMMU 回调。这通过 `iommu_ops_from_fwnode()` 函数完成。
      - 调用 `iommu_fwspec_init()` 函数为设备创建 `struct iommu_fwspec` 对象。当系统 I/O 设备的 dev_iommu 不存在时，`iommu_fwspec_init()` 函数会创建它。
      - 通过找到的 IOMMU 设备的 IOMMU 设备驱动程序的 `of_xlate()` 回调，将 OF master ID 添加到 IOMMU 组。
+
+设备树文件中相关的属性定义类似于下面 (位于 *arch/arm64/boot/dts/marvell/armada-8040.dtsi* 文件中) 这样：
+```
+&cp0_rtc {
+	status = "disabled";
+};
+
+&cp0_sata0 {
+	iommus = <&smmu 0x444>;
+};
+
+&cp0_sdhci0 {
+	iommus = <&smmu 0x445>;
+};
+
+&cp0_usb3_0 {
+	iommus = <&smmu 0x440>;
+};
+```
 
 `iommu_ops_from_fwnode()` 函数和 `iommu_fwspec_init()` 函数定义 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
 ```
@@ -1325,14 +1344,10 @@ static int iommu_alloc_default_domain(struct iommu_group *group,
 `iommu_probe_device()` 函数主要做了这样一些事情：
 
 1. 通过 `__iommu_probe_device()` 函数为系统 I/O 设备执行 IOMMU 探测，获得或创建设备的 `struct iommu_group`。
-
 2. 为 IOMMU group 分配默认的 domain，这主要通过 `iommu_alloc_default_domain()` 函数完成。`iommu_alloc_default_domain()` 函数首先通过 `iommu_get_def_domain_type()` 函数获得系统 I/O 设备默认的 domain 的类型，然后通过 `iommu_group_alloc_default_domain()` 函数分配默认的 domain。
-
 3. 连接系统 I/O 设备和 IOMMU domain，这主要通过 `__iommu_attach_device()` 函数完成。
-
 4. 创建设备直接映射，这主要通过 `iommu_create_device_direct_mappings()` 函数完成。
-
-5. 完成系统 I/O 设备的 IOMMU 探测，这主要通过 IOMMU 设备驱动程序提供的 `probe_finalize()` 回调完成。
+5. 结束系统 I/O 设备的 IOMMU 探测，这主要通过 IOMMU 设备驱动程序提供的 `probe_finalize()` 回调完成。
 
 `iommu_probe_device()` 函数整体的执行过程大概如下图所示：
 
