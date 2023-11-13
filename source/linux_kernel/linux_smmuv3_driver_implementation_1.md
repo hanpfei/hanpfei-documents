@@ -1306,7 +1306,7 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
 
 ## 初始化数据结构
 
-初始化数据结构主要通过调用 `arm_smmu_init_structures()` 函数完成，这个函数定义 (位于 *drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c* 文件中) 如下：
+初始化数据结构通过 `arm_smmu_init_structures()` 函数完成，这个函数定义 (位于 *drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c* 文件中) 如下：
 ```
 /* Stream table manipulation functions */
 static void
@@ -1812,9 +1812,9 @@ static int arm_smmu_init_structures(struct arm_smmu_device *smmu)
 
 队列的初始化主要通过 `arm_smmu_init_queues()`/`arm_smmu_init_one_queue()` 函数完成，这个过程大体如下：
 
-1. 为队列分配内存，**SMMU_IDR1** 寄存器中有字段描述了支持的命令队列、事件队列和 PRIQ 队列的最大大小，这个大小的含义为，支持的队列中包含的项的最大个数以 2 为底的对数。在为队列分配内存时，会尝试从分配最大数量的内存开始，并逐渐减半，直到内存分配成功，或队列大小的字节数小于一个内存页，后一种情况也就意味着内存分配失败，此时将报错退出。
+1. 为队列分配内存，**SMMU_IDR1** 寄存器中有字段描述了支持的命令队列、事件队列和 PRIQ 队列的最大大小，这个大小的含义为，支持的队列中包含的最大项数以 2 为底的对数。在为队列分配内存时，尝试从分配最大数量的内存开始，并逐渐减半，直到内存分配成功，或队列大小的字节数小于一个内存页，后一种情况意味着为队列分配内存失败，将报错退出。
 2. 初始化队列的生产者和消费者寄存器地址，以及队列项以 64 位为单位的大小。
-3. 基于为队列分配的内存的地址，以及队列大小，构造队列基址寄存器的值，这个值将在后面被写入 **SMMU_CMDQ_BASE**、**SMMU_EVENTQ_BASE** 和 **SMMU_PRIQ_BASE** 等寄存器。
+3. 基于为队列分配的内存基地址，以及队列大小，构造队列基址寄存器的值，这个值将在后面写入 **SMMU_CMDQ_BASE**、**SMMU_EVENTQ_BASE** 或 **SMMU_PRIQ_BASE** 寄存器。
 
 流表的初始化主要通过 `arm_smmu_init_strtab()` 及其调用的 `arm_smmu_init_strtab_2lvl()`/`arm_smmu_init_strtab_linear()` 等函数完成，这个过程大体如下：
 
@@ -1822,20 +1822,20 @@ static int arm_smmu_init_structures(struct arm_smmu_device *smmu)
      - **SMMU_STRTAB_BASE_CFG** 寄存器中有几个位可以用来配置使用多级流表时，StreamID 的分割点，即多少位用于索引第 1 级流表，多少位用于索引第 2 级流表，还有几个位可以用来配置 StreamID 的位长，另外从 **SMMU_IDR1** 寄存器中可以获得 SMMUv3 硬件设备支持的最长 StreamID 位长；
      - SMMUv3 设备驱动程序取第 2 级流表位长为 **STRTAB_SPLIT** 位，即 8 位，并取第 1 级流表最大占用 1 MB 内存空间，以此计算第 1 级流表的位长，并计算第 1 级流表的项数，和所需的以字节为单位的内存空间；
      - 为第 1 级流表分配内存；
-     - 初始化流表配置结构体 `struct arm_smmu_strtab_cfg` 的流表基址，流表项个数，和流表配置值等字段，其中的流表配置值将在后面被写入 **SMMU_STRTAB_BASE_CFG** 寄存器；
-     - 调用 `arm_smmu_init_l1_strtab()` 函数初始化第 1 级流表，SMMUv3 设备驱动程序维护两个 L1 流表描述符表，一个主要由 SMMUv3 驱动程序访问，另一个给 SMMUv3 硬件访问，前者用 `struct arm_smmu_strtab_l1_desc` 结构体数组来表示，在 `arm_smmu_init_l1_strtab()` 函数中会创建 `struct arm_smmu_strtab_l1_desc` 结构体数组，并初始化为无效 L1 流表描述符，并将这些对象的内容写入第 1 级流表。
+     - 初始化流表配置结构体 `struct arm_smmu_strtab_cfg` 的流表基址，流表项 STE 个数，和流表配置值等字段，其中的流表配置值将在后面写入 **SMMU_STRTAB_BASE_CFG** 寄存器；
+     - 调用 `arm_smmu_init_l1_strtab()` 函数初始化第 1 级流表，SMMUv3 设备驱动程序维护两个 L1 流表描述符表，一个主要由 SMMUv3 驱动程序访问，另一个给 SMMUv3 硬件访问，前者用 `struct arm_smmu_strtab_l1_desc` 结构体数组来表示，在 `arm_smmu_init_l1_strtab()` 函数中创建 `struct arm_smmu_strtab_l1_desc` 结构体数组，初始化为无效 L1 流表描述符，并将这些对象的内容写入第 1 级流表。
 2. SMMUv3 硬件设备不支持 2 级流表，创建线性流表：
      - 根据前面从 **SMMU_IDR1** 寄存器中获得的 StreamID 的位长度，计算线性流表所需的内存空间以字节为单位的大小；
      - 为线性流表分配内存；
      - 初始化流表配置结构体 `struct arm_smmu_strtab_cfg` 的流表基址，流表项个数，和流表配置值等字段，其中的流表配置值将在后面被写入 **SMMU_STRTAB_BASE_CFG** 寄存器；
-     - 调用 `arm_smmu_init_bypass_stes()` 函数，将线性流表中的所有 STE 初始化为旁路 SMMU。
-3. 基于在内存中创建的流表的基地址，构造流表基址寄存器的值，这个值将在后面被写入 **SMMU_STRTAB_BASE** 寄存器。
+     - 调用 `arm_smmu_init_bypass_stes()` 函数，将线性流表中的所有流表项 STE 初始化为旁路 SMMU。
+3. 基于在内存中创建的流表的基地址，构造流表基址寄存器的值，这个值将在后面写入 **SMMU_STRTAB_BASE** 寄存器。
 
-`arm_smmu_init_structures()` 函数按照 [ARM 系统内存管理单元架构规范版本 3](https://developer.arm.com/documentation/ihi0070/latest/) 中定义的数据结构及它们的关系执行。
+`arm_smmu_init_structures()` 函数按照 [ARM 系统内存管理单元架构规范版本 3](https://developer.arm.com/documentation/ihi0070/latest/) 中定义的队列和流表相关数据结构及它们的关系执行。
 
 ### 复位 SMMUv3 设备
 
-复位 SMMUv3 设备主要通过调用 `arm_smmu_device_reset()` 函数完成，这个函数定义 (位于 *drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c* 文件中) 如下：
+复位 SMMUv3 设备通过 `arm_smmu_device_reset()` 函数完成，这个函数定义 (位于 *drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c* 文件中) 如下：
 ```
 static int arm_smmu_write_reg_sync(struct arm_smmu_device *smmu, u32 val,
 				   unsigned int reg_off, unsigned int ack_off)
@@ -2254,30 +2254,30 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu, bool resume)
 复位 SMMUv3 设备完成硬件 SMMUv3 设备的使能，这个过程大体如下：
 
 1. 检查 **SMMU_CR0** 寄存器，如果 SMMU 已经使能，则更新 **SMMU_GBPA** 寄存器，停止所有传入的事务。
-2. 禁用 SMMU 设备的所有功能，包括命令队列、事件队列，和 PRI 队列 等，这里可以看到 SMMU 的一种独特的寄存器写入模式，**SMMU_CR0** 寄存器有一个对应的确认寄存器 **SMMU_CR0ACK**，当向 **SMMU_CR0** 寄存器写入的值确认生效时，**SMMU_CR0ACK** 寄存器对应的位会被更新，这里在写入 **SMMU_CR0** 寄存器时，会等待 **SMMU_CR0ACK** 寄存器对应位的更新，以确定写入生效，还有其它几个 SMMU 寄存器的写入模式与此类似。
+2. 禁用 SMMUv3 设备的所有功能，包括命令队列、事件队列，和 PRI 队列等，这里可以看到 SMMUv3 的一种独特的寄存器写入模式，**SMMU_CR0** 寄存器有一个对应的确认寄存器 **SMMU_CR0ACK**，两个寄存器的字段完全相同，当向 **SMMU_CR0** 寄存器写入的值确定生效时，**SMMU_CR0ACK** 寄存器对应的位会被更新，这里在写入 **SMMU_CR0** 寄存器时，会等待 **SMMU_CR0ACK** 寄存器对应位的更新，以确定写入生效，还有其它几个 SMMU 寄存器的写入模式与此类似。
 3. 写入**SMMU_CR1** 寄存器，配置表和队列的内存属性，流表、命令队列、事件队列和 PRI 队列等的可缓存性，可共享性。
-4. 写入**SMMU_CR2** 寄存器，配置 **RECINVSID**、**E2H** 和 **BTM**。
+4. 写入**SMMU_CR2** 寄存器，配置 **RECINVSID**、**E2H** 和 **BTM** 等功能。
 5. 将前面在初始化数据结构中创建的流表基址配置，流表基址值写入对应的寄存器。
 6. 将前面在初始化数据结构中创建的命令队列基址值，命令队列生产者指针，命令队列消费者指针，扩展命令队列相关的配置写入对应的寄存器，并写入 **SMMU_CR0** 寄存器 **启用命令队列**。
-7. 向命令队列中发送几条命令，无效任何缓存配置，陈旧的 TLB 项等。
+7. 向命令队列发送几条命令，使所有的缓存配置和陈旧的 TLB 项等无效。
 8. 将前面在初始化数据结构中创建的事件队列基址值，事件队列生产者指针，事件队列消费者指针写入对应的寄存器，并写入 **SMMU_CR0** 寄存器 **启用事件队列**。
 9. SMMUv3 硬件设备支持 PRI 时，将前面在初始化数据结构中创建的 PRI 队列基址值，PRI 队列生产者指针，PRI 队列消费者指针写入对应的寄存器，并写入 **SMMU_CR0** 寄存器 **启用 PRI 队列**。
-10. 如果 SMMUv3 硬件设备支持 ATS 检查，则写入 **SMMU_CR0** 寄存器 **启用 ATS 检查**。
-11. 配置中断。
-12. 如果没有配置旁路 SMMU 或禁用 SMMU，则写入 **SMMU_CR0** 寄存器开启 SMMU。
+10. 如果 SMMUv3 硬件设备支持 ATS，则写入 **SMMU_CR0** 寄存器 **启用 ATS 检查**。
+11. 调用 `arm_smmu_setup_irqs()` 函数设置中断。
+12. 如果没有配置旁路或禁用 SMMU，则写入 **SMMU_CR0** 寄存器 **启用 SMMU**。
 
 设置中断的过程如下：
 
 1. 写入 **SMMU_IRQ_CTRL** 寄存器禁用中断。
-2. 如果配置了使用联合中断，则向系统申请中断资源，并注册中断处理程序。
-3. 没有使用联合中断：
+2. 如果配置了使用联合中断，则向系统请求中断线，并注册中断处理程序。
+3. 没有使用联合中断，调用 `arm_smmu_setup_unique_irqs()` 函数配置单独的中断：
      * 配置 MSI；
      * 为事件队列请求中断线，并注册中断处理程序；
      * 为全局错误请求中断线，并注册中断处理程序；
      * SMMUv3 硬件设备支持 PRI 时，为 PRI 队列请求中断线，并注册中断处理程序。
-4. 写入 **SMMU_IRQ_CTRL** 寄存器启用中断。
+4. 写入 **SMMU_IRQ_CTRL** 寄存器 **启用中断**。
 
-`arm_smmu_device_reset()` 函数复位 SMMUv3 设备，集中设置 SMMUv3 设备的各种寄存器，和流表，队列，及中断相关的各个寄存器，并在最后使能 SMMU 硬件设备。
+`arm_smmu_device_reset()` 函数复位 SMMUv3 设备，集中设置 SMMUv3 设备的各个寄存器，和流表、队列及中断相关的各个寄存器，并在最后使能 SMMU 硬件设备。
 
 ### 将 SMMUv3 设备注册到 IOMMU 子系统
 
@@ -2296,11 +2296,11 @@ int iommu_device_register(struct iommu_device *iommu)
 EXPORT_SYMBOL_GPL(iommu_device_register);
 ```
 
-IOMMU 子系统用一个链表来维护系统中的 IOMMU 设备，将 SMMUv3 设备注册进 IOMMU 子系统即将表示 SMMUv3 设备的 `struct iommu_device` 对象放进 IOMMU 子系统的 IOMMU 设备链表中。
+IOMMU 子系统用一个链表来维护系统中的所有 IOMMU 设备，将 SMMUv3 设备注册进 IOMMU 子系统即将表示 SMMUv3 设备的 `struct iommu_device` 对象放进 IOMMU 子系统的 IOMMU 设备链表中。
 
 ### 为各个总线类型设置 IOMMU 回调
 
-`arm_smmu_device_probe()` 函数调用 `arm_smmu_set_bus_ops()` 函数为各个支持的总线类型设置 IOMMU 回调，`arm_smmu_set_bus_ops()` 函数定义 (位于 *drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c* 文件中) 如下：
+`arm_smmu_device_probe()` 调用 `arm_smmu_set_bus_ops()` 为各个支持的总线类型设置 IOMMU 回调，`arm_smmu_set_bus_ops()` 函数定义 (位于 *drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c* 文件中) 如下：
 ```
 static int arm_smmu_set_bus_ops(struct iommu_ops *ops)
 {
@@ -2340,7 +2340,9 @@ err_reset_pci_ops: __maybe_unused;
 }
 ```
 
-`arm_smmu_set_bus_ops()` 函数调用 `bus_set_iommu()` 函数为 `platform_bus_type`、`pci_bus_type` 和 `amba_bustype` 等设置 IOMMU 回调。`bus_set_iommu()` 函数定义 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
+SMMUv3 设备驱动程序支持三种总线类型：**PCIe**、**AMBA** 和平台设备总线。
+
+`arm_smmu_set_bus_ops()` 调用 `bus_set_iommu()` 为 `platform_bus_type`、`pci_bus_type` 和 `amba_bustype` 等设置 IOMMU 回调。`bus_set_iommu()` 函数定义 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
 ```
 static int probe_get_default_domain_type(struct device *dev, void *data)
 {
@@ -2627,17 +2629,17 @@ EXPORT_SYMBOL_GPL(bus_set_iommu);
 
 `bus_set_iommu()` 函数执行过程如下：
 
-1. 为总线设置 IOMMU 回调。
-2. 执行总线类型 IOMMU 特有的设置：
+1. 为总线类型设置 IOMMU 回调。
+2. 调用 `iommu_bus_init()` 执行总线类型 IOMMU 特有的设置：
      - 向总线注册一个回调，以便于在有新设备添加时得到通知；
      - 探测已经添加到总线的设备。
 
-探测已经添加到总线的设备的过程如下：
+探测已经添加到总线类型的设备的过程如下：
 
-1. 遍历总线上已经添加的所有设备，探测各个设备，如果设备连接到注册的 IOMMU 设备上，则获得设备的 `iommu_group`，这些 `iommu_group` 都被放进一个链表中。
+1. 遍历总线上已经添加的所有设备，探测各个设备，如果设备连接到注册的 IOMMU 设备上，则获得设备的 `iommu_group`，这些 `iommu_group` 被放进一个链表中。
 2. 遍历获得的 `iommu_group`，针对每个 `iommu_group`：
      - 将 `iommu_group` 移出链表；
-     - 尝试分配默认的 domain，先确认默认的 domain 类型，然后分配 domain 对象，确认 domain 类型时，先尝试通过 SMMU 设备注册的回调 `def_domain_type` 获取，失败时则取 IOMMO 子系统的默认 domain 类型；
+     - 尝试分配默认的 domain，先确认默认的 domain 类型，然后分配 domain 对象，确认 domain 类型时，先尝试通过 SMMU 设备注册的回调 `def_domain_type()` 获取，失败时则取 IOMMO 子系统的默认 domain 类型；
      - 为各个设备创建直接映射；
      - 为各个设备执行 attach；
      - 为各个设备执行探测结束回调。
