@@ -1255,7 +1255,7 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
 }
 ```
 
-在 `struct arm_smmu_device` 结构体中，SMMUv3 驱动程序用一个 32 位的值来描述支持的硬件特性，其中每个特性用一位来表示。函数 `arm_smmu_device_hw_probe()` 通过读取 SMMU 的寄存器获取 SMMU 的硬件特性。
+在 `struct arm_smmu_device` 结构体中，SMMUv3 驱动程序用一个 32 位值描述支持的硬件特性，其中每个特性用一位来表示。`arm_smmu_device_hw_probe()` 函数读取 SMMUv3 的寄存器获得 SMMUv3 的硬件特性。
 
 **SMMU_IDR0** 寄存器：
 
@@ -1295,7 +1295,7 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
 
 **SMMU_IDR5** 寄存器：
 
- * SMMU 和系统支持的未完成停滞事务的最大数目。
+ * SMMUv3 和系统支持的未完成停滞事务的最大数目。
  * 支持的页大小
  * 虚拟地址扩展 VAX，即支持的虚拟地址大小
  * 输出地址大小 OAS
