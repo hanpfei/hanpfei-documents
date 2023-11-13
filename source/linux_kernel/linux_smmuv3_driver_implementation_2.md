@@ -6,23 +6,23 @@ tags:
 - Linux 内核
 ---
 
-## SMMU 驱动中的系统 I/O 设备探测
+## 系统 I/O 设备的 SMMU 探测及与 SMMU 设备连接
 
-要使系统 I/O 设备的 DMA 内存访问能通过 IOMMU，需要将系统 I/O 设备和 IOMMU 设备绑定起来，也就是执行 SMMU 驱动中的系统 I/O 设备探测。总线发现系统 I/O 设备并和对应的驱动程序绑定，与 IOMMU 设备驱动程序注册并为 IOMMU 设备执行探测初始化的相对顺序不固定，可能系统 I/O 设备先被发现并和对应的驱动程序绑定，也可能 IOMMU 设备驱动程序注册及为 IOMMU 设备执行探测初始化先进行。
+要使系统 I/O 设备的 DMA 内存访问能经过 IOMMU 的管控，需要将系统 I/O 设备和 IOMMU 设备连接起来，也就是在 IOMMU 子系统和 SMMUv3 设备驱动程序中为系统 I/O 设备创建必要的数据结构。总线发现系统 I/O 设备并和对应的驱动程序绑定，与 IOMMU 设备驱动程序注册并为 IOMMU 设备执行探测初始化的相对顺序不固定，可能发现系统 I/O 设备并和对应的驱动程序绑定先进行，也可能 IOMMU 设备驱动程序注册及为 IOMMU 设备执行探测初始化先进行。
 
-SMMU 驱动中的系统 I/O 设备探测有两个时机：
+系统 I/O 设备的 SMMU 探测及与 SMMU 设备连接有两个时机：
 
-1. 如果系统 I/O 设备发现并和对应的驱动程序绑定先执行，在为 IOMMU 设备执行探测初始化时，调用 `bus_set_iommu()` 函数为总线类型设置 IOMMU 回调，此时会遍历总线类型上已经发现的设备列表，并尝试执行 SMMU 驱动中的系统 I/O 设备探测及连接。
+1. 如果系统 I/O 设备发现并和对应的驱动程序绑定先执行，在为 IOMMU 设备执行探测初始化时，调用 `bus_set_iommu()` 函数为总线类型设置 IOMMU 回调，此时会遍历总线类型上已经发现的设备列表，并尝试执行系统 I/O 设备的 SMMU 探测及与 SMMU 设备连接。
 
-2. 如果为 IOMMU 设备执行探测初始化先进行，则总线在发现及添加设备，并和对应的设备驱动程序绑定时，调用 `of_dma_configure()` 之类的函数尝试执行 SMMU 驱动中的系统 I/O 设备探测。
+2. 如果为 IOMMU 设备执行探测初始化先进行，则总线在发现及添加设备，并和对应的设备驱动程序绑定时，调用 `of_dma_configure()` 等函数尝试执行系统 I/O 设备的 SMMU 探测及与 SMMU 设备连接。
 
 ### SMMUv3 设备驱动程序 `probe` 时执行系统 I/O 设备的 IOMMU 探测
 
-SMMUv3 设备驱动程序 `probe` 时，通过如下这样的调用链：
+SMMUv3 设备驱动程序 `probe` 时，通过如下这样的调用链一路调到 `bus_iommu_probe()` 函数：
 
 ![bus_iommu_probe()](images/1315506-9daf769bcbf43a83.png)
 
-一路调到 `bus_iommu_probe()` 函数，`bus_iommu_probe()` 函数执行对总线类型上已经添加的系统 I/O 设备的探测。`bus_iommu_probe()` 函数定义 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
+`bus_iommu_probe()` 函数执行对总线类型上已经添加的系统 I/O 设备的 SMMU 探测及其与 SMMU 设备的连接。这个函数定义 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
 ```
 int bus_iommu_probe(struct bus_type *bus)
 {
@@ -71,17 +71,17 @@ int bus_iommu_probe(struct bus_type *bus)
 
 `bus_iommu_probe()` 函数主要做了这样一些事情：
 
-1. 遍历总线类型上的所有设备，针对每个设备执行 IOMMU 探测，获得或创建每个设备的 `struct iommu_group`，这些 `struct iommu_group` 放进一个链表中，由一个传出参数返回。各个设备的 IOMMU 探测主要由 `probe_iommu_group()` 函数完成。
+1. 遍历总线类型上的所有设备，为每个设备执行 SMMU 探测，为每个设备获得或创建 `struct iommu_group`，这些 `struct iommu_group` 放进一个链表中，由一个传出参数返回。各个设备的 IOMMU 探测主要由 `probe_iommu_group()` 函数完成。
 
 2. 遍历前 1 步中找到的所有 `struct iommu_group`，针对其中的每一个执行：
      * 将其从 `struct iommu_group` 链表中移除；
      * 为 IOMMU group 分配默认的 domain，这主要通过 `probe_alloc_default_domain()` 函数完成；
-     * 为 IOMMU group 分配默认的 domain 失败，则检查下一个 `struct iommu_group`，否则继续执行；
-     * 创建设备直接映射，这主要通过 `iommu_group_create_direct_mappings()` 函数完成；
-     * 连接设备和 IOMMU domain，这主要通过 `__iommu_group_dma_attach()` 函数完成；
-     * 完成系统 I/O 设备的 IOMMU 探测，这主要通过 `__iommu_group_dma_finalize()` 函数完成。
+     * 为 IOMMU group 分配默认的 domain 失败，则继续检查下一个 `struct iommu_group`，否则继续执行；
+     * 为 IOMMU group 中的各个设备创建设备直接映射，这主要通过 `iommu_group_create_direct_mappings()` 函数完成；
+     * 为 IOMMU group 中的各个设备，连接设备和 IOMMU domain，这主要通过 `__iommu_group_dma_attach()` 函数完成；
+     * 为 IOMMU group 中的各个设备，结束 IOMMU 探测，这主要通过 `__iommu_group_dma_finalize()` 函数完成。
 
-`probe_iommu_group()` 函数为每个系统 I/O 设备执行 IOMMU 探测，该函数定义 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
+`probe_iommu_group()` 函数为总线上的各个系统 I/O 设备执行 IOMMU 探测，该函数定义 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
 ```
 static struct dev_iommu *dev_iommu_get(struct device *dev)
 {
@@ -364,22 +364,22 @@ static int __iommu_attach_device(struct iommu_domain *domain,
 }
 ```
 
-`probe_iommu_group()` 函数首先尝试从设备 (由 `struct device` 表示) 获得它的 IOMMU group，如果获得成功，就返回，否则调用 `__iommu_probe_device()` 函数为系统 I/O 设备执行 IOMMU 的探测。
+`probe_iommu_group()` 函数首先尝试从设备 (由 `struct device` 表示) 获得它的 IOMMU group，如果获得成功，就返回，否则调用 `__iommu_probe_device()` 函数为系统 I/O 设备执行 IOMMU 探测。
 
 `__iommu_probe_device()` 函数的主要执行过程如下：
 
-1. 通过 `dev_iommu_get()` 获得设备 (由 `struct device` 表示) 的 `dev_iommu`。前面我们提到，在 IOMMU 子系统中，`struct dev_iommu` 对象表示一个连接到 IOMMU 的系统 I/O 设备。在 `dev_iommu_get()` 函数中，首先尝试获得设备的 `dev_iommu`，如果失败，**会为设备创建 `struct dev_iommu` 对象**。
+1. 通过 `dev_iommu_get()` 获得设备 (由 `struct device` 表示) 的 `dev_iommu`。前面我们提到，在 IOMMU 子系统中，`struct dev_iommu` 对象表示连接到 IOMMU 的系统 I/O 设备。在 `dev_iommu_get()` 函数中，首先尝试获得设备的 `dev_iommu`，如果失败，**会为设备创建并初始化 `struct dev_iommu` 对象**。
 
-2. 调用 IOMMU 设备驱动程序的 `probe_device()` 回调，添加设备到 IOMMU 设备驱动程序处理。SMMUv3 设备驱动程序的 `probe_device()` 回调检查设备是否与 SMMUv3 设备驱动程序匹配。`probe_device()` 回调成功时，为系统 I/O 设备返回它连接的 IOMMU 设备 (由 `struct iommu_device` 表示)，失败时返回退出。
+2. 为系统 I/O 设备调用 IOMMU 设备驱动程序的 `probe_device()` 回调。SMMUv3 设备驱动程序的 `probe_device()` 回调检查系统 I/O 设备是否与 SMMUv3 设备匹配。`probe_device()` 回调成功执行时，为系统 I/O 设备返回它连接的 IOMMU 设备 (由 `struct iommu_device` 表示)，失败时返回退出。
 
-3. 调用 `iommu_group_get_for_dev()` 函数为设备查找或创建 IOMMU group。
-     * 尝试从设备获得它的 IOMMU group，如果获得成功，就返回，否则继续执行。
-     * 调用 IOMMU 设备驱动程序的 `device_group()` 回调为设备查找或创建 IOMMU group，不同系统 I/O 设备间共享及创建 IOMMU group 的规则，由 IOMMU 设备驱动程序确定。
-     * 将设备添加进 IOMMU group 的设备列表中。如果 IOMMU group 的 domain 已经存在，且设备不需要延迟连接，则会调用 `__iommu_attach_device()` 函数连接系统 I/O 设备和 IOMMU 设备，并会通知监听者 IOMMU group 添加了设备。
+3. 调用 `iommu_group_get_for_dev()` 函数为系统 I/O 设备查找或创建 IOMMU group。
+     * 尝试从设备获得它的 IOMMU group，如果成功，就返回，否则继续执行。
+     * 调用 IOMMU 设备驱动程序的 `device_group()` 回调为设备查找或创建 IOMMU group，不同系统 I/O 设备间共享及创建 IOMMU group 的规则，由具体的 IOMMU 设备驱动程序确定。
+     * 将设备添加进 IOMMU group 的设备列表中。如果 IOMMU group 的 domain 已经存在，且设备不需要延迟连接，则会调用 `__iommu_attach_device()` 函数连接系统 I/O 设备和 IOMMU 设备，并会通知监听者：IOMMU group 添加了设备。
 
 4. 将获得的 IOMMU group 添加进传入的 IOMMU group 链表中。只有 IOMMU group 是新创建的会执行这个动作。
 
-5. 创建系统 I/O 设备和 IOMMU 设备间的链接。指示设备由给定的 IOMMU 管理。在 sysfs 中，IOMMU 设备的 “devices” 目录中将创建一个到该设备的链接，并在被链接的设备下创建一个指向 IOMMU 设备的 “IOMMU” 链接。
+5. 创建 sysfs 中系统 I/O 设备和 IOMMU 设备间的链接。指示设备由给定的 IOMMU 管理。在 sysfs 中，IOMMU 设备的 “devices” 目录中将创建一个到该设备的链接，并在被链接的设备下创建一个指向 IOMMU 设备的 “IOMMU” 链接。
 
 `probe_iommu_group()` 函数的执行过程总结如下图：
 
@@ -387,8 +387,8 @@ static int __iommu_attach_device(struct iommu_domain *domain,
 
 `probe_iommu_group()`/`__iommu_probe_device()` 函数为设备创建了如下对象：
 
- * 表示一个连接到 IOMMU 的系统 I/O 设备的 `struct dev_iommu` 对象；
- * SMMUv3 设备驱动程序内部表示系统 I/O 设备的 `struct arm_smmu_master` 对象，在 SMMUv3 设备驱动程序的 `probe_device()` 回调中；
+ * 表示连接到 IOMMU 的系统 I/O 设备的 `struct dev_iommu` 对象；
+ * SMMUv3 设备驱动程序内部表示系统 I/O 设备的 `struct arm_smmu_master` 对象，在 SMMUv3 设备驱动程序的 `probe_device()` 回调中创建；
  * IOMMU group。
 
 `probe_alloc_default_domain()` 函数为各个 IOMMU group 分配默认的 domain，该函数定义 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
@@ -505,16 +505,16 @@ static struct iommu_domain *__iommu_domain_alloc(struct bus_type *bus,
 }
 ```
 
-`probe_alloc_default_domain()` 函数：
+`probe_alloc_default_domain()` 函数做了这样一些事情：
 
-1. 遍历 IOMMU group 中的所有系统 I/O 设备，通过 IOMMU 设备驱动程序的 `def_domain_type()` 回调为系统 I/O 设备获得默认的 domain 类型，这分为几种情况来处理：
-     * IOMMU 设备驱动程序不支持为系统 I/O 设备获得默认 domain 类型的操作，或者通过 IOMMU 设备驱动程序为所有系统 I/O 设备获得的默认 domain 类型都为 0，则采用定义的全局默认 domain 类型；
+1. 遍历 IOMMU group 中的所有系统 I/O 设备，通过 IOMMU 设备驱动程序的 `def_domain_type()` 回调为各个系统 I/O 设备获得默认的 domain 类型，这分为几种情况来处理：
+     * IOMMU 设备驱动程序不支持为系统 I/O 设备获得默认 domain 类型的操作，或者通过 IOMMU 设备驱动程序的 `def_domain_type()` 回调为所有系统 I/O 设备获得的默认 domain 类型都为 0，则采用定义的全局默认 domain 类型；
      * IOMMU 设备驱动程序为部分系统 I/O 设备定义了默认 domain 类型，且所有这些系统 I/O 设备的默认 domain 类型相同，则采用这个默认的 domain 类型；
      * IOMMU 设备驱动程序为部分系统 I/O 设备定义了默认 domain 类型，但所有这些系统 I/O 设备的默认 domain 类型不完全相同，则采用定义的全局默认 domain 类型。
 
-2. 根据获得的默认 domain 类型，通过 IOMMU 设备驱动程序的 `domain_alloc()` 回调为 IOMMU group 分配默认的 domain。如果分配传入的 domain 类型的 domain 失败，还会尝试分配 `IOMMU_DOMAIN_DMA` domain 类型的 domain。
+2. 根据获得的默认 domain 类型，通过 IOMMU 设备驱动程序的 `domain_alloc()` 回调为 IOMMU group 分配默认的 domain。如果分配指定 domain 类型的 domain 失败，还会尝试分配 `IOMMU_DOMAIN_DMA` 类型的 domain。
 
-`iommu_group_create_direct_mappings()` 函数为各个 IOMMU group 中的各个系统 I/O 设备创建直接映射，该函数定义 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
+`iommu_group_create_direct_mappings()` 函数为各个 IOMMU group 中的各个系统 I/O 设备创建设备直接映射，该函数定义 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
 ```
 static int iommu_create_device_direct_mappings(struct iommu_group *group,
 					       struct device *dev)
@@ -723,15 +723,15 @@ void iommu_put_resv_regions(struct device *dev, struct list_head *list)
 }
 ```
 
-`iommu_group_create_direct_mappings()` 函数遍历 IOMMU group 中的各个系统 I/O 设备，通过 `iommu_do_create_direct_mappings()`/`iommu_create_device_direct_mappings()`函数为每个设备创建设备的直接映射，直接映射针对设备的保留内存区域，且 domain type 为 DMA。
+`iommu_group_create_direct_mappings()` 函数遍历 IOMMU group 中的各个系统 I/O 设备，通过 `iommu_do_create_direct_mappings()`/`iommu_create_device_direct_mappings()`函数为每个设备创建设备的直接映射，设备直接映射针对设备的保留内存区域，且 domain 类型需要为 DMA。
 
 `iommu_create_device_direct_mappings()` 的执行过程如下：
 
 1. 通过 IOMMU 设备驱动程序的 `get_resv_regions()` 回调获得设备的所有保留内存映射区域，没开启 IOMMU 时，保留内存映射区域的地址是物理内存地址，开启 IOMMU 时，保留内存映射区域的地址是 IO 虚拟地址。
 2. 针对设备的每个保留内存映射区域：
      * 通过 IOMMU 设备驱动程序的 `apply_resv_region()` 回调，应用保留内存映射区域；
-     * 将内存映射区域的起始地址对齐到页大小；
-     * 针对内存映射区域内的每个内存页：
+     * 将保留内存映射区域的起始地址和结束地址对齐到页大小；
+     * 针对保留内存映射区域内的每个内存页：
          - 通过 IOMMU 设备驱动程序的 `iova_to_phys()` 回调获得内存页的物理地址，用于判断是否可以映射；
          - 通过 `iommu_map()`/`_iommu_map()` 函数映射一个内存页。
 3. 通过 IOMMU 设备驱动程序的 `flush_iotlb_all()` 回调刷新 domain 的 IO TLB。
@@ -761,7 +761,7 @@ static int __iommu_group_dma_attach(struct iommu_group *group)
 }
 ```
 
-`__iommu_group_dma_attach()` 函数遍历 IOMMU group 中的各个系统 I/O 设备，通过 IOMMU 设备驱动程序的 `is_attach_deferred()` 回调判断系统 I/O 设备是否需要延迟连接，如果不需要，则会调用 `__iommu_attach_device()` 函数，通过 IOMMU 设备驱动程序的 `attach_dev()` 回调连接系统 I/O 设备和 IOMMU 设备。由于前面的步骤，此时可以确保 IOMMU group 的 domain 是存在的，因而不需要像前面在将设备添加到 IOMMU group 中那样检查 domain。
+`__iommu_group_dma_attach()` 函数遍历 IOMMU group 中的各个系统 I/O 设备，通过 IOMMU 设备驱动程序的 `is_attach_deferred()` 回调判断系统 I/O 设备是否需要延迟连接，如果不需要，则会调用 `__iommu_attach_device()` 函数，通过 IOMMU 设备驱动程序的 `attach_dev()` 回调连接系统 I/O 设备和 IOMMU 设备。由于前面执行的步骤，此时可以确保 IOMMU group 的 domain 是存在的，因而不需要像前面在将设备添加到 IOMMU group 时那样检查 domain。
 
 `__iommu_group_dma_finalize()` 函数为各个 IOMMU group 中的各个系统 I/O 设备结束 IOMMU 探测，这个函数定义 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
 ```
@@ -784,9 +784,11 @@ static void __iommu_group_dma_finalize(struct iommu_group *group)
 
 `__iommu_group_dma_finalize()` 函数遍历 IOMMU group 中的各个系统 I/O 设备，通过 IOMMU 设备驱动程序的 `probe_finalize()` 回调为系统 I/O 设备结束 IOMMU 探测。
 
-SMMUv3 设备驱动程序 `probe` 时执行系统 I/O 设备的 IOMMU 探测的整体过程大概如下图所示：
+SMMUv3 设备驱动程序 `probe` 时，执行系统 I/O 设备的 SMMU 探测及其与 SMMU 设备连接的整体过程大概如下图所示：
 
 ![设备的 IOMMU 探测](images/1315506-bb889f90d3c357d7.png)
+
+对于 SMMUv3 设备驱动程序的实现，这里被调用的 IOMMU 回调，不一定都有对应的实现。
 
 ### 系统 I/O 设备和其对应的驱动程序绑定时执行系统 I/O 设备的 IOMMU 探测
 
