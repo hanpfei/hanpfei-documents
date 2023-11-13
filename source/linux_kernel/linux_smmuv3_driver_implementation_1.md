@@ -232,7 +232,7 @@ struct iommu_device {
 
 SMMU 驱动程序创建 `struct iommu_device` 和 `struct iommu_ops` 结构体的实例并注册进 IOMMU 子系统中。
 
-Linux 内核的 IOMMU 子系统用 `struct dev_iommu` 结构体表示一个连接到 IOMMU 的系统 I/O 设备，用 `struct iommu_fwspec` 表示系统 I/O 设备连接的 IOMMU 设备，这几个结构体定义 (位于 *include/linux/iommu.h* 文件中) 如下：
+Linux 内核的 IOMMU 子系统用 `struct dev_iommu` 结构体表示一个连接到 IOMMU 的系统 I/O 设备，用 `struct iommu_fwspec` 表示系统 I/O 设备连接的 IOMMU 设备，`struct iommu_fwspec` 在系统 I/O 设备侧，描述指向它连接的 IOMMU 设备的引用，这几个结构体定义 (位于 *include/linux/iommu.h* 文件中) 如下：
 ```
 struct fwnode_handle {
 	struct fwnode_handle *secondary;
@@ -278,7 +278,7 @@ struct iommu_fwspec {
 };
 ```
 
-在 IOMMU 中，每一个 domain 即代表一个 IOMMU 映射地址空间，即一个 page table。一个 group 逻辑上是需要与 domain 进行绑定的，即一个 group 中的所有设备都位于一个 domain 中。在 Linux 内核的 IOMMU 子系统中，domain 由 `struct iommu_domain` 结构体表示，这个结构体定义 (位于 *include/linux/iommu.h* 文件中) 如下：
+在 IOMMU 子系统中，domain 代表 IOMMU 映射地址空间，即一个 page table。IOMMU group 逻辑上需要与 domain 绑定，即一个 IOMMU group 中的所有设备都位于一个 domain 中。在 Linux 内核的 IOMMU 子系统中，domain 由 `struct iommu_domain` 结构体表示，这个结构体定义 (位于 *include/linux/iommu.h* 文件中) 如下：
 ```
 struct iommu_domain {
 	unsigned type;
@@ -292,7 +292,7 @@ struct iommu_domain {
 };
 ```
 
-Linux 内核的 IOMMU 子系统用 `struct iommu_group` 结构体表示位于同一个 domain 的设备组，并用 `struct group_device` 结构体表示设备组中的一个设备。这两个结构体定义 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
+Linux 内核的 IOMMU 子系统用 `struct iommu_group` 结构体表示位于同一个 domain 的设备组，并用 `struct group_device` 结构体在 IOMMU group 中表示设备组中的一个设备。这两个结构体定义 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
 ```
 struct iommu_group {
 	struct kobject kobj;
@@ -316,7 +316,9 @@ struct group_device {
 };
 ```
 
-以面向对象的编程方法来看，可以认为在 ARM SMMUv3 驱动程序中，`struct iommu_device` 和 `struct iommu_domain` 结构体有其特定的实现，即 `struct arm_smmu_device` 和 `struct arm_smmu_domain` 结构体继承了 `struct iommu_device` 和 `struct iommu_domain` 结构体，这两个结构体定义 (位于 *drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h* 文件中) 如下：
+`struct group_device` 和 `struct device` 的关系与 `struct iommu_fwspec` 和 `struct iommu_device` 的关系有相似之处。
+
+以面向对象的编程方法来看，可以认为在 ARM SMMUv3 驱动程序中，`struct iommu_device` 和 `struct iommu_domain` 结构体有其特定的子类实现，即 `struct arm_smmu_device` 和 `struct arm_smmu_domain` 继承了 `struct iommu_device` 和 `struct iommu_domain`，这两个结构体定义 (位于 *drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h* 文件中) 如下：
 ```
 /* An SMMUv3 instance */
 struct arm_smmu_device {
@@ -455,13 +457,13 @@ struct arm_smmu_master {
 };
 ```
 
-以面向对象的编程方法来看，可以认为 `struct arm_smmu_master` 结构体继承了 `struct dev_iommu` 结构体。
+以面向对象的编程方法来看，可以认为 `struct arm_smmu_master` 继承了 `struct dev_iommu`。
 
 Linux 内核中 SMMU 的数据结构大体有如下的结构关系：
 
 ![Linux 内核中 SMMU 的数据结构](images/1315506-27d24b258eef6ddf.png)
 
-上面这些数据结构，基本上都包含指向 `struct device` 对象的指针，`struct device` 则包含指向几个关键 IOMMU 对象的指针。`struct device` 对象是各个部分的中介者，相关的各个子系统多通过 `struct device` 对象找到它需要的操作或数据。`struct device` 结构体中与 IOMMU 相关的字段主要有如下这些：
+上面这些数据结构，基本上都包含指向 `struct device` 对象的指针，`struct device` 则包含指向几个关键 IOMMU 对象的指针。`struct device` 对象是各个部分的中介者，相关的各个部分多通过 `struct device` 对象找到它需要的操作或数据。`struct device` 结构体中与 IOMMU 相关的字段主要有如下这些：
 ```
 struct device {
 #ifdef CONFIG_DMA_OPS
@@ -487,7 +489,7 @@ struct device {
 };
 ```
 
-除了 IOMMU 子系统的这些数据结构外，在更底层的 SMMU 驱动程序实现中，还定义了许多特定于硬件的数据结构，如：
+除了 IOMMU 子系统的这些数据结构外，在更底层的 SMMUv3 设备驱动程序实现中，还定义了许多特定于硬件的数据结构，如：
 
  * 命令队列项 `struct arm_smmu_cmdq_ent`，
  * 命令队列 `struct arm_smmu_cmdq`，
@@ -508,7 +510,7 @@ SMMU 相关的操作及过程，和对 SMMU 的访问，基于上面这些数据
 
 ![SMMU implementation in Linux](images/1315506-1ee3f3c575c277ab.png)
 
-系统 I/O 设备发现、探测，并和驱动程序绑定初始化的过程及系统 I/O 设备驱动程序通常调用平台设备子系统和 DMA 子系统提供的接口，如平台设备子系统的 `of_dma_configure()`/`of_dma_configure_id()` 和 DMA 子系统的 `dma_alloc_coherent()` 函数，这些函数的实现中，借助于更底层的模块完成。
+系统 I/O 设备发现、探测，并和驱动程序绑定初始化的过程，及系统 I/O 设备驱动程序通常调用平台设备子系统和 DMA 子系统提供的接口，如平台设备子系统的 `of_dma_configure()`/`of_dma_configure_id()` 和 DMA 子系统的 `dma_alloc_coherent()` 函数，这些函数的实现中，调用更底层的 IOMMU 子系统的接口及 SMMUv3 设备驱动程序的回调，完成必要的 IOMMU 配置。
 
 ## SMMUv3 设备驱动程序的初始化
 
