@@ -1357,19 +1357,19 @@ static int iommu_alloc_default_domain(struct iommu_group *group,
 
 ![of_dma_configure](images/1315506-54eaad27d1a55f87.png)
 
-### SMMUv3 设备驱动程序中的系统 I/O 设备探测
+### SMMUv3 设备驱动程序中的系统 I/O 设备 IOMMU 探测
 
-如上所述，系统 I/O 设备的 IOMMU 探测过程中，有多个 SMMUv3 设备驱动程序提供的 IOMMU 回调，出于不同的目的被调用。系统 I/O 设备的 IOMMU 探测过程可以分为几个阶段，每个阶段会有不同的 SMMUv3 设备驱动程序 IOMMU 回调被调用：
+系统 I/O 设备的 IOMMU 探测过程中，有多个 SMMUv3 设备驱动程序提供的 IOMMU 回调，出于不同的目的被调用。系统 I/O 设备的 IOMMU 探测过程可以分为几个阶段，每个阶段会有不同的 SMMUv3 设备驱动程序 IOMMU 回调被调用：
 
 1. OF IOMMU 配置设备，`struct iommu_fwspec` 对象创建及初始化：
      - **of_xlate()**/**arm_smmu_of_xlate()**
 
-2. IOMMU 探测设备：
+2. 系统 I/O 设备 IOMMU 探测：
      - **probe_device()**/**arm_smmu_probe_device()**
      - **device_group()**/**arm_smmu_device_group()**
 
 3. 分配默认的 domain：
-     - **def_domain_type()**/**arm_smmu_device_domain_type()**
+     - **def_domain_type()**/**arm_smmu_device_domain_type()**，SMMUv3 设备驱动程序有条件实现
      - **domain_alloc()**/**arm_smmu_domain_alloc()**
 
 4. 连接系统 I/O 设备和 SMMUv3 设备：
@@ -1428,7 +1428,7 @@ EXPORT_SYMBOL_GPL(iommu_fwspec_add_ids);
 
 `iommu_fwspec_add_ids()` 函数确保 `struct iommu_fwspec` 对象中有足够的空间来存放要添加的 StreamID，如果空间不足，会先重新分配并初始化 `struct iommu_fwspec` 对象，之后将要添加的 StreamID 放进 `struct iommu_fwspec` 对象。
 
-在 IOMMU 探测设备阶段，SMMUv3 设备驱动程序的 `probe_device()` 回调 `arm_smmu_probe_device()` 执行系统 I/O 设备的 IOMMU 探测。这个函数定义如下：：
+在系统 I/O 设备的 IOMMU 探测阶段，SMMUv3 设备驱动程序的 `probe_device()` 回调 `arm_smmu_probe_device()` 执行系统 I/O 设备的 IOMMU 探测。这个函数定义如下：
 ```
 static void
 arm_smmu_write_strtab_l1_desc(__le64 *dst, struct arm_smmu_strtab_l1_desc *desc)
@@ -1654,18 +1654,13 @@ static inline void dev_iommu_priv_set(struct device *dev, void *priv)
          * 如果使用了 2 级流表，在 `arm_smmu_init_l2_strtab()` 函数中分配并填充第 2 级流表。`arm_smmu_init_l2_strtab()` 函数调用 `arm_smmu_init_bypass_stes()` 函数将第 2 级流表中的所有流表项 STE 初始化为旁路 SMMU，并调用 `arm_smmu_write_strtab_l1_desc()` 函数将第 2 级流表的地址写入第 1 级流表中，对应的 L1 流表描述符中；
          * 将 StreamID 插入 SMMUv3 设备的 SID 树中；
      - 如果针对某个流的某个操作执行失败，则移除已经为当前系统 I/O 设备添加的所有 StreamID。
-
 3. 从设备树文件中读取系统 I/O 设备的 SubstreamID 位长，并计算将采用的 SubstreamID 位长。
-
 4. 启用 PASID。仅用于 PCIe 设备。
-
 5. 不支持 2 级 CD 表时，更新 SubstreamID 位长。
-
 6. 检查是否要为系统 I/O 设备支持 Stall 模式。
-
 7. 初始化 PRI。仅用于 PCIe 设备。
 
-在 IOMMU 探测设备阶段，SMMUv3 设备驱动程序的 `device_group()` 回调 `arm_smmu_device_group()` 用于为系统 I/O 设备查找或创建 IOMMU group，这个函数定义如下：
+在系统 I/O 设备的 IOMMU 探测阶段，SMMUv3 设备驱动程序的 `device_group()` 回调 `arm_smmu_device_group()` 用于为系统 I/O 设备查找或创建 IOMMU group，这个函数定义如下：
 ```
 static struct iommu_group *arm_smmu_device_group(struct device *dev)
 {
@@ -1685,7 +1680,7 @@ static struct iommu_group *arm_smmu_device_group(struct device *dev)
 }
 ```
 
-`arm_smmu_device_group()` 函数分为 PCIe 设备和其它设备来执行。IOMMU 子系统不支持设备共享 stream ID，除了 PCI RID 别名。这里主要关注非 PCIe 设备。`generic_device_group()` 函数为非 PCIe 设备分配 IOMMU group，这个函数定义 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
+`arm_smmu_device_group()` 函数分为 PCIe 设备和其它设备两种情况来执行。IOMMU 子系统不支持设备共享 Stream ID，除了 PCI RID 别名。这里主要关注非 PCIe 设备的情况。`generic_device_group()` 函数为非 PCIe 的系统 I/O 设备分配 IOMMU group，这个函数定义 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
 ```
 struct iommu_group *iommu_group_alloc(void)
 {
@@ -1756,7 +1751,7 @@ struct iommu_group *generic_device_group(struct device *dev)
 EXPORT_SYMBOL_GPL(generic_device_group);
 ```
 
-`generic_device_group()` 函数分配一个新的 IOMMU group，它为 `struct iommu_group` 对象分配内存，初始化对象，获得 group ID，并创建 sysfs 文件。SMMUv3 设备驱动程序的 `device_group()` 回调为非 PCIe 分配新的 IOMMU group。
+`generic_device_group()` 函数分配一个新的 IOMMU group，它为 `struct iommu_group` 对象分配内存，初始化对象，获得 group ID，并创建 sysfs 文件。SMMUv3 设备驱动程序的 `device_group()` 回调为非 PCIe 的系统 I/O 设备分配新的 IOMMU group。
 
 `def_domain_type()`/`arm_smmu_device_domain_type()` 和 `domain_alloc()`/`arm_smmu_domain_alloc()` 在分配默认的 domain 阶段配合使用，前者用于获得默认的 domain 类型，后者用于分配 domain 对象。这两个回调实现如下：
 ```
@@ -1958,20 +1953,14 @@ out_unlock:
 `arm_smmu_attach_dev()` 函数做了这样一些事情：
 
 1. 检查系统 I/O 设备的 SVA 已经被禁用，以确保它没有绑定到任何 mm，且可以从老的 domain 安全地断开连接。
-
 2. 从老的 domain 断开连接：
      - 停用 ATS，仅用于 PCIe 设备；
      - 将系统 I/O 设备 (在 SMMUv3 设备驱动程序中由 `struct arm_smmu_master` 对象表示) 从 domain 的设备列表中移除；
-     - 调用 `arm_smmu_install_ste_for_dev()` 函数为系统 I/O 设备安装流表 STE，此时系统 I/O 设备已经与 domain 断开连接，系统 I/O 设备的流表 STE 将被配置为旁路 SMMU。
-
+     - 调用 `arm_smmu_install_ste_for_dev()` 函数为系统 I/O 设备安装流表项 STE，此时系统 I/O 设备已经与 domain 断开连接，系统 I/O 设备的流表项 STE 将被配置为旁路 SMMU。
 3. 对于非 PCIe 的一般系统 I/O 设备，每个设备都是一个独立 IOMMU group，也都有一个独立的 domain。如果 domain 没有和 SMMU 设备连接起来，则连接 domain 和 SMMU 设备，并调用 `arm_smmu_domain_finalise()` 函数配置 SMMU domain。
-
 4. 连接系统 I/O 设备与 domain。
-
 5. 调用 `arm_smmu_install_ste_for_dev()` 函数再次为系统 I/O 设备安装流表 STE，此时系统 I/O 设备已经与 domain 连接。
-
 6. 将系统 I/O 设备添加进 domain 的设备列表中。
-
 7. 开启 ATS，仅用于 PCIe 设备。
 
 `arm_smmu_domain_finalise()` 函数配置 SMMU domain，这个函数定义如下：
@@ -2064,11 +2053,8 @@ static int arm_smmu_domain_finalise(struct iommu_domain *domain,
 `arm_smmu_domain_finalise()` 函数的执行过程如下：
 
 1. 根据从 SMMUv3 设备的 **SMMU_IDR\*** 寄存器读取的硬件特性及配置，如是否执行第 1 阶段地址转换，是否执行第 2 阶段地址转换，输入地址大小，输出地址大小等，来确定 IO 页表的格式和配置，及后面要执行的 `finalise_stage_fn`。对于一般的系统 I/O 设备驱动，只需要执行第 1 阶段的地址转换，IO 页表格式将是 **ARM_64_LPAE_S1**，后面要执行的 `finalise_stage_fn` 将是 `arm_smmu_domain_finalise_s1()`。
-
 2. 根据前面获得的 IO 页表格式和配置，调用 `alloc_io_pgtable_ops()` 函数分配 IO 页表操作。
-
 3. 执行 `finalise_stage_fn`，对于一般的系统 I/O 设备驱动，即 `arm_smmu_domain_finalise_s1()` 函数。
-
 4. 连接 IO 页表操作和 domain。
 
 `alloc_io_pgtable_ops()` 函数定义 (位于 *drivers/iommu/io-pgtable.c* 文件中) 如下：
@@ -2114,7 +2100,7 @@ struct io_pgtable_ops *alloc_io_pgtable_ops(enum io_pgtable_fmt fmt,
 EXPORT_SYMBOL_GPL(alloc_io_pgtable_ops);
 ```
 
-`alloc_io_pgtable_ops()` 函数根据传入的 IO 页表格式选择一组 IO 页表初始化操作，并利于 IO 页表初始化操作的分配操作分配一组 IO 页表，并将其中的 IO 页表操作返回。对于 **ARM_64_LPAE_S1** 格式，选中的 IO 页表初始化操作将是 `io_pgtable_arm_64_lpae_s1_init_fns`。这组 IO 页表初始化操作定义 (位于 *drivers/iommu/io-pgtable-arm.c* 文件中) 如下：
+`alloc_io_pgtable_ops()` 函数根据传入的 IO 页表格式选择一组 IO 页表初始化操作，利于 IO 页表初始化操作的分配操作分配一组 IO 页表，将其中的 IO 页表操作返回。对于 **ARM_64_LPAE_S1** 格式，选中的 IO 页表初始化操作是 `io_pgtable_arm_64_lpae_s1_init_fns`。这组 IO 页表初始化操作定义 (位于 *drivers/iommu/io-pgtable-arm.c* 文件中) 如下：
 ```
 static void __arm_lpae_free_pgtable(struct arm_lpae_io_pgtable *data, int lvl,
 				    arm_lpae_iopte *ptep)
@@ -2308,9 +2294,7 @@ struct io_pgtable_init_fns io_pgtable_arm_32_lpae_s1_init_fns = {
 ```
 
 `io_pgtable_arm_64_lpae_s1_init_fns` 的页表分配操作 `arm_64_lpae_alloc_pgtable_s1()`，它分两步分配 IO 页表：
-
 1. 调用 `arm_lpae_alloc_pgtable()` 分配 IO 页表结构，初始化包括 IO 页表操作在内的各种配置。
-
 2. 分配并创建 PGD。
 
 `arm_smmu_domain_finalise_s1()` 函数定义如下：
@@ -2610,11 +2594,9 @@ out_unlock:
 `arm_smmu_domain_finalise_s1()` 函数的执行过程如下：
 
 1. 调用 `arm_smmu_domain_finalise_cd()` 函数，为 domain 获得 ASID，并根据前面获得的 IO 页表配置等信息创建第 1 阶段转换的 CD 配置。
-
 2. 调用 `arm_smmu_alloc_cd_tables()` 函数根据 SSID 位数计算 CD 表的项数，并分配 CD 表，分为两种情况来处理：
      * SMMUv3 硬件设备支持 2 级 CD 表，且 SSID 位数大于 **CTXDESC_SPLIT**(10)，分配 L1 CD 描述符表，并分配与 L1 CD 描述符表项数相同的 `struct arm_smmu_l1_ctx_desc` 对象数组，`struct arm_smmu_l1_ctx_desc` 对象表示上下文描述符，但它主要由 CPU 访问，而不是 SMMUv3 硬件设备，它的内容将被以 SMMUv3 硬件设备支持的方式写入 L1 CD 描述符表的对应位置；
      * SMMUv3 硬件设备仅支持 1 级 CD 表，或者 SSID 位数小于 **CTXDESC_SPLIT**(10)，直接分配 CD 表。
-
 3. 调用 `arm_smmu_write_ctx_desc()` 函数将上下文描述符写入 CD 表，这里 SSID 取了 0：
      - 调用 `arm_smmu_get_cd_ptr()` 函数得到 CD 指针，这可以分为两种情况：
          * 如果使用了 2 级 CD 表，先调用 `arm_smmu_alloc_cd_leaf_table()` 函数分配第 2 级 CD 表，调用 `arm_smmu_write_cd_l1_desc()` 函数将 L1 CD 描述符写入 L1 CD 描述符表的对应位置，调用 `arm_smmu_sync_cd()` 函数向命令队列发送命令以同步 CD，返回第 2 级 CD 表中对应位置的 CD 项指针，两个具体位置由传入的 SSID 确定。
@@ -2827,18 +2809,3 @@ static void arm_smmu_install_ste_for_dev(struct arm_smmu_master *master)
 `arm_smmu_attach_dev()` 函数的执行过程总结如下图：
 
 ![linux_kernel_smmu_attach_dev](images/1315506-047f35d86e55ec6a.png)
-
-## 设备驱动程序分配内存
-```
-[   52.677459]  arm_smmu_map+0x34/0x9c
-[   52.682265]  __iommu_map+0xdc/0x190
-[   52.687057]  __iommu_map_sg+0xa8/0x140
-[   52.692181]  iommu_map_sg_atomic+0x14/0x20
-[   52.697693]  iommu_dma_alloc_remap+0x35c/0x45c
-[   52.703665]  iommu_dma_alloc+0x24c/0x2d4
-[   52.708991]  dma_alloc_attrs+0xdc/0xe4
-[   52.714063]  snd_dma_alloc_pages+0x13c/0x174
-[   52.719804]  preallocate_pages+0x190/0x220
-[   52.725326]  snd_pcm_lib_preallocate_pages_for_all+0x84/0xa4
-```
-
