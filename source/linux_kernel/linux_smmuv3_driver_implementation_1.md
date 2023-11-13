@@ -514,7 +514,7 @@ SMMU 相关的操作及过程，和对 SMMU 的访问，基于上面这些数据
 
 ## SMMUv3 设备驱动程序的初始化
 
-Linux 内核启动早期，会执行 IOMMU 初始化，这主要是执行 `iommu_init()` 函数，它创建并添加 `iommu_groups` kset，这个函数定义 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
+Linux 内核启动早期，会执行 IOMMU 的初始化，主要执行 `iommu_init()` 函数，它创建并添加 `iommu_groups` kset，这个函数定义 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
 ```
 static int __init iommu_init(void)
 {
@@ -529,7 +529,7 @@ static int __init iommu_init(void)
 core_initcall(iommu_init);
 ```
 
-Linux 内核启动时，可以传入一些配置 IOMMU 的命令行参数，这包括用于配置默认 domain 类型的 `iommu.passthrough`、用于配置 DMA setup 的 `iommu.strict` 和用于配置等待挂起的页请求的页相应的超时时间的 `iommu.prq_timeout`。Linux 内核启动早期，会初始化 IOMMU 子系统，如果没有通过 Linux 内核的命令行参数配置 IOMMU，则会设置默认的 domain 类型，相关代码 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
+Linux 内核启动时，可以传入一些配置 IOMMU 子系统的命令行参数，这包括用于配置默认 domain 类型的 `iommu.passthrough`、用于配置 DMA setup 的 `iommu.strict` 和用于配置等待挂起的页请求的页响应的超时时间的 `iommu.prq_timeout`。Linux 内核启动早期，会初始化 IOMMU 子系统，如果没有通过 Linux 内核的命令行参数配置 IOMMU 子系统，则会设置默认的 domain 类型，相关代码 (位于 *drivers/iommu/iommu.c* 文件中) 如下：
 ```
 static unsigned int iommu_def_domain_type __read_mostly;
 static bool iommu_dma_strict __read_mostly;
@@ -665,9 +665,9 @@ void iommu_set_default_translated(bool cmd_line)
 }
 ```
 
-`core_initcall` 的函数比 `subsys_initcall` 的函数执行地更早。
+`core_initcall` 的函数比 `subsys_initcall` 的函数执行地更早一点。
 
-IOMMU 子系统初始化之后，就轮到 SMMU 设备驱动程序上场了。SMMUv3 本身是一个平台设备，其硬件设备信息，包括寄存器映射地址范围，中断号等使用的资源，在设备树 `dts`/`dtsi` 文件中描述。SMMUv3 设备在设备树文件中的示例设备节点 (位于 *arch/arm64/boot/dts/arm/fvp-base-revc.dts* 文件中) 如下：
+IOMMU 子系统初始化之后，就轮到 SMMUv3 设备驱动程序上场了。SMMUv3 设备驱动程序实现为一个平台设备驱动程序，其硬件信息，如寄存器映射地址范围，和中断号等所用到的资源，在设备树 `dts`/`dtsi` 文件中描述。SMMUv3 设备在设备树文件中的示例设备节点 (位于 *arch/arm64/boot/dts/arm/fvp-base-revc.dts* 文件中) 如下：
 ```
 	smmu: iommu@2b400000 {
 		compatible = "arm,smmu-v3";
@@ -683,7 +683,7 @@ IOMMU 子系统初始化之后，就轮到 SMMU 设备驱动程序上场了。SM
 	};
 ```
 
-SMMUv3 设备驱动程序加载的入口为 `arm_smmu_device_probe()` 函数，这个函数定义 (位于 *drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c* 文件中) 如下：
+SMMUv3 设备驱动程序初始化的入口为 `arm_smmu_device_probe()`，这个函数定义 (位于 *drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c* 文件中) 如下：
 ```
 static struct arm_smmu_option_prop arm_smmu_options[] = {
 	{ ARM_SMMU_OPT_SKIP_PREFETCH, "hisilicon,broken-prefetch-cmd" },
@@ -854,16 +854,19 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
 `arm_smmu_device_probe()` 函数主要做了如下几件事情：
 
 1. 分配 `struct arm_smmu_device` 对象，这个对象用来在 IOMMU 子系统中描述 SMMUv3 设备。
-2. 获取设备树文件 `dts`/`dtsi` 中的 SMMUv3 设备节点中包含的信息，和引用的资源，这主要包括：
-     - 关于 SMMUv3 设备的信息，如 `iommu-cells`，其值必须为 1；options，如是否只有寄存器页 0 等；SMMU 是否支持 coherent，这主要由设备树文件中的设备节点的 `dma-coherent` 属性表示；
-     - SMMUv3 设备的寄存器映射，`arm_smmu_device_probe()` 函数会根据 options 的值检查寄存器映射的范围大小是否与预期匹配，并重映射 SMMUv3 设备的寄存器映射；
+2. 获取设备树文件 `dts`/`dtsi` 中的 SMMUv3 设备节点包含的信息，和引用的资源，这主要包括：
+     - 关于 SMMUv3 设备的信息，如 `iommu-cells`，其值必须为 1；options，如是否只有寄存器页 0 等；SMMU 是否支持 coherent，这主要由设备树文件的设备节点的 `dma-coherent` 属性表示；
+     - SMMUv3 设备的寄存器映射，`arm_smmu_device_probe()` 函数根据 options 的值检查寄存器映射的范围大小是否与预期匹配，并重映射 SMMUv3 设备的寄存器映射；
      - SMMUv3 设备引用的中断资源，包括用于命令队列、事件队列和全局错误的中断资源。
-3. 探测 SMMUv3 设备的硬件特性，这主要按照 [ARM 系统内存管理单元架构规范版本 3](https://developer.arm.com/documentation/ihi0070/latest/) 中定义的寄存器 **SMMU_IDR0**、**SMMU_IDR1**、**SMMU_IDR3**、和 **SMMU_IDR5** (另外一些用于提供信息的只读寄存器包含的信息和 SMMUv3 硬件设备的特性关系不大，**SMMU_IDR2** 包含 SMMU 为非安全编程接口实现的特性相关的信息，**SMMU_IDR4** 是一个 SMMU 实现定义的寄存器，**SMMU_IIDR** 寄存器包含 SMMU 的实现和实现者的信息，以及由实现定义的支持的架构版本信息，**SMMU_AIDR** 寄存器包含 SMMU 实现遵从的 SMMU 架构版本号信息) 的各个字段，确认实际的 SMMUv3 硬件设备支持的特性，这主要通过调用 `arm_smmu_device_hw_probe()` 函数完成。
-4. 初始化数据结构，这主要包括几个队列和流表，队列包括命令队列、事件队列和 PRIQ 队列。对于流表的初始化，分两种情况，如果流表的结构为线性流表，则线性流表中所有的 STE 都被配置为旁路 SMMU；如果流表的结构为 2 级流表，则流表中为无效的 L1 流表描述符，这主要通过调用 `arm_smmu_init_structures()` 函数完成。
-5. 在设备结构 `struct platform_device` 对象的私有字段中记录 `struct arm_smmu_device` 对象。
-6. 复位 SMMUv3 设备，这主要包括通过 **SMMU_CR0** 等寄存器复位硬件设备，设置流表基址寄存器等；以及设置中断，包括向系统请求中断及注册中断处理程序；初始化数据结构在内存中建立各个数据结构，复位 SMMUv3 设备则将各个数据结构的基地址和各种配置写进对应的设备寄存器中，这主要通过调用 `arm_smmu_device_reset()` 函数完成。
-7. 将 SMMUv3 设备注册到 IOMMU 子系统，这包括为 `struct iommu_device` 设置 `struct iommu_ops` 和 `struct fwnode_handle`，并将 `struct iommu_device` 对象注册进 IOMMU 子系统。`struct fwnode_handle` 用于匹配 SMMUv3 设备和系统 I/O 设备，这主要通过调用 `iommu_device_register()` 函数完成。
-8. 为各个总线类型设置 `struct iommu_ops`，SMMUv3 设备驱动程序和要使用 IOMMU 的系统 I/O 设备的加载顺序可能是不确定的；正常情况下，应该是 SMMUv3 设备驱动程序先加载，要使用 IOMMU 的系统 I/O 设备后加载；这里会处理使用 IOMMU 的系统 I/O 设备先于 SMMUv3 设备驱动程序加载的情况，这主要通过调用 `arm_smmu_set_bus_ops()` 函数完成。
+3. 探测 SMMUv3 设备的硬件特性。按照 [ARM 系统内存管理单元架构规范版本 3](https://developer.arm.com/documentation/ihi0070/latest/) 中描述的寄存器 **SMMU_IDR0**、**SMMU_IDR1**、**SMMU_IDR3**、和 **SMMU_IDR5** (另外一些用于提供信息的只读寄存器包含的信息和 SMMUv3 硬件设备的特性关系不大，**SMMU_IDR2** 包含 SMMU 为非安全编程接口实现的特性相关的信息，**SMMU_IDR4** 是一个由 SMMUv3 实现定义的非标准寄存器，**SMMU_IIDR** 寄存器包含 SMMU 的实现和实现者的信息，以及由实现定义的支持的架构版本信息，**SMMU_AIDR** 寄存器包含 SMMU 实现遵从的 SMMU 架构版本号信息) 的各个字段，确认实际的 SMMUv3 硬件设备支持的特性，通过调用 `arm_smmu_device_hw_probe()` 函数完成。
+4. 初始化数据结构。包括几个队列和流表，队列有命令队列、事件队列和 PRIQ 队列。对于流表的初始化，分两种情况：
+     * 流表的结构为线性流表，初始化线性流表，线性流表中所有的流表项 STE 都被配置为旁路 SMMU；
+     * 流表的结构为 2 级流表，初始化 L1 流表描述符表，其中的内容为无效的 L1 流表描述符；
+主要通过 `arm_smmu_init_structures()` 函数完成。
+5. 在设备结构 `struct platform_device` 对象的私有字段记录创建的 `struct arm_smmu_device` 对象。
+6. 复位 SMMUv3 设备。包括通过 **SMMU_CR0** 等寄存器复位硬件设备，设置流表基址寄存器等；以及设置中断，包括向系统请求中断及注册中断处理程序；初始化数据结构在内存中建立各个数据结构，复位 SMMUv3 设备则将各个数据结构的基地址和各种配置写进对应的设备寄存器中。通过 `arm_smmu_device_reset()` 函数完成。
+7. 将 SMMUv3 设备注册到 IOMMU 子系统，这包括为 `struct iommu_device` 设置 `struct iommu_ops` 和 `struct fwnode_handle`，并将 `struct iommu_device` 对象注册进 IOMMU 子系统。`struct fwnode_handle` 用于匹配 SMMUv3 设备和系统 I/O 设备。通过 `iommu_device_register()` 函数完成。
+8. 为各个总线类型设置 `struct iommu_ops`。SMMUv3 设备驱动程序和要使用 IOMMU 的系统 I/O 设备的驱动程序加载顺序不确定；正常情况下，SMMUv3 设备驱动程序先加载，系统 I/O 设备的驱动程序后加载；这里会处理系统 I/O 设备的驱动程序先于 SMMUv3 设备驱动程序加载的情况。通过 `arm_smmu_set_bus_ops()` 函数完成。
 
 ### 探测 SMMUv3 设备的硬件特性
 
