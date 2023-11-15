@@ -2603,6 +2603,7 @@ out_unlock:
 			dma-can-stall;
 #endif
 ```
+
      * SMMUv3 硬件设备支持 2 级 CD 表，且 SSID 位数大于 **CTXDESC_SPLIT**(10)，分配 L1 CD 描述符表，并分配与 L1 CD 描述符表项数相同的 `struct arm_smmu_l1_ctx_desc` 对象数组，`struct arm_smmu_l1_ctx_desc` 对象表示上下文描述符，但它主要由 CPU 访问，而不是 SMMUv3 硬件设备，它的内容将被以 SMMUv3 硬件设备支持的方式写入 L1 CD 描述符表的对应位置；
      * SMMUv3 硬件设备仅支持 1 级 CD 表，或者 SSID 位数小于 **CTXDESC_SPLIT**(10)，直接分配 CD 表。
 3. 调用 `arm_smmu_write_ctx_desc()` 函数将上下文描述符写入 CD 表，这里 SSID 取了 0：
