@@ -2595,6 +2595,14 @@ out_unlock:
 
 1. 调用 `arm_smmu_domain_finalise_cd()` 函数，为 domain 获得 ASID，并根据前面获得的 IO 页表配置等信息创建第 1 阶段转换的 CD 配置。
 2. 调用 `arm_smmu_alloc_cd_tables()` 函数根据 SSID 位数计算 CD 表的项数，并分配 CD 表，分为两种情况来处理：
+     * SSID 位数即 `cfg->s1cdmax`，在 `arm_smmu_domain_finalise_cd()` 函数中，`cfg->s1cdmax` 来自于 `master->ssid_bits`，`master->ssid_bits` 在 `arm_smmu_probe_device()` 函数中解析自设备树节点的 `pasid-num-bits` 属性，当设备树中没有为系统 I/O 设备节点配置这个属性时取 0，这也就意味着 CD 表中只有一个表项。设备树中为系统 I/O 设备节点配置 `pasid-num-bits` 属性的代码类似下面这样：
+```
+#ifdef USE_SMMU
+			iommus = <&smmu 0x1>;
+			pasid-num-bits = <5>;
+			dma-can-stall;
+#endif
+```
      * SMMUv3 硬件设备支持 2 级 CD 表，且 SSID 位数大于 **CTXDESC_SPLIT**(10)，分配 L1 CD 描述符表，并分配与 L1 CD 描述符表项数相同的 `struct arm_smmu_l1_ctx_desc` 对象数组，`struct arm_smmu_l1_ctx_desc` 对象表示上下文描述符，但它主要由 CPU 访问，而不是 SMMUv3 硬件设备，它的内容将被以 SMMUv3 硬件设备支持的方式写入 L1 CD 描述符表的对应位置；
      * SMMUv3 硬件设备仅支持 1 级 CD 表，或者 SSID 位数小于 **CTXDESC_SPLIT**(10)，直接分配 CD 表。
 3. 调用 `arm_smmu_write_ctx_desc()` 函数将上下文描述符写入 CD 表，这里 SSID 取了 0：
