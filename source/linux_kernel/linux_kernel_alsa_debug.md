@@ -1,0 +1,799 @@
+---
+title: Linux 内核音频子系统调试
+date: 2023-08-27 13:08:29
+categories: Linux 内核
+tags:
+- Linux 内核
+---
+
+## debugfs 文件系统
+
+debugfs 可以为 Linux 内核各个模块的分析调试，提供许多信息，如音频子系统的 ASoC，以及 tracing 等。debugfs 文件系统可以通过命令行工具挂载，如下所示：
+```
+root@apollo:~# ls /sys/kernel/debug/
+root@apollo:~# mount -t debugfs nodev /sys/kernel/debug
+root@apollo:~# ls /sys/kernel/debug/
+asoc                device_component    fault_around_bytes  mtd                 regulator           virtio-ports
+bdi                 devices_deferred    gpio                opp                 remoteproc          wakeup_sources
+block               dma_buf             hid                 pinctrl             sleep_time
+clear_warn_once     dma_pools           iio                 pm_genpd            split_huge_pages
+clk                 dmaengine           interconnect        pwm                 suspend_stats
+debug_enabled       energy_model        irq                 ras                 swiotlb
+devfreq             extfrag             memblock            regmap              usb
+```
+
+debugfs 文件系统也可以在系统启动时自动挂载，这需要修改 ***/etc/fstab*** 文件，需要在这个文件中添加如下行：
+```
+debugfs  /sys/kernel/debug  debugfs  defaults  0  0
+```
+
+挂载了 debugfs 文件系统之后，可以在 ***/sys/kernel/debug/asoc/*** 目录下看到注册的所有 DAI、component 和 sound card，如：
+```
+root@apollo:~# ls /sys/kernel/debug/asoc/
+components        dais              rt5651codec_card
+```
+
+在 sound card 对应的目录下，可以看到其更详细的组成，如：
+```
+root@apollo:~# ls /sys/kernel/debug/asoc/rt5651codec_card/
+725000.i2s     dapm           dapm_pop_time  rt5651.0-001a
+```
+
+这里的 sound card 主要由位于 0x725000 的 I2S 设备，也就是 CPU DAI，几个 DAPM 小部件，及 Audio Codec ALC5651，也就是 Codec DAI 组成。在 sound card 的 ***dapm*** 目录下，可以看到关于它的 DAPM 小部件的更详细的信息，如：
+```
+root@apollo:~# ls /sys/kernel/debug/asoc/rt5651codec_card/dapm
+HDMIIN       Headphones   Headset Mic  Int Mic      Lineout      bias_level
+```
+
+查看 sound card 的 ***dapm*** 目录下各个文件的内容，可以了解对应 DAPM 小部件的状态，如：
+```
+root@apollo:~# cat /sys/kernel/debug/asoc/rt5651codec_card/dapm/'Headset Mic'
+Headset Mic: Off  in 1 out 0
+```
+
+这些小部件可能需要用户专门通过工具来开关，也可能播放和录制应用软件会自动地开关。如 Headphones 小部件，它不需要用户专门通过工具来开关。在不播放音频文件时，它的状态为 `Off`，如：
+```
+root@apollo:~# cat /sys/kernel/debug/asoc/rt5651codec_card/dapm/Headphones
+Headphones: Off  in 0 out 1
+ in  "static" "HPOR"
+ in  "static" "HPOL"
+```
+
+当启动 `tinyplay` 播放 WAV 音频文件时，它的状态变为 `On`，如：
+```
+root@apollo:~# cat /sys/kernel/debug/asoc/rt5651codec_card/dapm/Headphones
+Headphones: On  in 16 out 1
+ in  "static" "HPOR"
+ in  "static" "HPOL"
+```
+
+在 sound card 的 ***rt5651.0-001a*** 目录下，可以看到关于它的 Audio Codec ALC5651 的更详细的信息，如：
+```
+root@apollo:~# ls /sys/kernel/debug/asoc/rt5651codec_card/rt5651.0-001a/
+dapm
+```
+
+ALC5651 的 Linux 内核驱动程序，主要提供了众多 DAPM 小部件，来对其内部各部分进行控制，如音量，静音，DAC，ADC，Mixer，耳机输出，有线输出等。
+
+ALC5651 的 DAPM 小部件有如下这些：
+```
+root@apollo:~# ls /sys/kernel/debug/asoc/rt5651codec_card/rt5651.0-001a/dapm/
+ADC ASRC                            HPO R Playback                      LOUT R Playback
+ADC L                               HPO R Playback Switch Autodisable   LOUT R Playback Switch Autodisable
+ADC L Power                         HPOL                                LOUTL
+ADC R                               HPOL MIX                            LOUTR
+ADC R Power                         HPOR                                MIC1
+AIF1 Capture                        HPOR MIX                            MIC2
+AIF1 Playback                       HPOVOL L                            MIC3
+AIF1RX                              HPOVOL R                            OUT MIXL
+AIF1TX                              I2S1                                OUT MIXR
+AIF2 Capture                        I2S1 ASRC                           OUTVOL L
+AIF2 Playback                       I2S2                                OUTVOL R
+AIF2RX                              I2S2 ASRC                           PDM L Mux
+AIF2TX                              IF1 ADC1                            PDM R Mux
+Amp Power                           IF1 ADC2                            PDML
+Audio DSP                           IF1 DAC                             PDMR
+BST1                                IF1 DAC1 L                          RECMIXL
+BST2                                IF1 DAC1 R                          RECMIXR
+BST3                                IF1 DAC2 L                          STO1 DAC ASRC
+DAC L1                              IF1 DAC2 R                          STO2 DAC ASRC
+DAC L1 Power                        IF2 ADC                             Stereo DAC MIXL
+DAC L2 Mux                          IF2 DAC                             Stereo DAC MIXR
+DAC L2 Volume                       IF2 DAC L                           Stereo1 ADC L1 Mux
+DAC MIXL                            IF2 DAC R                           Stereo1 ADC L2 Mux
+DAC MIXR                            IN1P                                Stereo1 ADC MIXL
+DAC R1                              IN2N                                Stereo1 ADC MIXR
+DAC R1 Power                        IN2P                                Stereo1 ADC R1 Mux
+DAC R2 Mux                          IN3P                                Stereo1 ADC R2 Mux
+DAC R2 Volume                       INL1                                Stereo1 Filter
+DD MIXL                             INL1 VOL                            Stereo2 ADC L1 Mux
+DD MIXR                             INL2                                Stereo2 ADC L2 Mux
+DMIC CLK                            INL2 VOL                            Stereo2 ADC MIXL
+DMIC L1                             INR1                                Stereo2 ADC MIXR
+DMIC R1                             INR1 VOL                            Stereo2 ADC R1 Mux
+HP Amp                              INR2                                Stereo2 ADC R2 Mux
+HP L Amp                            INR2 VOL                            Stereo2 Filter
+HP Post                             LDO                                 Stero1 DAC Power
+HP R Amp                            LOUT L Playback                     Stero2 DAC Power
+HPO L Playback                      LOUT L Playback Switch Autodisable  bias_level
+HPO L Playback Switch Autodisable   LOUT MIX                            micbias1
+```
+
+同样，查看这些文件的内容，可以了解它们的状态。其中的许多，由播放和录制应用自动控制。如其中的耳机输出开关 `HPOVOL L`，在播放音频文件之前状态如下：
+```
+root@apollo:~# cat /sys/kernel/debug/asoc/rt5651codec_card/rt5651.0-001a/dapm/'HPOVOL L'
+HPOVOL L: Off  in 0 out 2 - R102(0x66) mask 0x800
+ out  "HPO MIX HPVOL Switch" "HPOL MIX"
+ in  "Switch" "OUT MIXL"
+```
+
+在播放音频文件之后，其状态则为：
+```
+root@apollo:~# cat /sys/kernel/debug/asoc/rt5651codec_card/rt5651.0-001a/dapm/'HPOVOL L'
+HPOVOL L: On  in 2 out 2 - R102(0x66) mask 0x800
+ out  "HPO MIX HPVOL Switch" "HPOL MIX"
+ in  "Switch" "OUT MIXL"
+```
+
+这里还会显示各个 DAPM 小部件的音频路由，即其输入和输出分别是其它哪个小部件。
+
+在 debugfs 文件系统中看到的 DAPM 小部件，由驱动程序中类似下面的代码定义：
+```
+static const struct snd_soc_dapm_widget rt5651_dapm_widgets[] = {
+	/* ASRC */
+	SND_SOC_DAPM_SUPPLY_S("I2S1 ASRC", 1, RT5651_PLL_MODE_2,
+			      15, 0, NULL, 0),
+	SND_SOC_DAPM_SUPPLY_S("I2S2 ASRC", 1, RT5651_PLL_MODE_2,
+			      14, 0, NULL, 0),
+	SND_SOC_DAPM_SUPPLY_S("STO1 DAC ASRC", 1, RT5651_PLL_MODE_2,
+			      13, 0, NULL, 0),
+	SND_SOC_DAPM_SUPPLY_S("STO2 DAC ASRC", 1, RT5651_PLL_MODE_2,
+			      12, 0, NULL, 0),
+	SND_SOC_DAPM_SUPPLY_S("ADC ASRC", 1, RT5651_PLL_MODE_2,
+			      11, 0, NULL, 0),
+ . . . . . .
+ 	/* Output Lines */
+	SND_SOC_DAPM_OUTPUT("HPOL"),
+	SND_SOC_DAPM_OUTPUT("HPOR"),
+	SND_SOC_DAPM_OUTPUT("LOUTL"),
+	SND_SOC_DAPM_OUTPUT("LOUTR"),
+	SND_SOC_DAPM_OUTPUT("PDML"),
+	SND_SOC_DAPM_OUTPUT("PDMR"),
+};
+```
+
+Linux 内核音频设备驱动程序可以向用户空间导出控制接口，用户可以通过这些控制接口控制音量大小，音量开关等，也可以通过这些控制接口控制两个 DAPM 小部件等。这些控制接口在 Linux 内核音频设备驱动程序中，由 `struct snd_kcontrol_new` 描述。ALC5651 Linux 内核设备驱动程序中定义的控制接口有如下这些：
+```
+static const struct snd_kcontrol_new rt5651_snd_controls[] = {
+	/* Headphone Output Volume */
+	SOC_DOUBLE_TLV("HP Playback Volume", RT5651_HP_VOL,
+		RT5651_L_VOL_SFT, RT5651_R_VOL_SFT, 39, 1, out_vol_tlv),
+	/* OUTPUT Control */
+	SOC_DOUBLE_TLV("OUT Playback Volume", RT5651_LOUT_CTRL1,
+		RT5651_L_VOL_SFT, RT5651_R_VOL_SFT, 39, 1, out_vol_tlv),
+
+	/* DAC Digital Volume */
+	SOC_DOUBLE("DAC2 Playback Switch", RT5651_DAC2_CTRL,
+		RT5651_M_DAC_L2_VOL_SFT, RT5651_M_DAC_R2_VOL_SFT, 1, 1),
+	SOC_DOUBLE_TLV("DAC1 Playback Volume", RT5651_DAC1_DIG_VOL,
+			RT5651_L_VOL_SFT, RT5651_R_VOL_SFT,
+			175, 0, dac_vol_tlv),
+	SOC_DOUBLE_TLV("Mono DAC Playback Volume", RT5651_DAC2_DIG_VOL,
+			RT5651_L_VOL_SFT, RT5651_R_VOL_SFT,
+			175, 0, dac_vol_tlv),
+	/* IN1/IN2/IN3 Control */
+	SOC_SINGLE_TLV("IN1 Boost", RT5651_IN1_IN2,
+		RT5651_BST_SFT1, 8, 0, bst_tlv),
+	SOC_SINGLE_TLV("IN2 Boost", RT5651_IN1_IN2,
+		RT5651_BST_SFT2, 8, 0, bst_tlv),
+	SOC_SINGLE_TLV("IN3 Boost", RT5651_IN3,
+		RT5651_BST_SFT1, 8, 0, bst_tlv),
+	/* INL/INR Volume Control */
+	SOC_DOUBLE_TLV("IN Capture Volume", RT5651_INL1_INR1_VOL,
+			RT5651_INL_VOL_SFT, RT5651_INR_VOL_SFT,
+			31, 1, in_vol_tlv),
+	/* ADC Digital Volume Control */
+	SOC_DOUBLE("ADC Capture Switch", RT5651_ADC_DIG_VOL,
+		RT5651_L_MUTE_SFT, RT5651_R_MUTE_SFT, 1, 1),
+	SOC_DOUBLE_TLV("ADC Capture Volume", RT5651_ADC_DIG_VOL,
+			RT5651_L_VOL_SFT, RT5651_R_VOL_SFT,
+			127, 0, adc_vol_tlv),
+	SOC_DOUBLE_TLV("Mono ADC Capture Volume", RT5651_ADC_DATA,
+			RT5651_L_VOL_SFT, RT5651_R_VOL_SFT,
+			127, 0, adc_vol_tlv),
+	/* ADC Boost Volume Control */
+	SOC_DOUBLE_TLV("ADC Boost Gain", RT5651_ADC_BST_VOL,
+			RT5651_ADC_L_BST_SFT, RT5651_ADC_R_BST_SFT,
+			3, 0, adc_bst_tlv),
+
+	/* ASRC */
+	SOC_SINGLE("IF1 ASRC Switch", RT5651_PLL_MODE_1,
+		RT5651_STO1_T_SFT, 1, 0),
+	SOC_SINGLE("IF2 ASRC Switch", RT5651_PLL_MODE_1,
+		RT5651_STO2_T_SFT, 1, 0),
+	SOC_SINGLE("DMIC ASRC Switch", RT5651_PLL_MODE_1,
+		RT5651_DMIC_1_M_SFT, 1, 0),
+
+	SOC_ENUM("ADC IF2 Data Switch", rt5651_if2_adc_enum),
+	SOC_ENUM("DAC IF2 Data Switch", rt5651_if2_dac_enum),
+};
+ . . . . . .
+/* Digital Mixer */
+static const struct snd_kcontrol_new rt5651_sto1_adc_l_mix[] = {
+	SOC_DAPM_SINGLE("ADC1 Switch", RT5651_STO1_ADC_MIXER,
+			RT5651_M_STO1_ADC_L1_SFT, 1, 1),
+	SOC_DAPM_SINGLE("ADC2 Switch", RT5651_STO1_ADC_MIXER,
+			RT5651_M_STO1_ADC_L2_SFT, 1, 1),
+};
+
+static const struct snd_kcontrol_new rt5651_sto1_adc_r_mix[] = {
+	SOC_DAPM_SINGLE("ADC1 Switch", RT5651_STO1_ADC_MIXER,
+			RT5651_M_STO1_ADC_R1_SFT, 1, 1),
+	SOC_DAPM_SINGLE("ADC2 Switch", RT5651_STO1_ADC_MIXER,
+			RT5651_M_STO1_ADC_R2_SFT, 1, 1),
+};
+ . . . . . .
+```
+
+DAPM 小部件可以绑定控制操作或事件处理程序，这种控制操作在 Linux 内核驱动程序中也用控制接口来描述。上面的 DAPM 小部件，引用的部分 `struct snd_kcontrol_new` 定义如下：
+```
+static const struct snd_kcontrol_new rt5651_dd_dac_l_mix[] = {
+	SOC_DAPM_SINGLE("DAC L1 Switch", RT5651_DD_MIXER,
+			RT5651_M_STO_DD_L1_SFT, 1, 1),
+	SOC_DAPM_SINGLE("DAC L2 Switch", RT5651_DD_MIXER,
+			RT5651_M_STO_DD_L2_SFT, 1, 1),
+	SOC_DAPM_SINGLE("DAC R2 Switch", RT5651_DD_MIXER,
+			RT5651_M_STO_DD_R2_L_SFT, 1, 1),
+};
+```
+
+音频路由描述不同的 DAPM 小部件之间的连接。上面看到的音频路由，在 Linux 内核驱动程序中，由 `struct snd_soc_dapm_route` 描述。一些控制接口用于控制两个 DAPM 小部件之间的连接，对于需要这种控制接口的音频路由，在音频路由表中，会引用控制接口。ALC5651 Linux 内核驱动程序中定义的音频路由主要有如下这些：
+```
+static const struct snd_soc_dapm_route rt5651_dapm_routes[] = {
+	{"Stero1 DAC Power", NULL, "STO1 DAC ASRC"},
+	{"Stero2 DAC Power", NULL, "STO2 DAC ASRC"},
+	{"I2S1", NULL, "I2S1 ASRC"},
+	{"I2S2", NULL, "I2S2 ASRC"},
+ . . . . . .
+	{"RECMIXL", "INL1 Switch", "INL1 VOL"},
+	{"RECMIXL", "BST3 Switch", "BST3"},
+	{"RECMIXL", "BST2 Switch", "BST2"},
+	{"RECMIXL", "BST1 Switch", "BST1"},
+
+	{"RECMIXR", "INR1 Switch", "INR1 VOL"},
+	{"RECMIXR", "BST3 Switch", "BST3"},
+	{"RECMIXR", "BST2 Switch", "BST2"},
+	{"RECMIXR", "BST1 Switch", "BST1"},
+ . . . . . .
+	{"PDML", NULL, "PDM L Mux"},
+	{"PDMR", NULL, "PDM R Mux"},
+};
+```
+
+上面的这些 DAPM 小部件，和音频路由，作为 Codec DAI 驱动程序的一部分在注册 Codec DAI 驱动程序时注册进 ALSA 框架，如：
+```
+static const struct snd_soc_component_driver soc_component_dev_rt5651 = {
+	.probe			= rt5651_probe,
+	.suspend		= rt5651_suspend,
+	.resume			= rt5651_resume,
+	.set_bias_level		= rt5651_set_bias_level,
+	.set_jack		= rt5651_set_jack,
+	.controls		= rt5651_snd_controls,
+	.num_controls		= ARRAY_SIZE(rt5651_snd_controls),
+	.dapm_widgets		= rt5651_dapm_widgets,
+	.num_dapm_widgets	= ARRAY_SIZE(rt5651_dapm_widgets),
+	.dapm_routes		= rt5651_dapm_routes,
+	.num_dapm_routes	= ARRAY_SIZE(rt5651_dapm_routes),
+	.use_pmdown_time	= 1,
+	.endianness		= 1,
+	.non_legacy_dai_naming	= 1,
+};
+```
+
+通过 debugfs 文件系统了解音频子系统的状态比较方便，但控制各个 DAPM 小部件的开关则需要其它工具，如 `tinymix` 等。
+
+ALSA 项目的用户空间程序包括可以帮助用户空间应用程序访问 ALSA 的 **alsa-lib** 库，及众多实用的工具，如 **alsa-utils** 中的 `alsactl`、`amixer`、`aplay` 和 `amidi`等，这些工具可用于配置和测试 ALSA 的各项功能。如 `aplay` 调用 **alsa-lib** 库来播放音频文件，`arecord` 调用 **alsa-lib** 库来录制音频文件，`amixer` 可用于配置各个控制接口的状态等。更多详细信息可以参考 [alsa-project 的 github](https://github.com/alsa-project)。
+
+tinyalsa 可以看作是 ALSA 项目的用户空间程序的简化版本，它包含一个简化版的库，及一些实用的小工具。这些工具包括 `tinyplay`、`tinycap` 和 `tinymix` 等，这几个工具的作用大体与 `aplay`、`arecord` 和 `amixer` 等价。相对于 ALSA 项目的用户空间程序，tinyalsa 的代码更简洁，因而移植和调试分析也就更简单。本文中所做的测试和调试用 tinyalsa 的工具。
+
+## tinymix
+
+`tinymix` 可用来获取或设置各个控制接口的状态，这个工具用法如下：
+```
+root@apollo:~# tinymix --help
+usage: tinymix [options] <command>
+options:
+        -h, --help               : prints this help message and exits
+        -v, --version            : prints this version of tinymix and exits
+        -D, --card NUMBER        : specifies the card number of the mixer
+
+commands:
+        get NAME|ID              : prints the values of a control
+        set NAME|ID VALUE(S) ... : sets the value of a control
+                VALUE(S): integers, percents, and relative values
+                        Integers: 0, 100, -100 ...
+                        Percents: 0%, 100% ...
+                        Relative values: 1+, 1-, 1%+, 2%+ ...
+        controls                 : lists controls of the mixer
+        contents                 : lists controls of the mixer and their contents
+```
+
+`tinymix controls` 命令可以列出系统中所有的控制接口，如：
+```
+root@apollo:~# tinymix controls
+Number of controls: 91
+ctl     type    num     name
+0       INT     2       HP Playback Volume
+1       INT     2       OUT Playback Volume
+2       BOOL    2       DAC2 Playback Switch
+3       INT     2       DAC1 Playback Volume
+4       INT     2       Mono DAC Playback Volume
+5       INT     1       IN1 Boost
+6       INT     1       IN2 Boost
+7       INT     1       IN3 Boost
+8       INT     2       IN Capture Volume
+9       BOOL    2       ADC Capture Switch
+10      INT     2       ADC Capture Volume
+11      INT     2       Mono ADC Capture Volume
+12      INT     2       ADC Boost Gain
+13      BOOL    1       IF1 ASRC Switch
+14      BOOL    1       IF2 ASRC Switch
+15      BOOL    1       DMIC ASRC Switch
+16      ENUM    1       ADC IF2 Data Switch
+17      ENUM    1       DAC IF2 Data Switch
+18      BOOL    1       Headphones Switch
+19      BOOL    1       Lineout Switch
+20      BOOL    1       Headset Mic Switch
+21      BOOL    1       Int Mic Switch
+22      BOOL    1       RECMIXL INL1 Switch
+23      BOOL    1       RECMIXL BST3 Switch
+24      BOOL    1       RECMIXL BST2 Switch
+25      BOOL    1       RECMIXL BST1 Switch
+26      BOOL    1       RECMIXR INR1 Switch
+27      BOOL    1       RECMIXR BST3 Switch
+28      BOOL    1       RECMIXR BST2 Switch
+29      BOOL    1       RECMIXR BST1 Switch
+30      ENUM    1       Stereo1 ADC L2 Mux
+31      ENUM    1       Stereo1 ADC R2 Mux
+32      ENUM    1       Stereo1 ADC L1 Mux
+33      ENUM    1       Stereo1 ADC R1 Mux
+34      ENUM    1       Stereo2 ADC L2 Mux
+35      ENUM    1       Stereo2 ADC L1 Mux
+36      ENUM    1       Stereo2 ADC R1 Mux
+37      ENUM    1       Stereo2 ADC R2 Mux
+38      BOOL    1       Stereo1 ADC MIXL ADC1 Switch
+39      BOOL    1       Stereo1 ADC MIXL ADC2 Switch
+40      BOOL    1       Stereo1 ADC MIXR ADC1 Switch
+41      BOOL    1       Stereo1 ADC MIXR ADC2 Switch
+42      BOOL    1       Stereo2 ADC MIXL ADC1 Switch
+43      BOOL    1       Stereo2 ADC MIXL ADC2 Switch
+44      BOOL    1       Stereo2 ADC MIXR ADC1 Switch
+45      BOOL    1       Stereo2 ADC MIXR ADC2 Switch
+46      ENUM    1       IF2 ADC
+47      ENUM    1       PDM L Mux
+48      ENUM    1       PDM R Mux
+49      BOOL    1       DAC MIXL Stereo ADC Switch
+50      BOOL    1       DAC MIXL INF1 Switch
+51      BOOL    1       DAC MIXR Stereo ADC Switch
+52      BOOL    1       DAC MIXR INF1 Switch
+53      ENUM    1       DAC L2 Mux
+54      ENUM    1       DAC R2 Mux
+55      BOOL    1       Stereo DAC MIXL DAC L1 Switch
+56      BOOL    1       Stereo DAC MIXL DAC L2 Switch
+57      BOOL    1       Stereo DAC MIXL DAC R1 Switch
+58      BOOL    1       Stereo DAC MIXR DAC R1 Switch
+59      BOOL    1       Stereo DAC MIXR DAC R2 Switch
+60      BOOL    1       Stereo DAC MIXR DAC L1 Switch
+61      BOOL    1       DD MIXL DAC L1 Switch
+62      BOOL    1       DD MIXL DAC L2 Switch
+63      BOOL    1       DD MIXL DAC R2 Switch
+64      BOOL    1       DD MIXR DAC R1 Switch
+65      BOOL    1       DD MIXR DAC R2 Switch
+66      BOOL    1       DD MIXR DAC L2 Switch
+67      BOOL    1       OUT MIXL BST1 Switch
+68      BOOL    1       OUT MIXL BST2 Switch
+69      BOOL    1       OUT MIXL INL1 Switch
+70      BOOL    1       OUT MIXL REC MIXL Switch
+71      BOOL    1       OUT MIXL DAC L1 Switch
+72      BOOL    1       OUT MIXR BST2 Switch
+73      BOOL    1       OUT MIXR BST1 Switch
+74      BOOL    1       OUT MIXR INR1 Switch
+75      BOOL    1       OUT MIXR REC MIXR Switch
+76      BOOL    1       OUT MIXR DAC R1 Switch
+77      BOOL    1       OUTVOL L Switch
+78      BOOL    1       OUTVOL R Switch
+79      BOOL    1       HPOVOL L Switch
+80      BOOL    1       HPOVOL R Switch
+81      BOOL    1       HPO MIX DAC1 Switch
+82      BOOL    1       HPO MIX HPVOL Switch
+83      BOOL    1       LOUT MIX DAC L1 Switch
+84      BOOL    1       LOUT MIX DAC R1 Switch
+85      BOOL    1       LOUT MIX OUTVOL L Switch
+86      BOOL    1       LOUT MIX OUTVOL R Switch
+87      BOOL    1       HPO L Playback Switch
+88      BOOL    1       HPO R Playback Switch
+89      BOOL    1       LOUT L Playback Switch
+90      BOOL    1       LOUT R Playback Switch
+```
+
+`tinymix controls` 命令每行列出一个控制接口，其中包含控制 ID，可以用于其它命令，值的类型，及控制接口的名称等。`tinymix contents` 命令在列出 `tinymix controls` 命令列出的内容之外，还会列出各个控制接口的状态，如：
+```
+root@apollo:~# tinymix contents
+Number of controls: 91
+ctl     type    num     name                                    value
+0       INT     2       HP Playback Volume                      31, 31 (range 0->39)
+1       INT     2       OUT Playback Volume                     31, 31 (range 0->39)
+2       BOOL    2       DAC2 Playback Switch                    On, On
+3       INT     2       DAC1 Playback Volume                    175, 175 (range 0->175)
+4       INT     2       Mono DAC Playback Volume                175, 175 (range 0->175)
+5       INT     1       IN1 Boost                               0 (range 0->8)
+6       INT     1       IN2 Boost                               0 (range 0->8)
+7       INT     1       IN3 Boost                               0 (range 0->8)
+8       INT     2       IN Capture Volume                       23, 23 (range 0->31)
+9       BOOL    2       ADC Capture Switch                      On, On
+10      INT     2       ADC Capture Volume                      47, 47 (range 0->127)
+11      INT     2       Mono ADC Capture Volume                 47, 47 (range 0->127)
+12      INT     2       ADC Boost Gain                          0, 0 (range 0->3)
+13      BOOL    1       IF1 ASRC Switch                         Off
+14      BOOL    1       IF2 ASRC Switch                         Off
+15      BOOL    1       DMIC ASRC Switch                        Off
+16      ENUM    1       ADC IF2 Data Switch                     > Normal, Swap, left copy to right, right copy to left,
+17      ENUM    1       DAC IF2 Data Switch                     > Normal, Swap, left copy to right, right copy to left,
+18      BOOL    1       Headphones Switch                       On
+19      BOOL    1       Lineout Switch                          On
+20      BOOL    1       Headset Mic Switch                      On
+21      BOOL    1       Int Mic Switch                          On
+22      BOOL    1       RECMIXL INL1 Switch                     Off
+23      BOOL    1       RECMIXL BST3 Switch                     Off
+24      BOOL    1       RECMIXL BST2 Switch                     Off
+25      BOOL    1       RECMIXL BST1 Switch                     Off
+26      BOOL    1       RECMIXR INR1 Switch                     Off
+27      BOOL    1       RECMIXR BST3 Switch                     Off
+28      BOOL    1       RECMIXR BST2 Switch                     Off
+29      BOOL    1       RECMIXR BST1 Switch                     Off
+30      ENUM    1       Stereo1 ADC L2 Mux                      DMIC, > DD MIX,
+31      ENUM    1       Stereo1 ADC R2 Mux                      DMIC, > DD MIX,
+32      ENUM    1       Stereo1 ADC L1 Mux                      DD MIX, > ADC,
+33      ENUM    1       Stereo1 ADC R1 Mux                      DD MIX, > ADC,
+34      ENUM    1       Stereo2 ADC L2 Mux                      DMIC L, > DD MIXL,
+35      ENUM    1       Stereo2 ADC L1 Mux                      DD MIXL, > ADCL,
+36      ENUM    1       Stereo2 ADC R1 Mux                      > DD MIXR, ADCR,
+37      ENUM    1       Stereo2 ADC R2 Mux                      > DMIC R, DD MIXR,
+38      BOOL    1       Stereo1 ADC MIXL ADC1 Switch            Off
+39      BOOL    1       Stereo1 ADC MIXL ADC2 Switch            Off
+40      BOOL    1       Stereo1 ADC MIXR ADC1 Switch            Off
+41      BOOL    1       Stereo1 ADC MIXR ADC2 Switch            Off
+42      BOOL    1       Stereo2 ADC MIXL ADC1 Switch            Off
+43      BOOL    1       Stereo2 ADC MIXL ADC2 Switch            Off
+44      BOOL    1       Stereo2 ADC MIXR ADC1 Switch            Off
+45      BOOL    1       Stereo2 ADC MIXR ADC2 Switch            Off
+46      ENUM    1       IF2 ADC                                 > IF1 ADC1, IF1 ADC2,
+47      ENUM    1       PDM L Mux                               > DD MIX, Stereo DAC MIX,
+48      ENUM    1       PDM R Mux                               > DD MIX, Stereo DAC MIX,
+49      BOOL    1       DAC MIXL Stereo ADC Switch              Off
+50      BOOL    1       DAC MIXL INF1 Switch                    On
+51      BOOL    1       DAC MIXR Stereo ADC Switch              Off
+52      BOOL    1       DAC MIXR INF1 Switch                    On
+53      ENUM    1       DAC L2 Mux                              IF1, > IF2,
+54      ENUM    1       DAC R2 Mux                              IF1, > IF2,
+55      BOOL    1       Stereo DAC MIXL DAC L1 Switch           On
+56      BOOL    1       Stereo DAC MIXL DAC L2 Switch           Off
+57      BOOL    1       Stereo DAC MIXL DAC R1 Switch           Off
+58      BOOL    1       Stereo DAC MIXR DAC R1 Switch           On
+59      BOOL    1       Stereo DAC MIXR DAC R2 Switch           Off
+60      BOOL    1       Stereo DAC MIXR DAC L1 Switch           Off
+61      BOOL    1       DD MIXL DAC L1 Switch                   Off
+62      BOOL    1       DD MIXL DAC L2 Switch                   Off
+63      BOOL    1       DD MIXL DAC R2 Switch                   Off
+64      BOOL    1       DD MIXR DAC R1 Switch                   Off
+65      BOOL    1       DD MIXR DAC R2 Switch                   Off
+66      BOOL    1       DD MIXR DAC L2 Switch                   Off
+67      BOOL    1       OUT MIXL BST1 Switch                    Off
+68      BOOL    1       OUT MIXL BST2 Switch                    Off
+69      BOOL    1       OUT MIXL INL1 Switch                    Off
+70      BOOL    1       OUT MIXL REC MIXL Switch                Off
+71      BOOL    1       OUT MIXL DAC L1 Switch                  On
+72      BOOL    1       OUT MIXR BST2 Switch                    Off
+73      BOOL    1       OUT MIXR BST1 Switch                    Off
+74      BOOL    1       OUT MIXR INR1 Switch                    Off
+75      BOOL    1       OUT MIXR REC MIXR Switch                Off
+76      BOOL    1       OUT MIXR DAC R1 Switch                  On
+77      BOOL    1       OUTVOL L Switch                         Off
+78      BOOL    1       OUTVOL R Switch                         Off
+79      BOOL    1       HPOVOL L Switch                         On
+80      BOOL    1       HPOVOL R Switch                         On
+81      BOOL    1       HPO MIX DAC1 Switch                     On
+82      BOOL    1       HPO MIX HPVOL Switch                    On
+83      BOOL    1       LOUT MIX DAC L1 Switch                  Off
+84      BOOL    1       LOUT MIX DAC R1 Switch                  Off
+85      BOOL    1       LOUT MIX OUTVOL L Switch                Off
+86      BOOL    1       LOUT MIX OUTVOL R Switch                Off
+87      BOOL    1       HPO L Playback Switch                   On
+88      BOOL    1       HPO R Playback Switch                   On
+89      BOOL    1       LOUT L Playback Switch                  Off
+90      BOOL    1       LOUT R Playback Switch                  Off
+```
+
+如前面看到的，`tinymix controls` 和 `tinymix contents` 命令列出的所有控制接口，在 Linux 内核设备驱动程序中，由 `struct snd_kcontrol_new` 结构体描述。
+
+对于相同的 Audio Codec，由于 sound card 注册的控制接口不同，而使其各个控制接口，在不同设备中的控制 ID 可能不同，但名称都是相同的。
+
+要使播放或录制正常运转，通常需要开启 sound card 及 Audio Codec 中相关各个控制接口的开关。如要播放音频，对于 ALC5651，大概有如下这样的音频路由：
+
+![image](https://img2023.cnblogs.com/blog/3264540/202308/3264540-20230828194156853-1658141457.png)
+
+需要开启如下这些控制接口：
+```
+18      BOOL    1       Headphones Switch                       On
+50      BOOL    1       DAC MIXL INF1 Switch                    On
+52      BOOL    1       DAC MIXR INF1 Switch                    On
+55      BOOL    1       Stereo DAC MIXL DAC L1 Switch           On
+58      BOOL    1       Stereo DAC MIXR DAC R1 Switch           On
+71      BOOL    1       OUT MIXL DAC L1 Switch                  On
+76      BOOL    1       OUT MIXR DAC R1 Switch                  On
+79      BOOL    1       HPOVOL L Switch                         On
+80      BOOL    1       HPOVOL R Switch                         On
+81      BOOL    1       HPO MIX DAC1 Switch                     On
+82      BOOL    1       HPO MIX HPVOL Switch                    On
+87      BOOL    1       HPO L Playback Switch                   On
+88      BOOL    1       HPO R Playback Switch                   On
+```
+
+`tinymix get` 命令可以用于获取具体某个控制接口的状态，其参数为上面看到的控制 ID，如：
+```
+root@apollo:~# tinymix get 18
+On
+```
+
+`tinymix set` 命令可以用于设置具体某个控制接口的状态，其参数为上面看到的控制 ID 和要设置的值，如：
+```
+root@apollo:~# tinymix get 18
+On
+root@apollo:~# tinymix set 18 0
+root@apollo:~# tinymix get 18
+Off
+root@apollo:~# tinymix set 18 1
+root@apollo:~# tinymix get 18
+On
+```
+
+对于 ALC5651，如要播放音频，需要像下面这样打开相关控制接口的开关：
+```
+root@apollo:~# tinymix set 18 1
+root@apollo:~# tinymix set 50 1
+root@apollo:~# tinymix set 52 1
+root@apollo:~# tinymix set 55 1
+root@apollo:~# tinymix set 58 1
+root@apollo:~# tinymix set 71 1
+root@apollo:~# tinymix set 76 1
+root@apollo:~# tinymix set 79 1
+root@apollo:~# tinymix set 80 1
+root@apollo:~# tinymix set 81 1
+root@apollo:~# tinymix set 82 1
+root@apollo:~# tinymix set 87 1
+root@apollo:~# tinymix set 88 1
+```
+
+在播放音频数据的过程中，可以看到 Audio Codec 的 DAPM 小部件 `AIF1 Playback` 的状态由 `inactive` 变为 `active`， sound card 的 DAPM 小部件 `Headphones` 的状态由 `Off` 变为 `On`，如：
+```
+root@apollo:~# cat /sys/kernel/debug/asoc/rt5651codec_card/rt5651.0-001a/dapm/'AIF1 Playback'
+AIF1 Playback: Off  in 0 out 18
+ stream AIF1 Playback inactive
+ out  "static" "AIF1RX"
+ in  "static" "Playback"
+root@apollo:~# cat /sys/kernel/debug/asoc/rt5651codec_card/rt5651.0-001a/dapm/'AIF1 Playback'
+AIF1 Playback: On  in 1 out 18
+ stream AIF1 Playback active
+ out  "static" "AIF1RX"
+ in  "static" "Playback"
+root@apollo:~# cat /sys/kernel/debug/asoc/rt5651codec_card/dapm/Headphones
+Headphones: On  in 16 out 1
+ in  "static" "HPOR"
+ in  "static" "HPOL"
+```
+
+如果要用 ALC5651 录音，有如下的音频路由：
+
+![image](https://img2023.cnblogs.com/blog/3264540/202308/3264540-20230828193739433-1768431493.png)
+
+则需要打开如下这些控制接口的开关：
+```
+24      BOOL    1       RECMIXL BST2 Switch                     Off
+28      BOOL    1       RECMIXR BST2 Switch                     Off
+32      ENUM    1       Stereo1 ADC L1 Mux                      DD MIX, > ADC,
+33      ENUM    1       Stereo1 ADC R1 Mux                      DD MIX, > ADC,
+38      BOOL    1       Stereo1 ADC MIXL ADC1 Switch            Off
+40      BOOL    1       Stereo1 ADC MIXR ADC1 Switch            Off
+```
+
+这需要执行如下这些命令：
+```
+root@apollo:~# tinymix set 24 1
+root@apollo:~# tinymix set 28 1
+root@apollo:~# tinymix set 38 1
+root@apollo:~# tinymix set 40 1
+```
+
+## i2cget/i2cset
+
+调试 Linux 内核音频子系统时，如果怀疑音频设备的寄存器设置不正确，则可以根据不同设备的特性，采取不同的方法来确认。在 SoC 上，许多设备的寄存器被映射到物理内存地址空间，访问设备的寄存器就像访问物理内存一样，如 I2S 总线。还有一些设备的寄存器，需要通过 I2C 等其它总线访问，如 Audio Codec ALC5651。在 Linux 内核驱动程序的实现中，这些设备的寄存器都可以用 regmap 机制来访问。
+
+debugfs 文件系统的 ***/sys/kernel/debug/regmap*** 目录中，可以看到使用了 regmap 机制的设备，如：
+```
+root@apollo:~# ls /sys/kernel/debug/regmap/
+0-001a/                725000.i2s/            dummy-crg_vid@2c0000/
+```
+
+在上面各个具体设备的目录中，可以看到关于该设备的 regmap 的更详细信息，如 Audio Codec ALC5651 的 ***0-001a*** 目录包含如下内容:
+```
+root@apollo:~# ls /sys/kernel/debug/regmap/0-001a/
+PR            cache_bypass  cache_only    range         registers
+access        cache_dirty   name          rbtree
+```
+
+查看目录中 ***registers*** 文件的内容，可以看到设备的所有寄存器当前的值，如：
+```
+root@apollo:~# cat /sys/kernel/debug/regmap/0-001a/registers
+000: 0000
+002: 8888
+003: c8c8
+005: 0000
+00d: 0000
+00e: 0000
+00f: 0808
+010: 0808
+019: afaf
+01a: afaf
+ . . . . . .
+0fc: 0000
+0fd: 0002
+0fe: 10ec
+0ff: 6281
+100: aaaa
+101: 4000
+102: a280
+ . . . . . .
+1ad: 01f4
+1ae: 1c10
+1af: 01f4
+1b0: 2000
+1b1: 0000
+1b2: 2000
+1b3: 0800
+1b4: 0800
+```
+
+播放音频时查看 ALC5651 电源控制寄存器 1 的值：
+```
+root@apollo:~# cat /sys/kernel/debug/regmap/0-001a/registers  | grep 061
+061: 0000
+```
+
+可以用同样的方法查看 I2S 这种把设备寄存器映射到物理内存地址空间的设备的寄存器，如：
+```
+root@apollo:~# cat /sys/kernel/debug/regmap/725000.i2s/registers
+000: 00000000
+004: 00000000
+008: 00000000
+ . . . . . .
+```
+
+对于把设备寄存器映射到物理内存地址空间的设备，devmem 族是更好用的分析调试工具。`devmem` 和 `devmset` 分别可以查看和设置特定物理内存地址处的值，因而也可以读取和设置设备寄存器的值，如：
+```
+root@apollo:~# devmem 0x9f4100000
+0x00000000
+root@apollo:~# devmset 0x9f4100000 0x1234 1
+root@apollo:~# devmem 0x9f4100000
+0x00001234
+```
+
+对于需要通过 I2C 来访问内部寄存器的设备，i2cget/i2cset 族是更好用的工具。`i2cdetect` 命令可以检测 I2C 总线的状态，这个命令的用法如下：
+```
+root@apollo:~# i2cdetect --help
+BusyBox v1.35.0 () multi-call binary.
+
+Usage: i2cdetect -l | -F I2CBUS | [-ya] [-q|-r] I2CBUS [FIRST LAST]
+```
+
+`i2cdetect -l` 命令列出所有的 I2C 设备：
+```
+root@apollo:~# i2cdetect -l
+i2c-0   i2c            I2C adapter
+```
+
+`i2cdetect -F [I2CBUS]` 命令列出特定 I2C 总线支持的特性，如：
+```
+root@apollo:~# i2cdetect -F 0
+Functionalities implemented by bus #0
+I2C                              yes
+SMBus quick command              yes
+SMBus send byte                  yes
+SMBus receive byte               yes
+SMBus write byte                 yes
+SMBus read byte                  yes
+SMBus write word                 yes
+SMBus read word                  yes
+SMBus process call               no
+SMBus block write                yes
+SMBus block read                 yes
+SMBus block process call         no
+SMBus PEC                        no
+I2C block write                  yes
+I2C block read                   yes
+```
+
+`i2cdetect [I2CBUS]` 命令检测特定 I2C 总线上，哪个从地址上有设备。如下面的命令列出了 I2C 0 总线的情况：
+```
+root@apollo:~# i2cdetect -y 0
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:          -- -- -- -- -- -- -- -- -- -- -- -- --
+10: -- -- -- -- -- -- -- -- -- -- UU -- -- -- -- --
+20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+70: -- -- -- -- -- -- -- --
+```
+
+在上面这个 I2C总线上，只有从地址 0x1A 上有设备，也就是 ALC5651。
+
+`i2cdump` 命令可以显示特定 I2C 从设备所有寄存器的值，如下面的命令列出了 ALC5651 的所有寄存器的值：
+```
+root@apollo:~# i2cdump -fy 0 0x1a w
+     0,8  1,9  2,a  3,b  4,c  5,d  6,e  7,f
+00: 0000 0000 8888 c8c8 0000 0000 0000 0000
+08: 0000 0000 0000 0000 0000 0000 0000 0808
+10: 0808 0000 0000 0000 0000 0000 0000 0000
+18: 0000 afaf afaf 000c 2f2f 2f2f 0000 0000
+20: 0000 0000 0000 0000 0000 0000 0000 0018
+28: 1010 8080 1212 0000 0000 0000 0000 0000
+30: 0050 0000 0000 0000 0000 0000 0000 0000
+38: 0000 0000 0000 0000 4100 0000 4100 0000
+40: 0000 0000 0000 0000 0000 0000 0000 0000
+48: 0000 0000 0000 0000 0000 0000 0000 7802
+50: 0000 0000 7802 00f0 0000 0000 0000 0000
+58: 0000 0000 0000 0000 0000 0000 0000 0000
+60: 0000 0000 0000 0200 0002 0000 0000 0000
+68: 0000 0000 b400 0000 0008 0000 0000 0000
+70: 0080 0080 0000 0411 000c 8014 0000 000c
+78: 0040 2301 0000 0000 0000 0000 0000 0000
+80: 0040 0102 0008 0008 0000 0800 0000 0000
+88: 0000 0000 0000 0006 0000 0000 0500 4011
+90: 3707 000e 0000 0020 0002 0000 0000 0000
+98: 0000 0000 0000 0000 0000 0000 0000 0000
+a0: 0000 0000 0000 0000 0000 0000 0000 0000
+a8: 0000 0000 0000 0000 0000 0000 0000 0000
+b0: 8020 0000 0000 0000 0622 001f 0000 0000
+b8: 0000 0000 0000 0000 0000 0000 0000 0000
+c0: 0000 0000 0000 0000 0000 0000 0000 0000
+c8: 0000 0000 0000 0000 0000 0000 0000 1300
+d0: 8006 171c 0000 20b3 0000 0000 0004 0000
+d8: 0000 0908 0000 0000 0000 0000 0000 0000
+e0: 0000 0000 0000 0000 0000 0000 0000 0000
+e8: 0000 0000 0000 0000 0000 0000 0000 0000
+f0: 0000 0000 0000 0000 0000 0000 0000 0000
+f8: 0000 0000 1000 0000 0000 0200 ec10 8162
+```
+
+`i2cget` 和 `i2cset`分别用于读取和写入特定 I2C 从设备的寄存器。如：
+```
+root@apollo:~# i2cget -fy 0 0x1a 0xff w
+0x8162
+```
+
+`i2c*` 默认不能访问已经被某个驱动程序占用的 I2C 从设备，上面看到的 `-f` 标记表示强制访问，`-y` 标记表示以 Y 来回答工具给出的提示。这些工具是按大尾端来读取和设置值的。如上面看到的，0xFF 地址处的 0x8162，其实际值为 0x6281。向 I2C 从设备的寄存器写入特定值的方法如下：
+```
+root@apollo:~# i2cset -fy 0 0x1a 0xff 0x8162 w
+```
+
+参考文章：
+[Rockchip RK3399 - ALC5651音频调试](https://www.cnblogs.com/zyly/p/17591417.html)
+
+[Rockchip RK3399 - Codec驱动（ Realtek ALC5651）](https://www.cnblogs.com/zyly/p/17591411.html)
+
+[Linux 内核音频数据传递主要流程 (上)](https://www.cnblogs.com/wolfcs/p/17650804.html)
+
+[Linux 内核音频数据传递主要流程 (下)](https://www.cnblogs.com/wolfcs/p/17651440.html)
+
+Done.
