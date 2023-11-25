@@ -1,0 +1,805 @@
+---
+title: Linux 内核设备驱动程序的IO寄存器访问 (下)
+date: 2023-08-30 23:07:31
+categories: Linux 内核
+tags:
+- Linux 内核
+---
+
+Linux 内核设备驱动程序通过 `devm_regmap_init_mmio()` 等函数获得 `struct regmap` 结构对象，该对象包含可用于访问设备寄存器的全部信息，包括定义访问操作如何执行的 bus，定义了各个设备寄存器的读写属性的 config，以及加速设备寄存器访问的 cache。
+
+Linux 内核设备驱动程序可以通过 `regmap_write()`、`regmap_read()` 和 `regmap_update_bits()` 等函数读写设备寄存器，通过 `regcache_sync()`、`regcache_cache_only()`、`regcache_cache_bypass()` 和 `regcache_mark_dirty()` 等函数操作缓存。
+
+## 基于 I2C 的 regmap
+
+通过 I2C 访问的设备寄存器，可以使用 regmap 机制来访问。如在 ALC 5651 audio codec 内核设备驱动程序里，在 `probe` 操作中创建 regmap 对象 (位于 `sound/soc/codecs/rt5651.c`)：
+```
+static const struct regmap_config rt5651_regmap = {
+	.reg_bits = 8,
+	.val_bits = 16,
+
+	.max_register = RT5651_DEVICE_ID + 1 + (ARRAY_SIZE(rt5651_ranges) *
+					       RT5651_PR_SPACING),
+	.volatile_reg = rt5651_volatile_register,
+	.readable_reg = rt5651_readable_register,
+
+	.cache_type = REGCACHE_RBTREE,
+	.reg_defaults = rt5651_reg,
+	.num_reg_defaults = ARRAY_SIZE(rt5651_reg),
+	.ranges = rt5651_ranges,
+	.num_ranges = ARRAY_SIZE(rt5651_ranges),
+	.use_single_read = true,
+	.use_single_write = true,
+};
+ . . . . . .
+static int rt5651_i2c_probe(struct i2c_client *i2c,
+		    const struct i2c_device_id *id)
+{
+	struct rt5651_priv *rt5651;
+	int ret;
+	int err;
+
+	rt5651 = devm_kzalloc(&i2c->dev, sizeof(*rt5651),
+				GFP_KERNEL);
+	if (NULL == rt5651)
+		return -ENOMEM;
+
+	i2c_set_clientdata(i2c, rt5651);
+
+	rt5651->regmap = devm_regmap_init_i2c(i2c, &rt5651_regmap);
+	if (IS_ERR(rt5651->regmap)) {
+		ret = PTR_ERR(rt5651->regmap);
+		dev_err(&i2c->dev, "Failed to allocate register map: %d\n",
+			ret);
+		return ret;
+	}
+ . . . . . .
+```
+
+之后对设备寄存器的访问方法，同 mmio 的一样。这里创建 regmap 对象的方法为调用 `devm_regmap_init_i2c()`，这是一个宏，其定义 (位于 `include/linux/regmap.h`) 如下：
+ ```
+struct regmap *__devm_regmap_init_i2c(struct i2c_client *i2c,
+				      const struct regmap_config *config,
+				      struct lock_class_key *lock_key,
+				      const char *lock_name);
+ . . . . . .
+/**
+ * devm_regmap_init_i2c() - Initialise managed register map
+ *
+ * @i2c: Device that will be interacted with
+ * @config: Configuration for register map
+ *
+ * The return value will be an ERR_PTR() on error or a valid pointer
+ * to a struct regmap.  The regmap will be automatically freed by the
+ * device management code.
+ */
+#define devm_regmap_init_i2c(i2c, config)				\
+	__regmap_lockdep_wrapper
+```
+
+这个宏调用了 `__devm_regmap_init_i2c()` 函数，该函数定义 (位于 `drivers/base/regmap/regmap-i2c.c`) 如下：
+```
+static const struct regmap_bus regmap_smbus_byte = {
+	.reg_write = regmap_smbus_byte_reg_write,
+	.reg_read = regmap_smbus_byte_reg_read,
+};
+ . . . . . .
+static const struct regmap_bus regmap_smbus_word = {
+	.reg_write = regmap_smbus_word_reg_write,
+	.reg_read = regmap_smbus_word_reg_read,
+};
+ . . . . . .
+static const struct regmap_bus regmap_smbus_word_swapped = {
+	.reg_write = regmap_smbus_word_write_swapped,
+	.reg_read = regmap_smbus_word_read_swapped,
+};
+ . . . . . .
+static const struct regmap_bus regmap_i2c = {
+	.write = regmap_i2c_write,
+	.gather_write = regmap_i2c_gather_write,
+	.read = regmap_i2c_read,
+	.reg_format_endian_default = REGMAP_ENDIAN_BIG,
+	.val_format_endian_default = REGMAP_ENDIAN_BIG,
+};
+ . . . . . .
+static const struct regmap_bus regmap_i2c_smbus_i2c_block = {
+	.write = regmap_i2c_smbus_i2c_write,
+	.read = regmap_i2c_smbus_i2c_read,
+	.max_raw_read = I2C_SMBUS_BLOCK_MAX,
+	.max_raw_write = I2C_SMBUS_BLOCK_MAX,
+};
+ . . . . . .
+static const struct regmap_bus regmap_i2c_smbus_i2c_block_reg16 = {
+	.write = regmap_i2c_smbus_i2c_write_reg16,
+	.read = regmap_i2c_smbus_i2c_read_reg16,
+	.max_raw_read = I2C_SMBUS_BLOCK_MAX,
+	.max_raw_write = I2C_SMBUS_BLOCK_MAX,
+};
+
+static const struct regmap_bus *regmap_get_i2c_bus(struct i2c_client *i2c,
+					const struct regmap_config *config)
+{
+	const struct i2c_adapter_quirks *quirks;
+	const struct regmap_bus *bus = NULL;
+	struct regmap_bus *ret_bus;
+	u16 max_read = 0, max_write = 0;
+
+	if (i2c_check_functionality(i2c->adapter, I2C_FUNC_I2C))
+		bus = &regmap_i2c;
+	else if (config->val_bits == 8 && config->reg_bits == 8 &&
+		 i2c_check_functionality(i2c->adapter,
+					 I2C_FUNC_SMBUS_I2C_BLOCK))
+		bus = &regmap_i2c_smbus_i2c_block;
+	else if (config->val_bits == 8 && config->reg_bits == 16 &&
+		i2c_check_functionality(i2c->adapter,
+					I2C_FUNC_SMBUS_I2C_BLOCK))
+		bus = &regmap_i2c_smbus_i2c_block_reg16;
+	else if (config->val_bits == 16 && config->reg_bits == 8 &&
+		 i2c_check_functionality(i2c->adapter,
+					 I2C_FUNC_SMBUS_WORD_DATA))
+		switch (regmap_get_val_endian(&i2c->dev, NULL, config)) {
+		case REGMAP_ENDIAN_LITTLE:
+			bus = &regmap_smbus_word;
+			break;
+		case REGMAP_ENDIAN_BIG:
+			bus = &regmap_smbus_word_swapped;
+			break;
+		default:		/* everything else is not supported */
+			break;
+		}
+	else if (config->val_bits == 8 && config->reg_bits == 8 &&
+		 i2c_check_functionality(i2c->adapter,
+					 I2C_FUNC_SMBUS_BYTE_DATA))
+		bus = &regmap_smbus_byte;
+
+	if (!bus)
+		return ERR_PTR(-ENOTSUPP);
+
+	quirks = i2c->adapter->quirks;
+	if (quirks) {
+		if (quirks->max_read_len &&
+		    (bus->max_raw_read == 0 || bus->max_raw_read > quirks->max_read_len))
+			max_read = quirks->max_read_len;
+
+		if (quirks->max_write_len &&
+		    (bus->max_raw_write == 0 || bus->max_raw_write > quirks->max_write_len))
+			max_write = quirks->max_write_len;
+
+		if (max_read || max_write) {
+			ret_bus = kmemdup(bus, sizeof(*bus), GFP_KERNEL);
+			if (!ret_bus)
+				return ERR_PTR(-ENOMEM);
+			ret_bus->free_on_exit = true;
+			ret_bus->max_raw_read = max_read;
+			ret_bus->max_raw_write = max_write;
+			bus = ret_bus;
+		}
+	}
+
+	return bus;
+}
+ . . . . . .
+struct regmap *__devm_regmap_init_i2c(struct i2c_client *i2c,
+				      const struct regmap_config *config,
+				      struct lock_class_key *lock_key,
+				      const char *lock_name)
+{
+	const struct regmap_bus *bus = regmap_get_i2c_bus(i2c, config);
+
+	if (IS_ERR(bus))
+		return ERR_CAST(bus);
+
+	return __devm_regmap_init(&i2c->dev, bus, &i2c->dev, config,
+				  lock_key, lock_name);
+}
+EXPORT_SYMBOL_GPL(__devm_regmap_init_i2c);
+```
+
+`__devm_regmap_init_i2c()` 函数首先根据寄存器映射的配置，如寄存器地址的位数，寄存器值的位数，I2C 总线的功能特性，大尾端还是小尾端等，选择设备寄存器的访问操作，即 `struct regmap_bus`，然后如同 `__devm_regmap_init_mmio_clk()` 函数一样，通过 `__devm_regmap_init()` 函数创建并初始化 regmap 对象。
+
+这里通过 `i2c_check_functionality()` 函数判断 I2C 总线的功能特性，这个函数定义 (位于 `include/linux/i2c.h`) 如下：
+```
+/* Return the functionality mask */
+static inline u32 i2c_get_functionality(struct i2c_adapter *adap)
+{
+	return adap->algo->functionality(adap);
+}
+
+/* Return 1 if adapter supports everything we need, 0 if not. */
+static inline int i2c_check_functionality(struct i2c_adapter *adap, u32 func)
+{
+	return (func & i2c_get_functionality(adap)) == func;
+}
+```
+
+即通过 I2C 总线适配器驱动程序实现的 `functionality` 操作来判断。ALC 5651 Linux 内核驱动程序的寄存器映射配置，寄存器地址为 8 位，值为 16 位，对于标准的 I2C 总线，对应的 I2C IO 操作如下：
+```
+static int regmap_i2c_write(void *context, const void *data, size_t count)
+{
+	struct device *dev = context;
+	struct i2c_client *i2c = to_i2c_client(dev);
+	int ret;
+
+	ret = i2c_master_send(i2c, data, count);
+	if (ret == count)
+		return 0;
+	else if (ret < 0)
+		return ret;
+	else
+		return -EIO;
+}
+
+static int regmap_i2c_gather_write(void *context,
+				   const void *reg, size_t reg_size,
+				   const void *val, size_t val_size)
+{
+	struct device *dev = context;
+	struct i2c_client *i2c = to_i2c_client(dev);
+	struct i2c_msg xfer[2];
+	int ret;
+
+	/* If the I2C controller can't do a gather tell the core, it
+	 * will substitute in a linear write for us.
+	 */
+	if (!i2c_check_functionality(i2c->adapter, I2C_FUNC_NOSTART))
+		return -ENOTSUPP;
+
+	xfer[0].addr = i2c->addr;
+	xfer[0].flags = 0;
+	xfer[0].len = reg_size;
+	xfer[0].buf = (void *)reg;
+
+	xfer[1].addr = i2c->addr;
+	xfer[1].flags = I2C_M_NOSTART;
+	xfer[1].len = val_size;
+	xfer[1].buf = (void *)val;
+
+	ret = i2c_transfer(i2c->adapter, xfer, 2);
+	if (ret == 2)
+		return 0;
+	if (ret < 0)
+		return ret;
+	else
+		return -EIO;
+}
+
+static int regmap_i2c_read(void *context,
+			   const void *reg, size_t reg_size,
+			   void *val, size_t val_size)
+{
+	struct device *dev = context;
+	struct i2c_client *i2c = to_i2c_client(dev);
+	struct i2c_msg xfer[2];
+	int ret;
+
+	xfer[0].addr = i2c->addr;
+	xfer[0].flags = 0;
+	xfer[0].len = reg_size;
+	xfer[0].buf = (void *)reg;
+
+	xfer[1].addr = i2c->addr;
+	xfer[1].flags = I2C_M_RD;
+	xfer[1].len = val_size;
+	xfer[1].buf = val;
+
+	ret = i2c_transfer(i2c->adapter, xfer, 2);
+	if (ret == 2)
+		return 0;
+	else if (ret < 0)
+		return ret;
+	else
+		return -EIO;
+}
+
+static const struct regmap_bus regmap_i2c = {
+	.write = regmap_i2c_write,
+	.gather_write = regmap_i2c_gather_write,
+	.read = regmap_i2c_read,
+	.reg_format_endian_default = REGMAP_ENDIAN_BIG,
+	.val_format_endian_default = REGMAP_ENDIAN_BIG,
+};
+```
+
+这里构造消息给 I2C 总线驱动程序，调用 Linux 内核 I2C 子系统提供的 `i2c_master_send()` 和 `i2c_transfer()` 等操作，完成对设备寄存器的读写。Linux 内核 I2C 子系统及 I2C 总线驱动程序的更多细节这里不多赘述。
+
+## 写设备寄存器
+
+Linux 内核设备驱动程序通过 `regmap_write()` 等函数写设备寄存器，相关的这些函数原型 (位于 `include/linux/regmap.h`) 如下：
+```
+int regmap_write(struct regmap *map, unsigned int reg, unsigned int val);
+int regmap_write_async(struct regmap *map, unsigned int reg, unsigned int val);
+int regmap_raw_write(struct regmap *map, unsigned int reg,
+		     const void *val, size_t val_len);
+int regmap_noinc_write(struct regmap *map, unsigned int reg,
+		     const void *val, size_t val_len);
+int regmap_bulk_write(struct regmap *map, unsigned int reg, const void *val,
+			size_t val_count);
+int regmap_multi_reg_write(struct regmap *map, const struct reg_sequence *regs,
+			int num_regs);
+int regmap_multi_reg_write_bypassed(struct regmap *map,
+				    const struct reg_sequence *regs,
+				    int num_regs);
+int regmap_raw_write_async(struct regmap *map, unsigned int reg,
+			   const void *val, size_t val_len);
+```
+
+`regmap_write()` 和 `regmap_write_async()` 函数分别同步和异步地写一个设备寄存器，这两个函数定义 (位于 `drivers/base/regmap/regmap.c`) 如下：
+```
+bool regmap_reg_in_ranges(unsigned int reg,
+			  const struct regmap_range *ranges,
+			  unsigned int nranges)
+{
+	const struct regmap_range *r;
+	int i;
+
+	for (i = 0, r = ranges; i < nranges; i++, r++)
+		if (regmap_reg_in_range(reg, r))
+			return true;
+	return false;
+}
+EXPORT_SYMBOL_GPL(regmap_reg_in_ranges);
+
+bool regmap_check_range_table(struct regmap *map, unsigned int reg,
+			      const struct regmap_access_table *table)
+{
+	/* Check "no ranges" first */
+	if (regmap_reg_in_ranges(reg, table->no_ranges, table->n_no_ranges))
+		return false;
+
+	/* In case zero "yes ranges" are supplied, any reg is OK */
+	if (!table->n_yes_ranges)
+		return true;
+
+	return regmap_reg_in_ranges(reg, table->yes_ranges,
+				    table->n_yes_ranges);
+}
+EXPORT_SYMBOL_GPL(regmap_check_range_table);
+
+bool regmap_writeable(struct regmap *map, unsigned int reg)
+{
+	if (map->max_register && reg > map->max_register)
+		return false;
+
+	if (map->writeable_reg)
+		return map->writeable_reg(map->dev, reg);
+
+	if (map->wr_table)
+		return regmap_check_range_table(map, reg, map->wr_table);
+
+	return true;
+}
+ . . . . . .
+static inline void *_regmap_map_get_context(struct regmap *map)
+{
+	return (map->bus) ? map : map->bus_context;
+}
+
+int _regmap_write(struct regmap *map, unsigned int reg,
+		  unsigned int val)
+{
+	int ret;
+	void *context = _regmap_map_get_context(map);
+
+	if (!regmap_writeable(map, reg))
+		return -EIO;
+
+	if (!map->cache_bypass && !map->defer_caching) {
+		ret = regcache_write(map, reg, val);
+		if (ret != 0)
+			return ret;
+		if (map->cache_only) {
+			map->cache_dirty = true;
+			return 0;
+		}
+	}
+
+	if (regmap_should_log(map))
+		dev_info(map->dev, "%x <= %x\n", reg, val);
+
+	trace_regmap_reg_write(map, reg, val);
+
+	return map->reg_write(context, reg, val);
+}
+
+/**
+ * regmap_write() - Write a value to a single register
+ *
+ * @map: Register map to write to
+ * @reg: Register to write to
+ * @val: Value to be written
+ *
+ * A value of zero will be returned on success, a negative errno will
+ * be returned in error cases.
+ */
+int regmap_write(struct regmap *map, unsigned int reg, unsigned int val)
+{
+	int ret;
+
+	if (!IS_ALIGNED(reg, map->reg_stride))
+		return -EINVAL;
+
+	map->lock(map->lock_arg);
+
+	ret = _regmap_write(map, reg, val);
+
+	map->unlock(map->lock_arg);
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(regmap_write);
+
+/**
+ * regmap_write_async() - Write a value to a single register asynchronously
+ *
+ * @map: Register map to write to
+ * @reg: Register to write to
+ * @val: Value to be written
+ *
+ * A value of zero will be returned on success, a negative errno will
+ * be returned in error cases.
+ */
+int regmap_write_async(struct regmap *map, unsigned int reg, unsigned int val)
+{
+	int ret;
+
+	if (!IS_ALIGNED(reg, map->reg_stride))
+		return -EINVAL;
+
+	map->lock(map->lock_arg);
+
+	map->async = true;
+
+	ret = _regmap_write(map, reg, val);
+
+	map->async = false;
+
+	map->unlock(map->lock_arg);
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(regmap_write_async);
+```
+
+像众多 regmap 机制提供的设备寄存器访问操作函数一样，这两个函数，在开始任何操作前先加了锁，并在结束操作后解锁，***regmap 机制提供了对设备寄存器的互斥访问***。
+
+`regmap_write_async()` 函数在加锁后，将 `map->async` 赋值为 `true`，并在解锁前将其赋值为 `false`，从 `_regmap_write()` 函数的实现来看，这里的异步写疑似没有工作。
+
+`regmap_write()` 和 `regmap_write_async()` 函数都通过 `_regmap_write()` 函数完成对设备寄存器的写操作。
+
+`_regmap_write()` 函数的执行过程是简单的三步：
+
+1. 检查要写入的寄存器是否可写。这里的检查按照设备寄存器的读写属性配置进行。首先，检查寄存器是否超过了配置的寄存器，若超过了，则显然不可写；其次，当 `writeable_reg` 回调函数配置时，由该回调函数判断；然后，当 `wr_table` 可写寄存器表配置时，根据该表做判断；否则，认为寄存器可写。对于寄存器是否可写的判断，如果同时配置了 `writeable_reg` 回调函数和 `wr_table` 可写寄存器表，则前者的优先级高于后者，后者将被忽略；如果两者都没有配置，则认为寄存器可写。
+
+2. 使用了 cache，而没开延迟 cache 时，将要写入寄存器的值先写入 cached。如果写入失败，则直接返回，否则继续执行。如果设置了 `map->cache_only`，则将 `map->cache_dirty` 置为 `true` 并返回，否则继续执行。`map->cache_only` 标记表示不希望真正地写设备寄存器。
+
+3. 调用 `struct regmap` 的 `reg_write` 操作向设备寄存器写入值。
+
+这里的写操作基本上是一个无条件的写，即在写入设备寄存器之前，不会检查缓存中是否已经存在了相同值。
+
+`regcache_write()` 函数定义 (位于 `drivers/base/regmap/regcache.c`) 如下：
+```
+int regcache_write(struct regmap *map,
+		   unsigned int reg, unsigned int value)
+{
+	if (map->cache_type == REGCACHE_NONE)
+		return 0;
+
+	BUG_ON(!map->cache_ops);
+
+	if (!regmap_volatile(map, reg))
+		return map->cache_ops->write(map, reg, value);
+
+	return 0;
+}
+```
+
+`regcache_write()` 函数，首先，检查是否开启了 cache，如果没有则直接返回，否则继续执行；其次，检查要写入的寄存器是否为 volatile 的，如果不是，则通过 cache 实现的 `write` 回调写入 cache，否则返回。
+
+`regmap_volatile()` 函数用以检查寄存器是否为 volatile 的，这个函数定义 (位于 `drivers/base/regmap/regmap.c`) 如下：
+```
+bool regmap_readable(struct regmap *map, unsigned int reg)
+{
+	if (!map->reg_read)
+		return false;
+
+	if (map->max_register && reg > map->max_register)
+		return false;
+
+	if (map->format.format_write)
+		return false;
+
+	if (map->readable_reg)
+		return map->readable_reg(map->dev, reg);
+
+	if (map->rd_table)
+		return regmap_check_range_table(map, reg, map->rd_table);
+
+	return true;
+}
+
+bool regmap_volatile(struct regmap *map, unsigned int reg)
+{
+	if (!map->format.format_write && !regmap_readable(map, reg))
+		return false;
+
+	if (map->volatile_reg)
+		return map->volatile_reg(map->dev, reg);
+
+	if (map->volatile_table)
+		return regmap_check_range_table(map, reg, map->volatile_table);
+
+	if (map->cache_ops)
+		return false;
+	else
+		return true;
+}
+```
+
+对寄存器是否为 volatile 的检查，暗含着对它是否可读的检查。如果寄存器不是 volatile 的，会被认为是可缓存的。`regmap_volatile()` 函数的检查过程如下：
+
+1. 没有定义 `format_write` 操作，同时寄存器不可读，则认为寄存器不是 volatile 的。***这里有个坑。如果寄存器是只写的，比如 W1C 写 1 清的寄存器等 (对于硬件设备，这样的寄存器比较常见)，在这里会被判定为非 volatile 的，如果开了缓存即是可缓存的。在 `regmap_update_bits()` 操作中会出问题***
+
+2. 和对寄存器的 writable 判断类似，先检查配置的 `volatile_reg` 回调操作，再检查 `volatile_table` 表。
+
+3. 如果既没有配置 `volatile_reg` 回调操作，也没有配置 `volatile_table` 表，则根据缓存配置判断。如果开了缓存，则认为所有寄存器都是非 volatile 的，即都可以缓存，否则都是 volatile 的。
+
+在 `regmap_readable()` 函数中对于寄存器是否可读的判断，与对寄存器是否可写的判断类似。但多了对 `map->reg_read` 寄存器读操作的检查，及格式化写的检查。
+
+这里不再详细分析 `regmap_raw_write()`、`regmap_noinc_write()` 和 `regmap_bulk_write()` 等更复杂的设备寄存器写操作。
+
+## 读设备寄存器
+
+Linux 内核设备驱动程序通过 `regmap_read()` 等函数读设备寄存器，相关的这些函数原型 (位于 `include/linux/regmap.h`) 如下：
+```
+int regmap_read(struct regmap *map, unsigned int reg, unsigned int *val);
+int regmap_raw_read(struct regmap *map, unsigned int reg,
+		    void *val, size_t val_len);
+int regmap_noinc_read(struct regmap *map, unsigned int reg,
+		      void *val, size_t val_len);
+int regmap_bulk_read(struct regmap *map, unsigned int reg, void *val,
+		     size_t val_count);
+```
+
+`regmap_read()` 函数同步地读一个设备寄存器，这个函数定义 (位于 `drivers/base/regmap/regmap.c`) 如下：
+```
+static int _regmap_read(struct regmap *map, unsigned int reg,
+			unsigned int *val)
+{
+	int ret;
+	void *context = _regmap_map_get_context(map);
+
+	if (!map->cache_bypass) {
+		ret = regcache_read(map, reg, val);
+		if (ret == 0)
+			return 0;
+	}
+
+	if (map->cache_only)
+		return -EBUSY;
+
+	if (!regmap_readable(map, reg))
+		return -EIO;
+
+	ret = map->reg_read(context, reg, val);
+	if (ret == 0) {
+		if (regmap_should_log(map))
+			dev_info(map->dev, "%x => %x\n", reg, *val);
+
+		trace_regmap_reg_read(map, reg, *val);
+
+		if (!map->cache_bypass)
+			regcache_write(map, reg, *val);
+	}
+
+	return ret;
+}
+
+/**
+ * regmap_read() - Read a value from a single register
+ *
+ * @map: Register map to read from
+ * @reg: Register to be read from
+ * @val: Pointer to store read value
+ *
+ * A value of zero will be returned on success, a negative errno will
+ * be returned in error cases.
+ */
+int regmap_read(struct regmap *map, unsigned int reg, unsigned int *val)
+{
+	int ret;
+
+	if (!IS_ALIGNED(reg, map->reg_stride))
+		return -EINVAL;
+
+	map->lock(map->lock_arg);
+
+	ret = _regmap_read(map, reg, val);
+
+	map->unlock(map->lock_arg);
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(regmap_read);
+```
+
+与 `regmap_write()` 函数类似， `regmap_read()` 函数，首先，对 regmap 加锁；然后，调用 `_regmap_read()` 函数执行读操作；最后，解锁并返回。`_regmap_read()` 函数的执行过程是清晰的几个步骤：
+
+1. 如果开启了缓存，则先从缓存读，如果成功则返回，否则继续执行。
+
+2. 如果设置了 `map->cache_only`，则报错返回。设备驱动程序挂起时，可以设置 `map->cache_only`，以防止意外地对设备寄存器读写。
+
+3. 判断寄存器是否可读，如果不可读，则报错返回，否则继续执行。***对于只写的设备寄存器，如果开启了缓存，在这个函数中将读到上次写入的值。在逻辑上，这样的返回值不太合适。这个函数更好的实现方法，似乎是将寄存器是否可读的判断，放在从缓存读寄存器前面。***
+
+4. 读取设备寄存器。
+
+5. 读取设备寄存器成功，且开启了缓存，则将读取的值写入缓存。
+
+从缓存中读取设备寄存器的值的函数 `regcache_read()` 定义 (位于 `drivers/base/regmap/regcache.c`) 如下：
+```
+int regcache_read(struct regmap *map,
+		  unsigned int reg, unsigned int *value)
+{
+	int ret;
+
+	if (map->cache_type == REGCACHE_NONE)
+		return -ENOSYS;
+
+	BUG_ON(!map->cache_ops);
+
+	if (!regmap_volatile(map, reg)) {
+		ret = map->cache_ops->read(map, reg, value);
+
+		if (ret == 0)
+			trace_regmap_reg_read_cache(map, reg, *value);
+
+		return ret;
+	}
+
+	return -EINVAL;
+}
+```
+
+缓存操作针对开启了缓存的 regmap 的非 volatile 的寄存器。在 `regcache_read()` 函数中，它从缓存实现中读取寄存器的值。
+
+这里不再详细分析 `regmap_raw_read()`、`regmap_noinc_read()` 和 `regmap_bulk_read()` 等更复杂的设备寄存器读操作。
+
+## 设备寄存器位更新
+
+Linux 内核设备驱动程序通过 `regmap_update_bits()` 等函数更新设备寄存器的特定位，相关的这些函数原型 (位于 `include/linux/regmap.h`) 如下：
+```
+int regmap_update_bits_base(struct regmap *map, unsigned int reg,
+			    unsigned int mask, unsigned int val,
+			    bool *change, bool async, bool force);
+
+static inline int regmap_update_bits(struct regmap *map, unsigned int reg,
+				     unsigned int mask, unsigned int val)
+{
+	return regmap_update_bits_base(map, reg, mask, val, NULL, false, false);
+}
+
+static inline int regmap_update_bits_async(struct regmap *map, unsigned int reg,
+					   unsigned int mask, unsigned int val)
+{
+	return regmap_update_bits_base(map, reg, mask, val, NULL, true, false);
+}
+
+static inline int regmap_update_bits_check(struct regmap *map, unsigned int reg,
+					   unsigned int mask, unsigned int val,
+					   bool *change)
+{
+	return regmap_update_bits_base(map, reg, mask, val,
+				       change, false, false);
+}
+
+static inline int
+regmap_update_bits_check_async(struct regmap *map, unsigned int reg,
+			       unsigned int mask, unsigned int val,
+			       bool *change)
+{
+	return regmap_update_bits_base(map, reg, mask, val,
+				       change, true, false);
+}
+
+static inline int regmap_write_bits(struct regmap *map, unsigned int reg,
+				    unsigned int mask, unsigned int val)
+{
+	return regmap_update_bits_base(map, reg, mask, val, NULL, false, true);
+}
+```
+
+`regmap_update_bits()` 等函数传入不同的参数调用 `regmap_update_bits_base()` 函数，后者定义 (位于 `drivers/base/regmap/regmap.c`) 如下：
+```
+static int _regmap_update_bits(struct regmap *map, unsigned int reg,
+			       unsigned int mask, unsigned int val,
+			       bool *change, bool force_write)
+{
+	int ret;
+	unsigned int tmp, orig;
+
+	if (change)
+		*change = false;
+
+	if (regmap_volatile(map, reg) && map->reg_update_bits) {
+		ret = map->reg_update_bits(map->bus_context, reg, mask, val);
+		if (ret == 0 && change)
+			*change = true;
+	} else {
+		ret = _regmap_read(map, reg, &orig);
+		if (ret != 0)
+			return ret;
+
+		tmp = orig & ~mask;
+		tmp |= val & mask;
+
+		if (force_write || (tmp != orig)) {
+			ret = _regmap_write(map, reg, tmp);
+			if (ret == 0 && change)
+				*change = true;
+		}
+	}
+
+	return ret;
+}
+
+/**
+ * regmap_update_bits_base() - Perform a read/modify/write cycle on a register
+ *
+ * @map: Register map to update
+ * @reg: Register to update
+ * @mask: Bitmask to change
+ * @val: New value for bitmask
+ * @change: Boolean indicating if a write was done
+ * @async: Boolean indicating asynchronously
+ * @force: Boolean indicating use force update
+ *
+ * Perform a read/modify/write cycle on a register map with change, async, force
+ * options.
+ *
+ * If async is true:
+ *
+ * With most buses the read must be done synchronously so this is most useful
+ * for devices with a cache which do not need to interact with the hardware to
+ * determine the current register value.
+ *
+ * Returns zero for success, a negative number on error.
+ */
+int regmap_update_bits_base(struct regmap *map, unsigned int reg,
+			    unsigned int mask, unsigned int val,
+			    bool *change, bool async, bool force)
+{
+	int ret;
+
+	map->lock(map->lock_arg);
+
+	map->async = async;
+
+	ret = _regmap_update_bits(map, reg, mask, val, change, force);
+
+	map->async = false;
+
+	map->unlock(map->lock_arg);
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(regmap_update_bits_base);
+```
+
+与 `regmap_write()` 和 `regmap_read()` 函数类似，`regmap_update_bits_base()` 函数，首先，对 regmap 加锁；然后，设置 `map->async` 标志，调用 `_regmap_update_bits()` 函数执行寄存器位更新操作；最后，重置 `map->async` 标志，解锁并返回。`_regmap_update_bits()` 函数的执行分成几种情况来处理：
+
+1. 寄存器为 volatile 的，同时配置了 `reg_update_bits` 回调函数，则执行 `reg_update_bits` 回调函数并返回结果。寄存器为 volatile 的，所以可以忽略对 cached 的操作。只写寄存器会被判定为非 volatile 的，因而它们不会由 `reg_update_bits` 回调函数处理。
+
+2. 其它情况。先读取寄存器。特别需要关注的是对只写寄存器的处理。第一次读取只写寄存器时，会读取失败并返回错误。如果之前对只写寄存器有过写入操作，且开了 cache，则会读取之前写入的值。随后，如果要求强制写，或要写入的位的值与读取的值不同，则将值写入寄存器。如果开了 cache，写操作会更新 cache。
+
+考虑只写寄存器通过 `regmap_update_bits_base()` 函数来更新，则要么更新失败，要么很可能发现要更新的值和缓存中的值一致，而不会实际去更新。对只写寄存器的任何更新，`regmap_write()` 或 `regmap_write_bits()` 函数是更好的选择。
+
+要使得对 regmap 各函数调用的行为符合预期，还是需要对这些函数的行为实现有所了解，并适当的配置驱动程序中各个寄存器的读写属性。
+
+整体看下来，regmap 机制提供的能力有这样一些：
+
+1. 提供的设备寄存器访问操作函数可以执行对设备寄存器的互斥访问。
+2. 提高效率的 cache，其中包含多个 cache 策略可选。
+3. 统一的方便的 IO 访问操作函数访问 mmio，i2c 等不同总线的设备 IO 寄存器。
+4. 通过 debugfs 调试相关设备 IO 寄存器的能力。
+5. 良好的扩展能力。如未来要通过 regmap 机制支持一种新的访问设备 IO 寄存器的总线，则仅需实现 `struct regmap_bus` 即可。
+
+Done.
