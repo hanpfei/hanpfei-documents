@@ -2187,6 +2187,15 @@ EXPORT_SYMBOL_GPL(snd_soc_new_compress);
 5. 为 compress 音频设备选择操作集的 `copy` 操作，操作集的 `copy` 操作具有逻辑意义，操作集的 `copy` 操作是否存在对音频数据的传递过程有重大影响，这里根据各个 component 驱动程序是否提供 `copy` 操作来为 compress 音频设备选择操作集的 `copy` 操作；
 6. 为声卡创建 compress 音频设备。
 
+`snd_soc_new_compress()` 函数被调用的过程大体如下：
+```
+[   20.282884]  snd_soc_new_compress+0x98/0x34c
+[   20.288754]  snd_soc_dai_compress_new+0x30/0x84
+[   20.294948]  snd_soc_bind_card+0x7d0/0x924
+[   20.300542]  snd_soc_register_card+0xf4/0x10c
+[   20.306516]  devm_snd_soc_register_card+0x44/0xa0
+```
+
 ASoC compress 设备驱动核心定义了一组 `struct snd_soc_compr_ops` 操作的包装函数，这些函数定义 (位于 *sound/soc/soc-link.c*) 如下：
 ```
 int snd_soc_link_compr_startup(struct snd_compr_stream *cstream)
