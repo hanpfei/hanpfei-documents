@@ -2020,6 +2020,7 @@ struct snd_soc_compr_ops {
 Component 的 `struct snd_compress_ops` 接口包含的操作和 `struct snd_compr_ops` 包含的完全相同，各个操作的含义也完全相同。相对于 `struct snd_compress_ops`，`struct snd_soc_cdai_ops` 包含的操作少了 `copy`、`mmap`、`get_caps` 和 `get_codec_caps`四个，其它完全相同。
 
 一般情况下，为 DSP ASoC 驱动程序的 `struct snd_soc_dai_driver` 提供的 `compress_new` 操作实现为 ASoC compress 设备驱动核心定义的 `snd_soc_new_compress()` 函数。`snd_soc_new_compress()` 函数定义 (位于 *sound/soc/soc-compress.c*) 如下：
+```
 /* ASoC Compress operations */
 static struct snd_compr_ops soc_compr_ops = {
 	.open		= soc_compr_open,
