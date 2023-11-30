@@ -1,6 +1,6 @@
 ---
-title: 深入浅出 Linux ALSA Compress-Offload 驱动核心
-date: 2023-11-26 21:33:29
+title: Linux ALSA 核心简单分析
+date: 2023-06-23 20:23:29
 categories: Linux 内核
 tags:
 - Linux 内核
