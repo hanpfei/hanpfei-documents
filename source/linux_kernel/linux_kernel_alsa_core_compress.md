@@ -6,7 +6,7 @@ tags:
 - Linux 内核
 ---
 
-ALSA Compress-Offload API 是 Linux ALSA 为 ADSP 之类的带有音频数据编解码能力的 API，关于 Linux ALSA Compress-Offload API 的更多详细信息，可以参考 [ALSA Compress-Offload API](https://www.cnblogs.com/wolfcs/p/17825631.html)。本文分析 Linux 内核音频 ALSA 框架 Compress-Offload 设备驱动核心的实现。
+ALSA Compress-Offload API 是 Linux ALSA 为 ADSP 之类的带有音频数据编解码能力的设备设计的 API，关于 Linux ALSA Compress-Offload API 的更多详细信息，可以参考 [ALSA Compress-Offload API](https://www.cnblogs.com/wolfcs/p/17825631.html)。本文分析 Linux 内核音频 ALSA 框架 Compress-Offload 设备驱动核心的实现。
 
 ## 数据结构
 
