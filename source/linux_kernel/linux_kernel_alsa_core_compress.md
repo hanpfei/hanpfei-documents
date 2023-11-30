@@ -2051,7 +2051,6 @@ static struct snd_compr_ops soc_compr_dyn_ops = {
 	.get_codec_caps = soc_compr_get_codec_caps
 };
 
-```
 /**
  * snd_soc_new_compress - create a new compress.
  *
