@@ -673,7 +673,7 @@ EXPORT_SYMBOL(snd_device_new);
 
 `snd_device_new()` 函数分配 `struct snd_device` 对象，初始化其各个字段，并将其添加到 sound card 的设备列表中。`struct device` 对象为 Linux 内核设备管理核心的抽象设备表示，`struct snd_device` 对象为 Linux 内核 ALSA 音频子系统的抽象音频设备表示，`struct snd_compr` 对象为 Linux 内核 ALSA 音频子系统的抽象 compress 音频设备表示。从面向对象设计的角度来看，加上通常由 compress 设备驱动程序定义并创建的具体 compress 设备表示，这些设备表示大概有如下的关系：
 
-![Device in Linux Kernel Audio Sbusystem](https://upload-images.jianshu.io/upload_images/1315506-b0500e812c3caec1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![Device in Linux Kernel Audio Sbusystem](images/1315506-b0500e812c3caec1.png)
 
 在实际实现中，compress 音频设备的 `struct snd_device` 对象的 `device_data` 字段指向 `struct snd_compr` 对象。
 
@@ -1926,7 +1926,7 @@ ASoC 中的声卡由 `struct snd_soc_card` 对象表示，声卡可以包含一�
 
 ASoC 中的这些抽象大体有下图这样的结构：
 
-![Linux ALSA ASoC Objects](https://upload-images.jianshu.io/upload_images/1315506-012a03be8f6cb3d9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![Linux ALSA ASoC Objects](images/1315506-012a03be8f6cb3d9.png)
 
 支持音频数据编解码的 DSP 硬件设备的 Linux ALSA ASoC 驱动程序，通常实现为某个 component 驱动程序的一个 `struct snd_soc_dai_driver`，具体来说要做这些事情：
  * 为 DSP 硬件设备创建 `struct snd_soc_dai_driver` 对象。
