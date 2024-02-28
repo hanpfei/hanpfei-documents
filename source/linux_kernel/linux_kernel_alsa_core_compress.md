@@ -175,9 +175,9 @@ struct snd_compr_stream {
 };
 ```
 
-`struct snd_compr_stream` 和 `struct snd_compr_runtime` 对象在 compress 音频设备文件打开时创建，它们的对象生命周期从文件打开到文件关闭。`struct snd_compr` 和 `struct snd_compr` 对象的生命周期一般从 compress 设备驱动程序加载到驱动程序卸载。`struct snd_compr` 和 `struct snd_compr` 对象一般为静态对象，`struct snd_compr_stream` 和 `struct snd_compr_runtime` 对象则为运行时动态对象。
+`struct snd_compr_stream` 和 `struct snd_compr_runtime` 对象在 compress 音频设备文件打开时创建，它们的对象生命周期从设备文件打开到设备文件关闭。`struct snd_compr` 和 `struct snd_compr_ops` 对象的生命周期一般从 compress 设备驱动程序加载到驱动程序卸载。在 compress 音频设备驱动程序中，`struct snd_compr` 和 `struct snd_compr_ops` 对象一般为静态对象，`struct snd_compr_stream` 和 `struct snd_compr_runtime` 对象则为运行时动态对象。
 
-用户空间程序通过一些结构与内核 ALSA 框架的 Compress 功能块交换数据，`struct snd_compr_params` 对象表示压缩的音频流的参数，`struct snd_compr_metadata` 对象表示压缩的音频流的 metadata，`struct snd_compr_tstamp` 对象表示时间戳描述符，`struct snd_compr_caps` 对象表示音频流能力描述符，`struct snd_compr_codec_caps` 对象表示音频流 codec 能力描述符，这些结构体定义 (位于 *include/uapi/sound/compress_offload.h*) 如下：
+用户空间程序通过一些数据结构与内核 ALSA 框架的 Compress 功能块交换数据，`struct snd_compr_params` 对象表示压缩音频流的参数，`struct snd_compr_metadata` 对象表示压缩音频流的 metadata，`struct snd_compr_tstamp` 对象表示时间戳描述符，`struct snd_compr_caps` 对象表示音频流能力描述符，`struct snd_compr_codec_caps` 对象表示音频流 codec 能力描述符，这些结构体定义 (位于 *include/uapi/sound/compress_offload.h*) 如下：
 ```
 /**
  * struct snd_compressed_buffer - compressed buffer
@@ -505,7 +505,7 @@ Linux 内核音频 ALSA 框架 Compress-Offload 设备驱动核心通过这些�
 
 ### Compress 设备的创建
 
-驱动程序调用 `snd_compress_new()` 函数为 sound card 创建 compress 设备，这个函数定义 (位于 *sound/core/compress_offload.c*) 如下：
+如果 Compress-Offload 设备驱动程序直接基于 ALSA 框架的接口实现，而不是通过 ASoC 等 ALSA 子系统的接口实现，则驱动程序直接调用 `snd_compress_new()` 函数为 sound card 创建 compress 设备，这个函数定义 (位于 *sound/core/compress_offload.c*) 如下：
 ```
 #ifdef CONFIG_SND_VERBOSE_PROCFS
 static void snd_compress_proc_info_read(struct snd_info_entry *entry,
@@ -599,11 +599,11 @@ int snd_compress_new(struct snd_card *card, int device,
 EXPORT_SYMBOL_GPL(snd_compress_new);
 ```
 
-一般来说，需要 compress 设备驱动程序创建 `struct snd_compr_ops` 对象，为 `struct snd_compr` 对象分配内存，并初始化 `struct snd_compr` 对象的 `ops` 字段指向创建的 `struct snd_compr_ops` 对象等。
+一般来说，需要 compress 设备驱动程序创建 `struct snd_compr_ops` 对象，且为 `struct snd_compr` 对象分配内存，并初始化 `struct snd_compr` 对象的 `ops` 字段指向创建的 `struct snd_compr_ops` 对象等。
 
 在 `snd_compress_new()` 函数中，主要做了这样一些事情：
 
-1. 进一步初始化 `struct snd_compr` 对象；
+1. 进一步初始化 `struct snd_compr` 对象，如 sound card，direction，和 device 等；
 2. 为 `struct snd_compr` 对象设置 ID，用于创建 procfs 虚拟文件系统的 compress 设备相关文件；
 3. 调用 `snd_device_initialize()` 函数初始化 `struct snd_compr` compress 音频设备的 `struct device`；
 4. 为 compress 设备设置设备名；
@@ -636,7 +636,7 @@ void snd_device_initialize(struct device *dev, struct snd_card *card)
 EXPORT_SYMBOL_GPL(snd_device_initialize);
 ```
 
-`snd_device_initialize()` 函数设置 `struct device` 的 `class` 为 `sound_class`，这个设置与 compress 设备文件名的设置共同协助 compress 设备在 devtmpfs 虚拟文件系统中设备文件的创建。
+`snd_device_initialize()` 函数设置 `struct device` 的 `class` 为 `sound_class`，这个设置与 compress 设备文件名的设置共同协助 compress 设备在 devtmpfs 虚拟文件系统中创建设备文件。
 
 `snd_device_new()` 函数定义 (位于 *sound/core/init.c*) 如下：
 ```
@@ -690,7 +690,7 @@ Compress 设备随着它所属的 `struct snd_card` 的注册一起注册。在�
 	};
 ```
 
-`struct snd_device_ops` 的 `dev_register` 操作 `snd_compress_dev_register()` 在 `struct snd_card` 注册时被调用，调用过程类似于下面这样：
+`struct snd_device_ops` 的 `dev_register` 操作 `snd_compress_dev_register()` 在 `struct snd_card` 注册时被调用，调用过程如下面这样：
 ```
 [   20.391776]  snd_compress_dev_register+0x30/0xc0
 [   20.398034]  snd_device_register_all+0x4c/0x80
@@ -816,7 +816,7 @@ int snd_compress_deregister(struct snd_compr *device)
 EXPORT_SYMBOL_GPL(snd_compress_deregister);
 ```
 
-`snd_compress_register()` 接口检查 compress 设备驱动程序必须实现的操作，初始化 compress 设备的锁，并注册声卡。`snd_compress_deregister()` 接口则注销声卡。
+`snd_compress_register()` 接口检查 compress 设备驱动程序必须实现的操作，初始化 compress 设备的锁，并注册声卡，`snd_compress_deregister()` 接口则注销声卡。Sound card 对象本身，依然需要 compress 设备驱动程序创建，并通过传入的 `struct snd_compr` 对象传下来。
 
 ### Compress 音频流的状态机及设备文件的文件操作
 
@@ -869,7 +869,7 @@ Compress 音频流状态机如下：
      +----------+                   +----------+
 ```
 
-在 Linux 内核中，compress 音频流状态机由 compress 设备文件的文件操作实现。`struct snd_device_ops` 的 `dev_register` 操作 `snd_compress_dev_register()` 中可以看到 compress 设备文件的文件操作为 `snd_compr_file_ops`，`snd_compr_file_ops` 定义 (位于 *sound/core/compress_offload.c*) 如下：
+在 Linux 内核中，compress 音频流状态机由 compress 设备文件的文件操作实现。在 `struct snd_device_ops` 的 `dev_register` 操作 `snd_compress_dev_register()` 的实现中可以看到 compress 设备文件的文件操作为 `snd_compr_file_ops`，`snd_compr_file_ops` 定义 (位于 *sound/core/compress_offload.c*) 如下：
 ```
 /* support of 32bit userspace on 64bit platforms */
 #ifdef CONFIG_COMPAT
