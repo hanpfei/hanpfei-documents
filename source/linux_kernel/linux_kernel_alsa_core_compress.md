@@ -1593,7 +1593,7 @@ Compress 音频流的基本数据传递过程，与 PCM 的有一定的相似性
 4. 对于录制流，硬件设备驱动程序向数据缓冲区中写入数据，并更新写指针，用户空间程序读取数据，并更新读指针。
 5. 如此往复，直到流结束。
 
-Compress 音频流具体实现上，在 compress 音频设备设备文件操作 `ioctl()` 的 **SNDRV_COMPRESS_SET_PARAMS** 命令中，由 compress-offload 设备驱动核心分配数据缓冲区，或由设备驱动程序在其 `open()` 或 `set_params()` 等操作中分配数据缓冲区。整个压缩音频数据的传递，需要 compress 音频设备的设备文件操作 `write()`/`read()` 及 `ioctl()` 的部分命令协同完成。
+Compress 音频流具体实现上，在 compress 音频设备文件操作 `ioctl()` 的 **SNDRV_COMPRESS_SET_PARAMS** 命令中，由 compress-offload 设备驱动核心分配数据缓冲区，或由设备驱动程序在其 `open()` 或 `set_params()` 等操作中分配数据缓冲区。整个压缩音频数据的传递，需要 compress 音频设备的设备文件操作 `write()`/`read()` 及 `ioctl()` 的部分命令协同完成。
 
 压缩音频流的运行时表示 `struct snd_compr_runtime` 中的数据缓冲区写指针为 `total_bytes_available`，读指针为 `total_bytes_transferred`。它们是流的指针，随着数据的传递单调递增。
 
@@ -1767,14 +1767,14 @@ static ssize_t snd_compr_write(struct file *f, const char __user *buf,
 
 1. 检查压缩音频流的状态为 **SETUP**、**PREPARED** 或 **RUNNING**。
 2. 调用 `snd_compr_get_avail()` 函数计算音频数据缓冲区中可用空间的大小，这个可用空间是从用户空间程序视角来看的，对于播放流，指还可以向数据缓冲区写入的数据量，对于录制流，指可以读取的已经编码好的数据量。对于播放流，大体为 (缓冲区大小 - (写指针 - 读指针))，对于录制流，大体为 (写指针 - 读指针)。在使用数据缓冲区的读写指针计算可用空间大小之前，会先调用 `snd_compr_get_avail()` 函数，通过 compress 音频设备驱动程序的 `pointer` 操作，获得硬件 DSP 当前已经传递的数据量，并更新数据缓冲区的读写指针，对于播放流，是读指针；对于录制流，是写指针。
-3. 根据要传递的数据量，和数据缓冲区中可用空间的大小，计算实际需要传递数据量。
+3. 根据要传递的数据量，和数据缓冲区中可用空间的大小，计算实际需要传递的数据量。
 4. 将用户空间的音频数据实际拷贝到内核音频数据缓冲区。这分为两种情况：
 (1). compress 音频设备驱动程序提供了 `copy()` 操作，意味着它打算完全由自己处理和用户空间的数据传递，则调用 compress 音频设备驱动程序的 `copy()` 操作，由底层硬件设备驱动程序来处理音频数据从用户空间到内核数据缓冲区的拷贝。
 (2). compress 音频设备驱动程序没有提供 `copy()` 操作，则调用 `snd_compr_write_data()` 函数拷贝数据。拷贝数据时，首先计算指向数据缓冲区的实际的写指针；随后分两种情况处理，一是写指针的位置到数据缓冲区结尾有足够空间的，则直接拷贝，二是写指针的位置到数据缓冲区结尾处空间不够，需要绕回数据缓冲区开头继续写的，则分两段拷贝；最后调用 compress 音频设备驱动程序的 `ack()` 操作，通知底层硬件设备驱动程序拷贝的数据量。
 5. 更新数据缓冲区的写指针。
 6. 压缩音频流的状态为 **SETUP** 时，将其状态切换为 **PREPARED**，为后面启动压缩音频流做准备。
 
-compress 音频设备设备文件操作 `ioctl()` 的 **SNDRV_COMPRESS_TSTAMP** 命令给用户空间程序获得数据缓冲区和硬件设备之间已经拷贝的音频数据量，并更新数据缓冲区的读写指针，对于播放流，是读指针；对于录制流，是写指针。**SNDRV_COMPRESS_AVAIL** 命令获得从用户空间程序视角来看的，当前音频数据缓冲区可用空间的大小，它也会查询 tstamp 属性。
+compress 音频设备文件操作 `ioctl()` 的 **SNDRV_COMPRESS_TSTAMP** 命令用于用户空间程序获得数据缓冲区和硬件设备之间已经拷贝的音频数据量，并更新数据缓冲区的读写指针，对于播放流，是读指针；对于录制流，是写指针。**SNDRV_COMPRESS_AVAIL** 命令获得从用户空间程序视角来看的，当前音频数据缓冲区可用空间的大小，它也会查询 tstamp 属性。
 
 compress 音频设备的 `read()` 设备文件操作 `snd_compr_read()` 函数从音频数据缓冲区读出录制的音频数据，这个函数定义 (位于 *sound/core/compress_offload.c*) 如下：
 ```
@@ -1837,7 +1837,7 @@ out:
 4. 将内核音频数据缓冲区的音频数据实际拷贝到用户空间。这个文件操作强制要求 compress 音频设备驱动程序提供 `copy()` 操作，否则报错。数据拷贝由 compress 音频设备驱动程序的 `copy()` 操作完成。
 5. 更新数据缓冲区的读指针。
 
-compress 音频设备提供了空的 `mmap()` 设备文件操作 `snd_compr_mmap()`，并提供了 `poll()` 设备文件操作 `snd_compr_poll()`，这两个操作定义 (位于 *sound/core/compress_offload.c*) 如下：
+compress 音频设备文件提供了空的 `mmap()` 设备文件操作 `snd_compr_mmap()`，并提供了 `poll()` 设备文件操作 `snd_compr_poll()`，这两个操作定义 (位于 *sound/core/compress_offload.c*) 如下：
 ```
 static int snd_compr_mmap(struct file *f, struct vm_area_struct *vma)
 {
@@ -1904,7 +1904,7 @@ out:
 }
 ```
 
-对于 compress 音频设备驱动程序，必须为录制流提供 `copy()` 操作；对于播放流，则 `copy()` 和 `ack()` 操作二选一提供，两者同时存在时，`ack()` 操作不会被用到。
+对于 compress 音频设备驱动程序，强制要求为录制流提供 `copy()` 操作；对于播放流，则 `copy()` 和 `ack()` 操作二选一提供，两者同时存在时，`ack()` 操作不会被用到。
 
 ALSA Compress-Offload API 和 PCM API 类似，但也有一些不同的地方：
 
@@ -1912,7 +1912,7 @@ ALSA Compress-Offload API 和 PCM API 类似，但也有一些不同的地方：
 2. Compress-Offload API 的数据传递操做不会主动触发压缩音频流的启动，但 PCM API 的会。
 3. Compress-Offload 驱动核心不如 PCM 的完善。
 
-ALSA Compress-Offload 设备驱动核心将 compress 音频设备文件的文件操作映射到  compress 音频设备驱动程序的接口。
+ALSA Compress-Offload 设备驱动核心将 compress 音频设备文件的文件操作映射到  compress 音频设备的 `struct snd_compr_ops` 操作接口。如果 compress 音频设备驱动程序直接基于 ALSA 的接口实现，这些操作由 compress 音频设备驱动程序实现，如果 compress 音频设备驱动程序基于 ASoC 接口实现，则这些操作由 ASoC 核心实现，ASoC 。
 
 ### SoC 中的 Compress 设备驱动
 
