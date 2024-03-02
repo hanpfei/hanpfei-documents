@@ -20,11 +20,11 @@ ALSA 拓扑给音频驱动程序提供了一种在运行时，从用户空间加
 
 这里有一个例子。
 
-![Topology-objects](https://upload-images.jianshu.io/upload_images/1315506-3fda30f0fc42e894.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![Topology-objects](images/1315506-3fda30f0fc42e894.png)
 
 ## 拓扑架构
 
-![Topology](https://upload-images.jianshu.io/upload_images/1315506-487dd528391d6028.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![Topology](images/1315506-487dd528391d6028.png)
 
 ### 用户空间
 

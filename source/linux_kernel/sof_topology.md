@@ -348,7 +348,7 @@ DAI_CONFIG(SSP, 5, 0, SSP5-Codec,
 **BUF1.1**：流水线 1 中的缓冲区组件 1
 **SSP5.OUT**：BE DAI 对应于 SSP 5
 
-![tplg1](https://upload-images.jianshu.io/upload_images/1315506-ff4113bb5c024e53.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![tplg1](images/1315506-ff4113bb5c024e53.png)
 
 ### 2.2 多流水线拓扑示例
 
@@ -457,7 +457,7 @@ DAI_CONFIG(DMIC, 0, 2, dmic01,
 
 下图显示了第 2.2 节中定义的拓扑。
 
-![tplg2](https://upload-images.jianshu.io/upload_images/1315506-6a1db50a3af03db5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![tplg2](images/1315506-6a1db50a3af03db5.png)
 
 ## 3. 调试拓扑
 
