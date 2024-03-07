@@ -8,8 +8,6 @@ tags:
 
 拓扑接口允许开发者以文本文件格式定义 DSP 拓扑，并将文本格式的拓扑转换为内核可以理解的二进制拓扑表示。目前的拓扑核心可以识别的对象类型如下：
 
-[toc]
-
  * Controls (mixer，enumerated 和 byte)，包括 TLV 数据
  * PCM (前端 DAI & DAI 链接)
  * DAPM widgets
@@ -17,6 +15,12 @@ tags:
  * 物理 DAI & DAI 链接
  * 各个对象类型的私有数据
  * 清单 Manifest (包含各个对象类型的个数)
+
+本文介绍的是以文本格式定义 ALSA 拓扑的基础 alsaconf 语法，其它以文本格式定义 ALSA 拓扑的方法为 [SoF 的 M4 宏语言](https://thesofproject.github.io/latest/developer_guides/topology/topology.html) 和 [拓扑 2.0 语法](https://thesofproject.github.io/latest/developer_guides/topology2/topology2.html) 。用 [M4 宏语言](https://thesofproject.github.io/latest/developer_guides/topology/topology.html) 和 [拓扑 2.0 语法](https://thesofproject.github.io/latest/developer_guides/topology2/topology2.html) 编写的 ALSA 拓扑配置文件，会首先被转换为本文说明的语法格式的配置文件，进而转换为二进制拓扑文件。
+
+基础 alsaconf 语法定义的 ALSA 拓扑配置文件中的各个对象和结构，与 Linux 内核拓扑驱动程序代码的对应关系比较直接，同时它也是 alsatplg 编译器解码二进制拓扑配置文件生成的拓扑配置文件所用格式。基础 alsaconf 语法可以理解为 ALSA 拓扑的汇编语言。
+
+本文的内容主要来自 *alsa-lib/include/topology.h* 头文件的注释。
 
 ## 拓扑文件格式
 
@@ -450,7 +454,7 @@ SectionVendorTuples {
 
 SectionXXX -> SectionData -> SectionVendorTuples -> SectionVendorTokens。
 
-##### Mixer Controls
+#### Mixer Controls
 
 Mixer control 被定义为一个新的 section，它可以包含通道映射，TLV 数据，回调操作和私有数据。Mixer section 也包含一些其它的配置选项，如：
 ```
@@ -478,7 +482,7 @@ SectionControlMixer."mixer name" {
 
 Section 名称用于定义 mixer 名称。index 号可用于标识拓扑对象组。这允许驱动程序对索引号为 N 的对象进行操作，并可用于添加/删除对象的流水线，而其它对象不受影响。
 
-##### Byte Controls
+#### Byte Controls
 
 Byte control 被定义为一个新的 section，它可以包含通道映射，TLV 数据，回调操作和私有数据。Byte section 还包含一些其它的配置选项，如下所示：
 
@@ -509,7 +513,7 @@ SectionControlBytes."name" {
 
 内核代码中，实际没有处理 byte control 的 TLV 数据的逻辑。
 
-##### Enumerated Controls
+#### Enumerated Controls
 
 Enumerated control 被定义为一个新的 section (与 mixer 和 byte 一样)，它可以包含通道映射，回调操作，私有数据和表示枚举的 control 选项的文本字符串。
 
@@ -548,7 +552,7 @@ SectionControlMixer."name" {
 }
 ```
 
-##### DAPM 图
+### DAPM 图
 
 可以使用拓扑文件轻松定义 DAPM 图。该格式与 DAPM 图内核格式非常相似：
 ```
@@ -566,7 +570,7 @@ SectionGraph."dsp" {
 
 在 Linux 内核中，DAPM 图由 `soc_tplg_dapm_graph_elems_load()` 函数处理，Linux 内核将会基于 DAPM 图创建 `struct snd_soc_dapm_route` 对象。
 
-#### DAPM Widgets
+### DAPM Widgets
 
 DAPM widgets 类似于 controls，因为它们可以包含许多其它对象。Widgets 可以包含私有数据，mixer controls 和 enum controls。
 
@@ -616,13 +620,13 @@ SectionWidget."name" {
 
 Section 名称是 widget 名称。mixer 和 enum 字段是互斥的，用于将 controls 包含到 widget 中。Widgets 的 index 和数据字段与 controls 的相同，而其它字段则非常接近于驱动程序的 widget 字段。
 
-##### Widget 私有数据
+#### Widget 私有数据
 
 Widget 可以有私有数据。关于私有数据的格式，请参考 Control 私有数据一节。
 
 在 Linux 内核中，DAPM widget 由 `soc_tplg_dapm_widget_elems_load()` 和 `soc_tplg_dapm_widget_create()` 等函数处理，Linux 内核将会基于 DAPM widget 创建 `struct snd_soc_dapm_widget` 对象。
 
-#### PCM Capabilities
+### PCM Capabilities
 
 拓扑也可以定义前端或物理 DAI 的 PCM Capabilities。Capabilities 可以通过如下 section 定义：
 ```
@@ -737,7 +741,7 @@ struct snd_soc_tplg_pcm_v4 {
 
 在 Linux 内核中，PCM 的 PCM capabilities 与 PCM 对象一同处理，由 `soc_tplg_pcm_elems_load()`、`soc_tplg_pcm_create()`、`soc_tplg_dai_create()` 和 `set_stream_info()`等函数处理。
 
-#### PCM 配置
+### PCM 配置
 
 可以通过如下的 section 为播放和录制流方向定义 PCM 运行时配置：
 ```
@@ -761,7 +765,7 @@ SectionPCMConfig."name" {
 
 支持的格式使用与驱动程序宏相同的命名约定。PCM 配置名称可以被 PCM 和物理链接 sections 引用和包含。
 
-#### PCM（前端 DAI 和 DAI 链接）
+### PCM（前端 DAI & DAI 链接）
 
 PCM sections 为支持的播放和录制流定义了支持的 capabilities 和配置，为 DAI & DAI 链接定义了名称和标记。拓扑内核驱动程序将使用 PCM 对象创建 FE DAI & DAI 链接对。
 
@@ -804,7 +808,7 @@ SectionPCM."name" {
 }
 ```
 
-#### 物理 DAI 链接配置
+### 物理 DAI 链接配置
 
 物理 DAI 链接的运行时配置可以通过 SectionLink 定义。
 
@@ -846,7 +850,7 @@ SectionHWConfig."name" {
 }
 ```
 
-#### 物理 DAI
+### 物理 DAI
 
 物理 DAI（比如 DPCM 的后端 DAI）被定义为一个新的 section，它可以包含唯一的 ID，播放和录制流的 capabilities，可选的标记，和私有数据。
 
@@ -874,7 +878,7 @@ SectionDAI."name" {
 }
 ```
 
-#### Manifest 私有数据
+### Manifest 私有数据
 
 Manifest 可能有私有数据。用户需要定义一个 manifest section，并为它定义指向 1 个或多个数据 sections 引用。请参考 **如何定义具有私有数据的元素** 一节。
 
@@ -888,7 +892,18 @@ SectionManifest"name" {
 }
 ```
 
-#### 包含其它文件
+具有私有数据的 manifest 的实际例子如下：
+```
+SectionManifest.manifest.data.0 'manifest:data0'
+ . . . . . .
+SectionData {
+	'manifest:data0'.bytes '03:00:1d:00:00:00'
+	'pipeline.1:tuple0'.tuples 'pipeline.1:tuple0'
+	'host-copier-simple.0.playback:tuple0'.tuples 'host-copier-simple.0.playback:tuple0'
+}
+```
+
+### 包含其它文件
 
 用户可能通过 alsaconf 语法 <path/to/configuration-file> 在文本配置文件中包含其它文件。这允许用户在单独的文件中定义公共的信息（比如 vendor tokens，tuples），并为不同的平台共享它们，这样就节省了配置文件的总大小。
 
