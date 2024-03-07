@@ -1,6 +1,6 @@
 ---
-title: ALSA 拓扑接口
-date: 2024-03-06 20:43:37
+title: SOF项目简介
+date: 2024-03-05 21:53:37
 categories: Linux 内核
 tags:
 - Linux 内核
