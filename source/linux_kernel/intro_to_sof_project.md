@@ -15,7 +15,7 @@ tags:
  * DSP 基础架构和驱动程序。
  * 主机操作系统基础架构和驱动程序。
 
-![图 1：均衡器流水线示例，其中主机操作系统控制均衡器系数和流水线音量](https://upload-images.jianshu.io/upload_images/1315506-d4956b870c60b169.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![图 1：均衡器流水线示例，其中主机操作系统控制均衡器系数和流水线音量](images/1315506-d4956b870c60b169.png)
 
 Sound Open Firmware 具有模块化和通用的代码库，可以移植到不同的 DSP 架构或主机平台。请参阅当前支持的 DSP 架构和支持的平台列表。
 
@@ -23,7 +23,7 @@ Sound Open Firmware 具有模块化和通用的代码库，可以移植到不同
 
 Sound Open Firmware SDK 由许多成分组成，可以定制这些成分以用于固件/软件开发生命周期。定制允许 “最适合” 的开发方法，其中 SDK 可以针对特定流程或环境进行优化。有些 SDK 成分是可选的，而其他成分可以有多次选择，如下图所示。
 
-![sdk-overview.png](https://upload-images.jianshu.io/upload_images/1315506-7bf3ac30c14c8fdf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![sdk-overview.png](images/1315506-7bf3ac30c14c8fdf.png)
 
 **图 2：SDK 示例配置显示了运行 Linux 操作系统的 Intel Apollo Lake 平台上的 SOF 开发流程。请注意编译器工具链的选择和可选的 DSP 仿真器的选择。**
 
