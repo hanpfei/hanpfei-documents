@@ -82,13 +82,14 @@ class URLRequest::Delegate {
 };
 ```
 
-当启动一个 `URLRequest` 时，它要做的第一件事是决定创建什么类型的 `URLRequestJob`。主要的 job 类型是 `URLRequestHttpJob`，它用于实现 **http://** 请求。还有许多其它的 jobs，如 `URLRequestFileJob` (**file://**)、`URLRequestFtpJob` (**ftp://**)，`URLRequestDataJob` (**data://**) 等。网络栈将选择适当的 job 来实现请求，但它给客户端提供了两种方式来定制 job 的创建：`URLRequest::Interceptor` 和 `URLRequest::ProtocolFactory`。这些都是相当多余的，除了 `URLRequest::Interceptor` 的接口更具可扩展性。在 job 进行过程中，它将通知 `URLRequest`，而后者则在需要时通知 `URLRequest::Delegate`。
+当启动一个 `URLRequest` 时，它要做的第一件事是决定创建什么类型的 `URLRequestJob`。主要的 job 类型是 `URLRequestHttpJob`，它用于实现 **http://** 请求。还有许多其它的 jobs，如 `URLRequestFileJob` (**file://**)、`URLRequestFtpJob` (**ftp://**)，`URLRequestDataJob` (**data://**) 等。网络栈将选择适当的 job 来实现请求，但它给客户端提供了两种方式来定制 job 的创建：`URLRequest::Interceptor` 和 `URLRequest::ProtocolFactory`。这些都是相当多余的，除了 `URLRequest::Interceptor` 的接口更具可扩展性。在 job 进行过程中，它将通知 `URLRequest`，而后者则在有需要时通知 `URLRequest::Delegate`。
 
 ## URLRequestHttpJob
 
-`URLRequestHttpJob`将首先确定要给HTTP请求设置的cookies，这需要查询请求上下文中的`CookieMonster`。这可以是异步的，因为`CookieMonster`可能是由一个[sqlite](http://en.wikipedia.org/wiki/SQLite)数据库支持的。做完了这些之后，它将请求请求上下文的`HttpTransactionFactory`来创建一个`HttpTransaction`。典型地， [HttpCache](http://dev.chromium.org/developers/design-documents/network-stack/http-cache)将被指定为HttpTransactionFactory。HttpCache将创建一个HttpCache::Transaction来处理HTTP请求。HttpCache::Transaction将首先检查HttpCache (它会检查[磁盘缓存](http://dev.chromium.org/developers/design-documents/network-stack/disk-cache))来查看缓存项是否已经存在。如果存在，则意味着响应已经被缓存了，或者这个缓存项的一个网络事物已经存在，则只是从那个项中读取。如果缓存项不存在，则我们创建它并让HttpCache的HttpNetworkLayer给请求的服务创建一个HttpNetworkTransaction。给HttpNetworkTransaction一个包含执行HTTP请求的上下文状态的HttpNetworkSession。这些状态中的一些来自于`URLRequestContext`。
+`URLRequestHttpJob`将首先确定要给 HTTP 请求设置的 cookies，这需要查询请求上下文中的 `CookieMonster`。这可以是异步的，因为 `CookieMonster` 可能是由一个 [sqlite](http://en.wikipedia.org/wiki/SQLite) 数据库在支持。做完了这些之后，它将让请求上下文的 `HttpTransactionFactory` 创建一个 `HttpTransaction`。通常会把 [HttpCache](http://dev.chromium.org/developers/design-documents/network-stack/http-cache) 指定为`HttpTransactionFactory`。`HttpCache` 将创建一个 `HttpCache::Transaction` 来处理 HTTP 请求。`HttpCache::Transaction` 将首先检查 `HttpCache` (它会检查 [磁盘缓存](http://dev.chromium.org/developers/design-documents/network-stack/disk-cache)) 来查看缓存项是否已经存在。如果存在，则意味着响应已经被缓存了，或者这个缓存项的网络事务已经存在，则只从该缓存项读取。如果缓存项不存在，则我们创建它，并让 `HttpCache` 的 `HttpNetworkLayer` 创建一个 `HttpNetworkTransaction`，以服务发起的请求。给 `HttpNetworkTransaction` 赋予一个 `HttpNetworkSession`，`HttpNetworkSession` 包含执行 HTTP 请求的上下文状态。这种状态中的一些来自于 `URLRequestContext`。
 
 ## HttpNetworkTransaction
+
 ```
 class HttpNetworkSession {
  ...
@@ -108,9 +109,11 @@ class HttpNetworkSession {
   HttpStreamFactory http_stream_factory_;
 };
 ```
-`HttpNetworkTransaction`请求`HttpStreamFactory`创建一个`HttpStream`。
 
-`HttpStreamFactory`返回一个`HttpStreamRequest`，它被期望处理包括如何建立连接，及一旦连接建立则把它包装为一个与网络直接对话的居间`HttpStream`的子类等所有的逻辑。
+`HttpNetworkTransaction` 请求 `HttpStreamFactory` 创建 `HttpStream`。
+
+`HttpStreamFactory` 返回 `HttpStreamRequest`，`HttpStreamRequest` 应该处理包括如何建立连接，及一旦连接建立，则把它包装为一个居间与网络直接对话的 `HttpStream`子类等所有的逻辑。
+
 ```
 class HttpStream {
  public:
@@ -120,24 +123,38 @@ class HttpStream {
   ...
 };
 ```
-当前，只有两种主要的`HttpStream`子类：`HttpBasicStream`和`SpdyHttpStream`，尽管我们已经在计划为[HTTP pipelining](http://en.wikipedia.org/wiki/HTTP_pipelining)创建子类。`HttpBasicStream`假设它在直接地读/写一个socket。`SpdyHttpStream`读和写一个`SpdyStream`。网络事务将会调用流上的方法，并且在完成时，将会调用回调回到`HttpCache::Transaction`，而它将会根据需要通知URLRequestHttpJob和URLRequest。对于HTTP路径，http请求和响应的产生及解析将由`HttpStreamParser`处理。对于SPDY路径，请求和响应的解析由`SpdyStream`和`SpdySession`来处理。基于HTTP响应，`HttpNetworkTransaction`可能需要执行 [HTTP 认证](http://dev.chromium.org/developers/design-documents/http-authentication)。这可能包括重启网络事务。
+
+当前，只有两种主要的 `HttpStream` 子类：`HttpBasicStream` 和 `SpdyHttpStream`，尽管我们已经在计划为 [HTTP pipelining](http://en.wikipedia.org/wiki/HTTP_pipelining) 创建子类。`HttpBasicStream` 假设它直接读/写 socket。`SpdyHttpStream` 读写 `SpdyStream`。网络事务将调用流的方法，并且在完成时，将调用回调回到 `HttpCache::Transaction`，而它将根据需要通知 `URLRequestHttpJob` 和 `URLRequest`。对于 HTTP 路径，http 请求和响应的产生及解析将由 `HttpStreamParser` 处理。对于 SPDY 路径，请求和响应的解析由 `SpdyStream` 和 `SpdySession` 处理。基于 HTTP 响应，`HttpNetworkTransaction` 可能需要执行 [HTTP 认证](http://dev.chromium.org/developers/design-documents/http-authentication)。这可能包括重启网络事务。
+
 ## HttpStreamFactory
-`HttpStreamFactory`首先做代理解析来决定是否需要一个代理。端点被设置为URL主机或代理服务器。然后`HttpStreamFactory`检查`SpdySessionPool`来查看我们是否有这个端点的可用`SpdySession`。如果没有，则stream factory从适当的池中请求一个 "socket"(TCP/proxy/SSL/etc) 。如果socket是一个SSL socket，则它检查[NPN](https://tools.ietf.org/id/draft-agl-tls-nextprotoneg-01.txt)是否指示了一个协议（可能是SPDY），如果是，则使用特定的协议。对于SPDY，我们将检查一个SpdySession是否已经存在，如果是则使用它，否则我们将由这个SSL socket创建一个新的`SpdySession`，并由`SpdySession`创建一个`SpdyStream`，其中包装一个`SpdyHttpStream`。对于HTTP，我们将简单地获取socket，并把它包装进一个`HttpBasicStream`。
+
+`HttpStreamFactory` 首先执行代理解析，以决定是否需要代理。端点被设置为 URL 主机或代理服务器。`HttpStreamFactory` 然后检查 `SpdySessionPool`，来查看我们是否有这个端点的可用 `SpdySession`。如果没有，则 stream factory 从适当的池中请求一个 "socket" (TCP/proxy/SSL/etc) 。如果 socket 是一个 SSL socket，则它检查 [NPN](https://tools.ietf.org/id/draft-agl-tls-nextprotoneg-01.txt) 是否指示了协议（可能是 SPDY），如果是，则使用指定的协议。对于 SPDY，我们将检查是否有一个 `SpdySession` 已经存在，如果是则使用它，否则我们将从这个 SSL socket 创建一个新的 `SpdySession`，并从 `SpdySession` 创建一个 `SpdyStream`，其中包装了一个 `SpdyHttpStream`。对于 HTTP，我们将简单地获取 socket，并把它包装进 `HttpBasicStream`。
+
 ### 代理解析
-`HttpStreamFactory`查询`ProxyService`来给GURL返回`ProxyInfo`。代理服务首先需要检查它是否有一个最近的代理配置。如果没有，它使用`ProxyConfigService`来为当前的代理设置查询系统。如果代理设置被设置为没有代理或一个特定的代理，则代理解析是很简单的（我们返回没有代理或特定的代理）。否则，我们需要运行[PAC script](http://en.wikipedia.org/wiki/Proxy_auto-config)来确定合适的代理（或lack thereof）。如果我们还没有PAC script，则代理设置将指示我们应该使用[WPAD auto-detection](http://en.wikipedia.org/wiki/Web_Proxy_Autodiscovery_Protocol)，或将指定一个定制PAC url，然后我们将通过`ProxyScriptFetcher`获取PAC script。一旦我们有了PAC script，我们将通过`ProxyResolver`执行它。注意我们使用一个shim `MultiThreadedProxyResolver`对象来把PAC script执行派发给线程，它们将运行一个ProxyResolverV8实例。这是由于PAC script执行可能阻塞主机解析。然而，为了防止一个失速的PAC script执行阻塞了其它的代理解析，我们允许并发地执行多个PAC script（警告： [V8](http://en.wikipedia.org/wiki/V8_(JavaScript_engine))不是线程安全的，因此我们要为javascript bindings获取锁，以使得一个V8 script实例阻塞在主机解析，它释放锁使另一个V8实例可以执行PAC script来为不同的URL解析代理）。
+
+`HttpStreamFactory` 为 GURL 查询 `ProxyService`来返回 `ProxyInfo`。代理服务首先需要检查它是否有一个最新的代理配置。如果没有，它使用 `ProxyConfigService` 来查询系统，以获得当前的代理设置。如果代理设置被设置为没有代理或一个特定的代理，则代理解析是很简单的（我们返回没有代理或特定的代理）。否则，我们需要运行 [PAC 脚本](http://en.wikipedia.org/wiki/Proxy_auto-config) 来确定合适的代理（或没有代理）。如果我们还没有 PAC 脚本，则代理设置将指示我们应该使用 [WPAD auto-detection](http://en.wikipedia.org/wiki/Web_Proxy_Autodiscovery_Protocol)，或者将指定一个定制的 PAC url，然后我们将通过 `ProxyScriptFetcher` 获取 PAC 脚本。一旦我们获得了 PAC 脚本，我们将通过 `ProxyResolver` 执行它。注意我们使用一个闪烁的 `MultiThreadedProxyResolver` 对象来把 PAC 脚本的执行派发给线程，它运行一个 `ProxyResolverV8` 实例。这是由于 PAC 脚本的执行可能阻塞主机解析。然而，为了防止一个停滞的 PAC 脚本执行阻塞其它的代理解析，我们允许并发地执行多个 PAC 脚本（警告： [V8](http://en.wikipedia.org/wiki/V8_(JavaScript_engine)) 不是线程安全的，因此我们要为 javascript 绑定获取锁，这样一个 V8 实例阻塞在主机解析时，它释放锁，然后另一个 V8 实例可以执行 PAC 脚本来为不同的 URL 解析代理）。
+
 ### 连接管理
-`HttpStreamRequest`确定了适当的端点（URL端点或代理端点）之后，它需要建立一个连接。它通过确认适当的"socket"池并从中请求一个socket来做到这一点。注意，这里的"socket"基本上表示我们可以读和写以在网络上发送数据的东西。一个SSL socket是在一个传输([TCP](http://en.wikipedia.org/wiki/Transmission_Control_Protocol)) socket之上构建的，并为用户加密/解密原始的TCP数据。不同的socket类型还处理不同的连接设置，对于HTTP/SOCKS代理，SSL握手，等等。Sockets池被设计为层次结构，因而不同的连接设置可能被放在其它sockets的上层。`HttpStream`的实际的底层socket类型可能是不可知的，由于它仅仅需要对socket做读和写。Socket池执行不同的功能。它们实现我们的单个代理，单个主机和单个进程的连接限制。当前单个代理的限制被设置为32个sockets，单个目标主机被设置为6 sockets，单个进程被设置为256个sockets（没有被完全正确的实现，但足够好）。Socket池也从实现抽象了sockets请求，从而给我们提供sockets的"late binding"。一个socket请求可以通过一个全新的连接的socket或一个idle socket（[从一个之前http事务复用](http://en.wikipedia.org/wiki/HTTP_persistent_connection)）来满足。
+
+`HttpStreamRequest` 确定了适当的端点（URL 端点或代理端点）之后，它需要建立一个连接。它通过确认适当的 "socket" 池并从中请求一个 socket 来执行这一点。注意，这里的 "socket" 基本上表示我们可以读和写，以通过网络发送数据的东西。SSL socket 基于传输 ([TCP](http://en.wikipedia.org/wiki/Transmission_Control_Protocol)) socket 构建，并为用户加密/解密原始的 TCP 数据。不同的 socket 类型还处理不同的连接设置，如 HTTP/SOCKS 代理，SSL 握手等。Sockets 池被设计为分层的，因而各种各样的连接设置可能被放在其它 sockets 的上层。`HttpStream` 可能不知道其实际的底层 socket 类型，因为它仅仅需要读和写 socket。Socket 池执行大量的函数。它们实现我们的各个代理，各个主机和单个进程的连接限制。当前单个代理的限制被设置为 32 个sockets，单个目标主机被设置为 6 个 sockets，单个进程被设置为 256 个sockets（没有完全正确地实现，但已经足够好）。Socket 池也从实现抽象了 sockets 请求，从而给我们提供了 sockets 的 "late binding"。一个 socket 请求可以通过一个新连接的 socket 或一个 idle socket（[从之前的 http 事务复用](http://en.wikipedia.org/wiki/HTTP_persistent_connection)）来满足。
+
 ### 主机解析
-注意传输sockets的连接设置不仅仅需要传输(TCP)握手，也可能需要主机解析。HostResolverImpl使用getaddrinfo()来执行主机解析，这是一个阻塞调用，因而解析器在unjoined worker线程上调用这些功能。典型地，主机解析通常包括[DNS](http://en.wikipedia.org/wiki/Domain_Name_System)解析，但可能包括非DNS命名空间，比如[NetBIOS](http://en.wikipedia.org/wiki/NetBIOS)/[WINS](http://en.wikipedia.org/wiki/Windows_Internet_Name_Service)。注意，自写入的事件起，我们将并发的主机解析的数量限制为8，但我们也在寻求优化这个值。HostResolverImpl也包含了一个HostCache，其中缓存最多1000个主机名。
+
+注意传输 sockets 的连接设置不仅需要传输 (TCP) 握手，也可能需要主机解析。`HostResolverImpl` 使用包括 `getaddrinfo()` 在内的各种机制来执行主机解析，这是一个阻塞调用，因而解析器在 unjoined worker 线程上调用这些函数。通常主机解析常常包括 [DNS](http://en.wikipedia.org/wiki/Domain_Name_System) 解析，但可能包括非 DNS 命名空间，比如 [NetBIOS](http://en.wikipedia.org/wiki/NetBIOS) / [WINS](http://en.wikipedia.org/wiki/Windows_Internet_Name_Service)。注意，自相关代码编写起，我们将并发主机解析数量限制为 8，但我们也在寻求优化这个值。`HostResolverImpl` 也包含了一个 `HostCache`，其中可以缓存最多 1000 个主机名。
+
 ### SSL
-SSL sockets需要执行SSL连接设置和证书验证。当前，在所有的平台上，我们使用[NSS](http://www.mozilla.org/projects/security/pki/nss/)的libssl来处理SSL连接逻辑。然而，我们使用平台特有的APIs来做证书验证。我们也将使用一个证书验证缓存，这将把多个对相同证书的证书验证请求联合为一个单独的证书验证任务，也将把结果缓存一段时间。
 
-`SSLClientSocketNSS`严格地依照这个事件顺序(忽略高级的功能，如基于证书验证的[Snap Start](http://tools.ietf.org/html/draft-agl-tls-snapstart-00)或[DNSSEC](http://en.wikipedia.org/wiki/Domain_Name_System_Security_Extensions) based certificate verification)：
+Chromium 网络栈使用 [BoringSSL](https://boringssl.googlesource.com/boringssl/) 来处理 TLS 链接逻辑。`StreamSocket` 类和 BoringSSL 的桥接在 `SSLClientSocketImpl`。
 
- - 调用Connect()。我们将基于`SSLConfig`描述的配置和预处理器宏设置NSS的SSL选项。然后我们启动握手。
- - 握手完成。假设我们没有遇到任何错误，我们将使用`CertVerifier`验证服务器的证书。证书验证可能会消耗一些时间，因而`CertVerifier`使用了`WorkerPool`来实际地调用`X509Certificate::Verify()`，这使用平台特有的APIs来实现。
+SSL sockets 需要执行 SSL 连接设置和证书验证。当前，在所有的平台上，我们使用 [NSS](http://www.mozilla.org/projects/security/pki/nss/) 的 libssl 来处理 SSL 连接逻辑。然而，我们使用平台特有的 APIs 来做证书验证。我们也将使用一个证书验证缓存，这将把多个对相同证书的证书验证请求合并为单个证书验证任务，也将把结果缓存一段时间。
 
-注意chromium具有它自己的NSS程序，它支持一些高级的特性，一些在系统的NSS模块中不需要的特性，比如支持[NPN](http://tools.ietf.org/html/draft-agl-tls-nextprotoneg-00)，[False Start](http://tools.ietf.org/search/draft-bmoeller-tls-falsestart-00)，Snap Start，[OCSP stapling](http://en.wikipedia.org/wiki/OCSP_Stapling)，etc。
+`SSLClientSocketNSS` 严格地遵循如下的事件顺序 (忽略高级功能，如基于证书验证的 [Snap Start](http://tools.ietf.org/html/draft-agl-tls-snapstart-00) 或 [DNSSEC](http://en.wikipedia.org/wiki/Domain_Name_System_Security_Extensions))：
+
+ - 调用 `Connect()`。我们将基于 `SSLConfig` 描述的配置和预处理器宏设置 NSS 的 SSL 选项。然后我们启动握手。
+ 
+ - 握手完成。假设我们没有遇到任何错误，我们将使用 `CertVerifier` 验证服务器的证书。证书验证可能会消耗一些时间，因而 `CertVerifier` 使用了 `WorkerPool` 来实际地调用 `X509Certificate::Verify()`，这使用平台特有的 APIs 实现。
+
+注意 chromium 具有它自己的 NSS 程序，它支持一些高级的特性，一些在系统的 NSS 模块中不需要的特性，比如支持 [NPN](http://tools.ietf.org/html/draft-agl-tls-nextprotoneg-00)，[False Start](http://tools.ietf.org/search/draft-bmoeller-tls-falsestart-00)，Snap Start，[OCSP stapling](http://en.wikipedia.org/wiki/OCSP_Stapling)，等等。
 
 TODO: talk about network change notifications
 
