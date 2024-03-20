@@ -10,47 +10,62 @@ tags:
 
 # 总览
 
-网络栈主要地是一个单线程跨平台的库，主要负责资源获取。它的主要接口是`URLRequest`和`URLRequestContext`。`URLRequest`，
-正如它的名字所表明的那样，表示一个[URL](http://en.wikipedia.org/wiki/URL)的请求。`URLRequestContext`包含实现URL请求所需的所有相关上下文，比如[cookies](http://en.wikipedia.org/wiki/HTTP_cookie)，主机解析器，代理解析器，[cache](http://dev.chromium.org/developers/design-documents/network-stack/http-cache)，等等。多个`URLRequest`对象可以共享相同的`URLRequestContext`。大多数的net对象不是线程安全的，尽管磁盘缓存可以使用一个专门的线程，而一些组件（主机解析，证书验证等等）可以使用unjoined worker线程。由于它主要运行于一个单独的网络线程上，因而在网络线程上的操作都不允许阻塞。所以我们通过异步的回调(典型的是CompletionCallback)来使用非阻塞操作。网络栈的代码也会把大多数操作记录到NetLog，它允许消费者把表示操作的说明记录到内存中，并以用户友好的格式用于调试中。
+Chromium 网络栈几乎是个单线程的跨平台库，它主要用于资源获取。它的主要接口是 `URLRequest` 和 `URLRequestContext`。`URLRequest`，就像它的名字所表明的那样，表示对 [URL](http://en.wikipedia.org/wiki/URL) 的请求。`URLRequestContext` 包含实现 URL 请求所需的所有相关上下文，比如 [cookies](http://en.wikipedia.org/wiki/HTTP_cookie)、域名解析器、代理解析器、[cache](http://dev.chromium.org/developers/design-documents/network-stack/http-cache) 等等。多个 `URLRequest` 对象可以共享同一个 `URLRequestContext`。大多数的 `net` 对象不是线程安全的，尽管磁盘缓存可以使用专门的线程，及一些组件（域名解析，证书验证等）可以使用 unjoined worker 线程。由于它主要运行在单个网络线程上，因而网络线程上的操作都不允许阻塞。我们通过异步回调（通常是 `CompletionCallback`）使用非阻塞操作。网络栈的代码也会把大多数操作记录到 `NetLog`，它允许消费者把操作记录到内存中，并以用户友好的格式用于调试中。
 
 <!--more-->
 
-Chromium开发者编写网络栈的目的是：
+Chromium 开发者编写网络栈的目的是：
 
- - abstractions允许编写跨平台的抽象。
- - 相对于高层的系统网络库(WinHTTP)可提供的，提供更好的控制。
-   * 避免系统库中可能出现的bugs。
+ - 允许编写跨平台的抽象。
+
+ - 相对于更高层的系统网络库（如 WinHTTP 或 WinINET）可以提供的，提供更好的控制。
+
+   * 避免系统库中可能出现的 bugs。
+
    * 方便更好地做性能优化。
 
 # 代码结构
-net/base - net实用例程的百宝袋，比如主机解析，cookies，网络改变探测，[SSL](http://en.wikipedia.org/wiki/Transport_Layer_Security)。
-net/disk_cache - [Web资源缓存](http://dev.chromium.org/developers/design-documents/network-stack/disk-cache)
-net/ftp - FTP实现。这些代码主要是基于老的HTTP实现的
-net/http - HTTP实现。
-net/ocsp - 当不使用系统库或系统没有提供一个OCSP实现时的[OCSP](http://en.wikipedia.org/wiki/Online_Certificate_Status_Protocol)实现。当前只包含一个基于NSS的实现。
-net/proxy - 代理 ([SOCKS](http://en.wikipedia.org/wiki/SOCKS)和HTTP) 配置，解析，脚本获取，等等。
-net/quic - QUIC实现。
-net/socket - TCP sockets，"SSL sockets"，和socket池的跨平台实现。
-net/socket_stream - WebSockets的socket streams。
-net/spdy - SPDY实现。
-net/url_request - URLRequest，URLRequestContext，和URLRequestJob的实现。
-net/websockets - WebSockets实现。
 
-# 网络请求剖析（集中于HTTP）
+ * net/base - `net` 实用例程百宝袋，比如域名解析、cookies、网络改变探测、[SSL](http://en.wikipedia.org/wiki/Transport_Layer_Security)。
+ 
+ * net/disk_cache - [Web 资源缓存](http://dev.chromium.org/developers/design-documents/network-stack/disk-cache)
+ 
+ * net/ftp - [FTP](http://en.wikipedia.org/wiki/File_Transfer_Protocol) 实现。代码主要基于老的 HTTP 实现。
+
+ * net/http - [HTTP](http://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) 实现。
+
+ * net/ocsp - 当不使用系统库或系统没有提供 OCSP 实现时的 [OCSP](http://en.wikipedia.org/wiki/Online_Certificate_Status_Protocol) 实现。当前只包含一个基于 NSS 的实现。
+
+ * net/proxy - 代理 ([SOCKS](http://en.wikipedia.org/wiki/SOCKS) 和 HTTP) 配置、解析、脚本获取等。
+
+ * net/quic - [QUIC](https://www.chromium.org/quic) 实现。
+
+ * net/socket - [TCP](http://en.wikipedia.org/wiki/Transmission_Control_Protocol) sockets、"SSL sockets" 和 socket 池的跨平台实现。
+
+ * net/socket_stream - WebSockets 的 socket 流。
+
+ * net/spdy - HTTP2（及其前身）[SPDY](https://www.chromium.org/spdy) 的实现。
+
+ * net/url_request - `URLRequest`、`URLRequestContext` 和 `URLRequestJob` 的实现。
+
+ * net/websockets - [WebSockets](http://en.wikipedia.org/wiki/WebSockets) 实现。
+
+# 网络请求剖析（聚焦于 HTTP）
 
 ![Chromium HTTP Network Request Diagram](../images/1315506-a1ebf2e63ed9668b.png)
 
 ## URLRequest
+
 ```
 class URLRequest {
  public:
   // Construct a URLRequest for |url|, notifying events to |delegate|.
   URLRequest(const GURL& url, Delegate* delegate);
-  
+
   // Specify the shared state
   void set_context(URLRequestContext* context);
 
-  // Start the request.  Notifications will be sent to |delegate|.
+  // Start the request. Notifications will be sent to |delegate|.
   void Start();
 
   // Read data from the request.
@@ -67,12 +82,10 @@ class URLRequest::Delegate {
 };
 ```
 
-当启动一个`URLRequest`时，它要做的第一件事就是决定要创建何种类型的`URLRequestJob`。主要的job类型是`URLRequestHttpJob`，它用于实现http://请求。还有许多其它的jobs，比如URLRequestFileJob
- (file://)，URLRequestFtpJob
- (ftp://)，URLRequestDataJob
- (data://)，等等。网络栈将确定适当的job来实现请求。但它给客户端提供了两种方式来定制job的创建：URLRequest::Interceptor和URLRequest::ProtocolFactory。这些相当地多余，除了URLRequest::Interceptor的接口更具可扩展性。在job进行的过程中，它将通知URLRequest，而后者则在需要时通知URLRequest::Delegate。
+当启动一个 `URLRequest` 时，它要做的第一件事是决定创建什么类型的 `URLRequestJob`。主要的 job 类型是 `URLRequestHttpJob`，它用于实现 **http://** 请求。还有许多其它的 jobs，如 `URLRequestFileJob` (**file://**)、`URLRequestFtpJob` (**ftp://**)，`URLRequestDataJob` (**data://**) 等。网络栈将选择适当的 job 来实现请求，但它给客户端提供了两种方式来定制 job 的创建：`URLRequest::Interceptor` 和 `URLRequest::ProtocolFactory`。这些都是相当多余的，除了 `URLRequest::Interceptor` 的接口更具可扩展性。在 job 进行过程中，它将通知 `URLRequest`，而后者则在需要时通知 `URLRequest::Delegate`。
 
 ## URLRequestHttpJob
+
 `URLRequestHttpJob`将首先确定要给HTTP请求设置的cookies，这需要查询请求上下文中的`CookieMonster`。这可以是异步的，因为`CookieMonster`可能是由一个[sqlite](http://en.wikipedia.org/wiki/SQLite)数据库支持的。做完了这些之后，它将请求请求上下文的`HttpTransactionFactory`来创建一个`HttpTransaction`。典型地， [HttpCache](http://dev.chromium.org/developers/design-documents/network-stack/http-cache)将被指定为HttpTransactionFactory。HttpCache将创建一个HttpCache::Transaction来处理HTTP请求。HttpCache::Transaction将首先检查HttpCache (它会检查[磁盘缓存](http://dev.chromium.org/developers/design-documents/network-stack/disk-cache))来查看缓存项是否已经存在。如果存在，则意味着响应已经被缓存了，或者这个缓存项的一个网络事物已经存在，则只是从那个项中读取。如果缓存项不存在，则我们创建它并让HttpCache的HttpNetworkLayer给请求的服务创建一个HttpNetworkTransaction。给HttpNetworkTransaction一个包含执行HTTP请求的上下文状态的HttpNetworkSession。这些状态中的一些来自于`URLRequestContext`。
 
 ## HttpNetworkTransaction
