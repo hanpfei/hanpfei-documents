@@ -137,9 +137,9 @@ PCM0 上由耳机播放看起来像下面这样：
   };
 ```
 
-这个 FE DAI 链接与常规 DAI 链接非常相似，只是我们还通过 `dynamic = 1` 把 DAI 链接设置为一个 DPCM FE。支持的 FE 流方向也应该通过 `dpcm_playback` 和 `dpcm_capture` 标记来设置。还有一个选项可以为每个 FE 指定触发调用的顺序。这允许 ASoC 核心在其它组件之前或之后触发 DSP (因为一些 DSP 对 DAI/DSP 的启动和停止顺序有很强的要求)。
+这个 FE DAI 链接与常规 DAI 链接非常相似，只是我们还通过 `dynamic = 1` 把 DAI 链接设置为一个 DPCM FE。支持的 FE 流方向也应该通过 `dpcm_playback` 和 `dpcm_capture` 标记来设置。还有一个选项可以为每个 FE 指定触发调用的顺序。这允许 ASoC 核心在其它组件之前或之后触发 DSP (因为一些 DSP 对 DAI/DSP 的启动和停止顺序有强要求)。
 
-上面的 FE DAI 设置 codec 并把 DAI 编码为 dummy 设备，由于 BE 是动态的，并将根据运行时配置而更改。
+由于 BE 是动态的，并将根据运行时配置而更改，上面的 FE DAI 设置 codec 并把 codec DAI 设置为 dummy 设备。
 
 BE DAI 配置如下：
 ```
@@ -163,9 +163,9 @@ BE DAI 配置如下：
   };
 ```
 
-这个 BE DAI 链接把 DAI0 连接到 codec (在这个例子中是 RT5460 AIF1)。它设置了 `no_pcm` 标志来标记它有一个 BE，并使用上面的 `dpcm_playback` 和 `dpcm_capture` 为支持的流方向设置标记。
+这个 BE DAI 链接把 DAI0 连接到 codec (这个例子中是 RT5460 AIF1) 上。它设置了 `no_pcm` 标志来标记它有一个 BE，并使用上面的 `dpcm_playback` 和 `dpcm_capture` 为支持的流方向设置标记。
 
-BE 还设置了忽略挂起和 PM 停机事件的标志。这允许 BE 在无主机模式下工作，其中主机 CPU 不像 BT 电话呼叫那样传输数据：
+BE 还设置了忽略挂起和 PM 停机事件的标志。这允许 BE 在无主机模式下工作，就像 BT 通话那样，主 CPU 不传输数据：
 ```
                       *************
   PCM0 <------------> *           * <----DAI0-----> Codec Headset
@@ -182,7 +182,7 @@ BE 还设置了忽略挂起和 PM 停机事件的标志。这允许 BE 在无主
                       *************
 ```
 
-这允许主机 CPU 在 DSP、MODEM DAI 和 BT DAI 仍在运行时休眠。
+这允许主 CPU 在 DSP、MODEM DAI 和 BT DAI 仍在运行时休眠。
 
 如果 codec 是外部管理的设备，BE DAI 链接也可以把 codec 设置为 dummy 设备。
 
@@ -190,9 +190,9 @@ BE 还设置了忽略挂起和 PM 停机事件的标志。这允许 BE 在无主
 
 ### FE/BE PCM 操作
 
-上面的 BE 也导出一些 PCM 操作和一个 `fixup` 回调。机器驱动程序使用 `fixup` 回调来 (重新) 配置基于 FE 硬件参数的 DAI。即 DSP 可以执行从 FE 到 BE 的 SRC 或 ASRC。
+上面的 BE 还导出了一些 PCM 操作和一个 `fixup` 回调。机器驱动程序基于 FE 硬件参数，使用 `fixup` 回调 (重新) 配置 DAI。如 DSP 可以执行从 FE 到 BE 的 SRC (采样率转换，重采样) 或 ASRC (异步采样率转换，异步重采样)。
 
-例如，DSP 为 DAI0 将所有 FE 硬件参数转换为以固定的 48k 速率, 16 位，立体声运行。这意味着在 DAI0 的机器驱动程序中所有 FE hw_params 必须是固定的，以便 DAI 在所需配置下运行，而无论 FE 配置如何。
+例如，对于 DAI0，DSP 将所有 FE 硬件参数转换为以固定的 48k 采样率, 16 位，立体声运行。这意味着 DAI0 的机器驱动程序中所有的 FE hw_params 必须是固定的，以便 DAI 在所需配置下运行，而无论 FE 配置如何。
 ```
   static int dai0_fixup(struct snd_soc_pcm_runtime *rtd,
 			struct snd_pcm_hw_params *params)
@@ -216,7 +216,7 @@ BE 还设置了忽略挂起和 PM 停机事件的标志。这允许 BE 在无主
 
 ### 小部件图连接
 
-BE DAI 链接通常在初始化时由 ASoC DPAM 核心连接到图。然而，如果 BE codec 或 BE DAI 是 dummy 的，则必须在驱动程序中显式设置：
+BE DAI 链接通常在初始化时由 ASoC DAPM 核心连接到该图。然而，如果 BE codec 或 BE DAI 是 dummy 的，则必须在驱动程序中显式设置：
 ```
   /* BE for codec Headset -  DAI0 is dummy and managed by DSP FW */
   {"DAI0 CODEC IN", NULL, "AIF1 Capture"},
@@ -229,27 +229,27 @@ DPCM DSP 驱动程序看起来与标准的平台类 ASoC 驱动程序结合 code
 
 1. 前端 PCM DAI - 即 struct snd_soc_dai_driver。
 
-2. DAPM 图展示从 FE DAI 到 BE 的 DSP 音频路由。
+2. DAPM 图，展示了从 FE DAI 到 BE 的 DSP 音频路由。
 
-3. 来自 DSP 图的 DAPM 部件。
+3. 来自 DSP 图的 DAPM 小部件。
 
-4. 增益、路由等混音器。
+4. 用于增益、路由等的混音器设置。
 
 5. DMA 配置。
 
 6. BE AIF 小部件。
 
-第 6 项对于 DSP 外部的音频路由很重要。需要为每个 BE 和每个流方向定义 AIF。比如，对于上面的 BE DAI0 我们将有：
+第 6 项对于将音频路由出 DSP 很重要。需要为每个 BE 和每个流方向定义 AIF。比如，对于上面的 BE DAI0 我们将有：
 ```
   SND_SOC_DAPM_AIF_IN("DAI0 RX", NULL, 0, SND_SOC_NOPM, 0, 0),
   SND_SOC_DAPM_AIF_OUT("DAI0 TX", NULL, 0, SND_SOC_NOPM, 0, 0),
 ```
 
-BE AIF 用于将 DSP 图连接到其它组件驱动程序的图 (比如，codec 图)。
+BE AIF 用于将 DSP 图和其它组件驱动程序的图 (比如，codec 图) 连接起来。
 
 ## 无主机 PCM 流
 
-无主机 PCM 流是不通过主机 CPU 路由的流。这方面的一个例子是从手机到调制解调器的电话。
+无主机 PCM 流是不通过主机 CPU 路由的流。这方面的一个例子是从耳机到调制解调器的手机通话。
 ```
                       *************
   PCM0 <------------> *           * <----DAI0-----> Codec Headset
@@ -266,17 +266,17 @@ BE AIF 用于将 DSP 图连接到其它组件驱动程序的图 (比如，codec 
                       *************
 ```
 
-在这种情况下，PCM 数据通过 DSP 路由。在这种用例中，主机 CPU 仅用于控制，且可以在流运行期间休眠。
+在这个例子中，PCM 数据通过 DSP 路由。在这个用例中，主机 CPU 仅用于控制，且可以在流运行期间休眠。
 
 主机可以通过以下方式控制无主机链路：
 
-1. 把链接配置为 CODEC <-> CODEC 样式的链接。在这种情况下，链接由 DAPM 图的状态启用或禁用。这通常意味着有一个混音器控制，可用于连接或断开两个 DAI 之间的路径。
+1. 把链接配置为 CODEC <-> CODEC 式的链接。在这种情况下，链接由 DAPM 图的状态启用或禁用。这通常意味着有一个混音器控制，可用于连接或断开两个 DAI 之间的通路。
 
-2. 无主机 FE。这种 FE 与 DAPM 图上的 BE DAI 链接有一个虚拟连接。然后像常规 PCM 操作那样由 FE 进行控制。这种方法提供了对 DAI 链接的更多控制，但需要更多的用户空间代码来控制链接。建议使用 CODEC<->CODEC，除非你的硬件需要更细粒度的 PCM 操作顺序。
+2. 无主机 FE。这种 FE 与 DAPM 图上的 BE DAI 链接有一个虚拟连接。然后像常规 PCM 操作那样由 FE 进行控制。这种方法提供了对 DAI 链接的更多控制，但需要更多用户空间代码来控制链接。建议使用 CODEC<->CODEC，除非你的硬件需要更细粒度的 PCM 操作顺序。
 
 ### CODEC <-> CODEC 链接
 
-当 DAPM 检测到 DAPM 图中的有效路径时，启用这种 DAI 链接。机器驱动程序给这种 DAI 链接设置一些附加参数，即：
+当 DAPM 检测到 DAPM 图中的有效通路时，启用这种 DAI 链接。机器驱动程序给这种 DAI 链接设置一些额外的参数，如：
 ```
   static const struct snd_soc_pcm_stream dai_params = {
 	.formats = SNDRV_PCM_FMTBIT_S32_LE,
@@ -301,11 +301,11 @@ BE AIF 用于将 DSP 图连接到其它组件驱动程序的图 (比如，codec 
 	< ... more DAI links here ... >
 ```
 
-这些参数用于在 DAPM 检测到有效路径并调用 PCM 操作启动链路时配置 DAI `hw_params()`。当路径不再有效时，DAPM 还将调用适当的 PCM 操作来禁用 DAI。
+这些参数用于在 DAPM 检测到有效通路时配置 DAI `hw_params()`，并调用 PCM 操作以启动链路。当通路不再有效时，DAPM 还将调用适当的 PCM 操作来禁用 DAI。
 
 ### 无主机 FE
 
-DAI 链接由不读写任何 PCM 数据的 FE 启用。这意味着创建一个与两个 DAI 链接的虚拟路径相连接的新 FE。FE PCM 启动时 DAI 链接启动，FE PCM 停止时 DAI 链接停止。注意，在这种配置中，FE PCM 不能读取或写入数据。
+DAI 链接由不读写任何 PCM 数据的 FE 启用。这意味着创建一个与通向两个 DAI 链接的虚拟通路相连接的新 FE。DAI 链接将在 FE PCM 启动时启动，在 FE PCM 停止时停止。注意，在这种配置中，FE PCM 不能读取或写入数据。
 
 [原文](linux-kernel/Documentation/sound/soc/dpcm.rst)
 
