@@ -244,9 +244,9 @@ struct mgmt *mgmt_new_default(void)
 
 在 BlueZ 中，`struct mgmt` 是一个与管理蓝牙控制器相关的结构体，用于处理与蓝牙控制器的通信和管理操作。具体实现上，BlueZ 通过协议为 **BTPROTO_HCI** 的蓝牙 **PF_BLUETOOTH** socket 与蓝牙控制器通信。`struct mgmt` 及其接口函数，封装蓝牙 HCI 接口，提供主机和蓝牙控制器之间的通信接口。
 
-`mgmt_new_default()` 函数新建一个 socket，绑定到地址 `(hci_family:AF_BLUETOOTH, hci_dev:HCI_DEV_NONE, hci_channel:HCI_CHANNEL_CONTROL)`，创建 `struct mgmt` 对象，为 socket 设置读取回调函数 `can_read_data()`，并设置 MTU。Socket 不绑定到任何设备，用户传递控制消息，MTU 会被设置的尽可能大，默认为 1024，最大为 65535。
+`mgmt_new_default()` 函数新建一个 socket，绑定到地址 `(hci_family:AF_BLUETOOTH, hci_dev:HCI_DEV_NONE, hci_channel:HCI_CHANNEL_CONTROL)`，创建 `struct mgmt` 对象，为 socket 设置读取回调函数 `can_read_data()`，并设置 MTU。这个 socket 不绑定到任何设备，用于传递控制命令、事件和数据，它的 MTU 会被设置的尽可能大，默认为 1024，最大为 65535。
 
-BlueZ 使用事件驱动 I/O，使用 polling 机制监听 socket 状态变化，并在 socket 可读或可写时执行读或写操作。为 socket 设置的读取回调函数 `can_read_data()` 是控制消息读取和处理的入口，这个函数定义 (位于 *src/shared/mgmt.c*) 如下：
+BlueZ 使用事件驱动 I/O，使用 polling 机制监听 socket 状态变化，并在 socket 可读或可写时执行读或写操作。BlueZ 为 socket 设置的读取回调函数 `can_read_data()` 是控制相关事件和数据读取和处理的入口，这个函数定义 (位于 *src/shared/mgmt.c*) 如下：
 ```
 static bool match_request_index(const void *a, const void *b)
 {
@@ -457,10 +457,24 @@ static bool can_read_data(struct io *io, void *user_data)
 }
 ```
 
-**BTPROTO_HCI** 协议的蓝牙 **PF_BLUETOOTH** socket 可以读取到的消息分为 3 种类型，分别为带返回数据的命令完成响应，不带返回数据仅包含状态的命令完成响应，通知消息。对于前两种消息类型，在待处理请求队列中找到对应的请求，通过请求的回调，通知请求的发起方，并唤醒 socket 上的写者。对于通知消息，在通知队列中查找注册的通知，找到注册的匹配的通知，并将消息通过通知的回调通知给注册方，并根据需要清理需要清理的通知。消息读取没有做数据缓存，BlueZ 通过 socket 执行的消息交换是面向消息的，而不是流式，类似于 UDP，每次收发操作一个完整的消息。
+通过 HCI socket 可以读取到的消息分为 3 种类型，分别为有返回数据的命令的完成响应，没有返回数据仅影响状态的命令的完成响应，通知消息。对于前两种消息类型，在待处理请求队列中找到对应的请求，通过请求的回调，通知请求的发起方，并唤醒 HCI socket 上的写者。对于通知消息，在通知队列中查找注册的通知，找到匹配的，并将消息通过它的回调通知给通知的注册方，并根据需要清理通知。可以看到 BlueZ 的数据读取没有做数据缓存，没有对读取到的数据做消息分割，可见 BlueZ 通过 HCI socket 执行的数据交换是面向消息的，而不是流式，类似于 UDP，每次收发一个完整的消息。
 
-`adapter_init()` 调用 `mgmt_send()` 函数向 `struct mgmt` 发送一个读取版本号的请求，`mgmt_send()` 函数定义如下：
+`adapter_init()` 调用 `mgmt_send()` 函数向 HCI 发送一个读取版本号的请求，`mgmt_send()` 函数定义 (位于 *src/shared/mgmt.c*) 如下：
 ```
+struct mgmt_request {
+	struct mgmt *mgmt;
+	unsigned int id;
+	uint16_t opcode;
+	uint16_t index;
+	void *buf;
+	uint16_t len;
+	mgmt_request_func_t callback;
+	mgmt_destroy_func_t destroy;
+	void *user_data;
+	int timeout;
+	unsigned int timeout_id;
+};
+ . . . . . .
 static struct mgmt_request *create_request(struct mgmt *mgmt, uint16_t opcode,
 				uint16_t index, uint16_t length,
 				const void *param, mgmt_request_func_t callback,
@@ -555,7 +569,7 @@ unsigned int mgmt_send(struct mgmt *mgmt, uint16_t opcode, uint16_t index,
 }
 ```
 
-`mgmt_send()` 函数为要发送的请求创建一个 `struct mgmt_request` 对象，将这个对象放进请求队列，并根据需要，为 socket 设置可写处理函数。
+`mgmt_send()` 函数为要发送的请求创建一个 `struct mgmt_request` 对象，将这个对象放进请求队列，并根据需要，为 HCI socket 设置写处理函数。
 
 读取版本号的请求可以看作是一个握手消息。读取版本号结束之后，将会执行更多地初始化动作，这从读取版本号的请求完成处理函数 `read_version_complete()` 中可以看出。这个函数定义 (位于 *src/adapter.c*) 如下：
 ```
