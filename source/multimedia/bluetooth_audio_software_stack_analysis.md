@@ -72,7 +72,7 @@ BlueZ 是 Linux 官方蓝牙协议栈，提供对蓝牙无线通信标准的全�
 
 蓝牙控制器/适配器是蓝牙硬件的中心，各个蓝牙设备通过蓝牙控制器/适配器连接进系统。蓝牙软件系统中，一切蓝牙设备的发现、配置和管理，从蓝牙适配器的探测开始。在 Linux 平台上，蓝牙控制器/适配器相关逻辑由 BlueZ 实现。
 
-BlueZ 系统服务 **bluetoothd** 启动时，执行 `adapter_init()` 函数初始化蓝牙适配器，这个调用过程如下：
+BlueZ 系统服务 **bluetoothd** 启动时，执行 `adapter_init()` 函数初始化蓝牙控制器/适配器，这个调用过程如下：
 ```
 #0  adapter_init () at src/adapter.c:10337
 #1  0x0000aaaaaaac3398 in main (argc=<optimized out>, argv=<optimized out>) at src/main.c:1216
@@ -106,7 +106,7 @@ int adapter_init(void)
 }
 ```
 
-`adapter_init()` 函数访问一下 DBus 连接，调用 `mgmt_new_default()` 函数创建并初始化 `struct mgmt` 对象，设置 `struct mgmt` 的调试配置，并调用 `mgmt_send()` 函数向 `struct mgmt` 发送一个读取版本号的请求。
+`adapter_init()` 函数获取 DBus 连接，并将其保存在静态变量 `dbus_conn`；调用 `mgmt_new_default()` 函数创建并初始化 `struct mgmt` 对象，设置 `struct mgmt` 的调试配置，并调用 `mgmt_send()` 函数向 `struct mgmt` 发送一个读取 HCI 版本号的请求。
 
 `mgmt_new_default()` 函数定义 (位于 *src/shared/mgmt.c*) 如下：
 ```
@@ -242,7 +242,9 @@ struct mgmt *mgmt_new_default(void)
 }
 ```
 
-在 BlueZ 中，`struct mgmt` 是一个与管理蓝牙控制器相关的结构体，用于处理与蓝牙控制器的通信和管理操作。具体实现上，BlueZ 通过协议为 **BTPROTO_HCI** 的蓝牙 **PF_BLUETOOTH** socket 与蓝牙控制器通信。`mgmt_new_default()` 函数新建一个 socket，绑定到地址 (hci_family:AF_BLUETOOTH, hci_dev:HCI_DEV_NONE, hci_channel:HCI_CHANNEL_CONTROL)，创建 `struct mgmt` 对象，为 socket 设置读取回调函数 `can_read_data()`，并设置 MTU。Socket 不绑定到任何设备，用户传递控制消息，MTU 会被设置的尽可能大，默认为 1024，最大为 65535。
+在 BlueZ 中，`struct mgmt` 是一个与管理蓝牙控制器相关的结构体，用于处理与蓝牙控制器的通信和管理操作。具体实现上，BlueZ 通过协议为 **BTPROTO_HCI** 的蓝牙 **PF_BLUETOOTH** socket 与蓝牙控制器通信。`struct mgmt` 及其接口函数，封装蓝牙 HCI 接口，提供主机和蓝牙控制器之间的通信接口。
+
+`mgmt_new_default()` 函数新建一个 socket，绑定到地址 `(hci_family:AF_BLUETOOTH, hci_dev:HCI_DEV_NONE, hci_channel:HCI_CHANNEL_CONTROL)`，创建 `struct mgmt` 对象，为 socket 设置读取回调函数 `can_read_data()`，并设置 MTU。Socket 不绑定到任何设备，用户传递控制消息，MTU 会被设置的尽可能大，默认为 1024，最大为 65535。
 
 BlueZ 使用事件驱动 I/O，使用 polling 机制监听 socket 状态变化，并在 socket 可读或可写时执行读或写操作。为 socket 设置的读取回调函数 `can_read_data()` 是控制消息读取和处理的入口，这个函数定义 (位于 *src/shared/mgmt.c*) 如下：
 ```
