@@ -1,4 +1,61 @@
 @[TOC](Linux 蓝牙音频软件栈实现分析)
+## 蓝牙协议栈简介
+**蓝牙协议栈**是实现蓝牙通信功能的软件架构，它由多个层次组成，每一层负责特定的功能。蓝牙协议栈的设计遵循蓝牙标准 (由**蓝牙技术联盟**，**Bluetooth SIG** 定义），支持多种蓝牙配置文件 (Profiles），以满足不同的应用场景 (如音频传输、文件传输、健康设备、键盘鼠标这样的输入输出设备等）。
+
+蓝牙各个应用场景的实现，如音频传输、文件传输和键盘鼠标这样的输入设备，与系统中常规的这些功能的实现大为不同。如对于音频播放和录制，通过 USB 连接的音频设备，或通过 audio codec 实现的音频播放和录制，在 Linux 中，基于 ALSA 框架实现，内核通过导出设备文件向用户空间暴露相应的硬件能力。USB 键盘鼠标，在 Linux 中，基于输入设备框架实现，内核同样通过导出设备文件向用户空间暴露相应的硬件能力。
+
+可与**蓝牙协议栈**类比的不是系统中常规的各个功能的实现，而是 TCP/IP 网络协议栈。在实现上，与 TCP/IP 网络协议栈类似，**蓝牙协议栈**不同功能的各个协议层次实现分布于硬件、Linux 操作系统内核、BlueZ 这样的蓝牙系统服务和 PulseAudio 这样系统服务中。
+
+**Bluetooth SIG** 官方的蓝牙核心规范 ([蓝牙核心规范 6.0](https://www.bluetooth.com/specifications/specs/core-specification-6-0/)) 给出的蓝牙核心系统架构如下图所示：
+![Bluetooth core system architecture](https://i-blog.csdnimg.cn/direct/cb0ffe3688884197944d3f89055ad355.png)
+
+蓝牙协议栈的分层结构如下图所示：
+```
++--------------------------------------------------------------------------------------------+
+|                   Application Layer                                                        |
+|  (Profiles: A2DP, HFP, HSP, AVRCP, HAP, BAP, ACS, ACAS, GAP, GATT, FTP, OPP, etc.)         |
++--------------------------------------------------------------------------------------------+
+|                   Middleware Layer                                                         |
+|  (Protocols: AVDTP, AVCTP, SDP, ATT, RFCOMM, OBEX, TCS, BNEP, etc.)    |
++--------------------------------------------------------------------------------------------+
+|                   Host Controller Interface (HCI)                                          |
+|  (Protocols: HCI Commands, Events, and Data)                                               |
++--------------------------------------------------------------------------------------------+
+|                   Logical Link Control and                                                 |
+|                   Adaptation Protocol (L2CAP)                                              |
++--------------------------------------------------------------------------------------------+
+|                   Baseband Layer                                                           |
+|  (Protocols: Link Manager Protocol (LMP), SCO, eSCO, ACL, ISOC, etc.)                            |
++--------------------------------------------------------------------------------------------+
+|                   Radio Layer                                                              |
+|  (Physical Layer: Bluetooth Radio)                                                         |
++--------------------------------------------------------------------------------------------+
+```
+
+蓝牙协议栈各层次简单说明如下：
+
+ * **应用层**：实现具体的蓝牙应用功能 (如音频传输、文件传输）。通过蓝牙配置文件 (Profiles) 定义设备的行为。常见的应用层协议/配置文件有 **A2DP** (Advanced Audio Distribution Profile，高质量音频传输)，**HFP** (Hands-Free Profile，免提通话），**HSP** (Headset Profile，耳机通话），**AVRCP** (Audio/Video Remote Control Profile，远程控制音频/视频设备），**HAP** (Hearing Aid Profile，用于助听器设备)，**BAP** (Bluetooth Audio Profile，用于通用音频设备)，**ACS** (Audio Control Service，提供音频控制功能（如音量调节、播放控制），基于 GATT/ATT 实现，通过暴露特性（Characteristics）供应用程序使用)，**ACAS** (Audio Stream Control Service，提供音频流管理功能（如流的创建、配置、删除），基于 GATT/ATT 实现，与 Isochronous Channels（ISOC） 协作，实现低延迟音频流传输)，**GATT** (Generic Attribute Profile，定义基于 ATT 的服务和特性，用于数据传输，提供逻辑信道管理，支持客户端-服务器模型)，**GAP** (Generic Access Profile，定义设备角色 (如广播者、观察者、中心设备、外围设备) 和连接流程，负责设备发现、连接建立和安全控制)，**FTP** (File Transfer Profile，文件传输），**OPP** (Object Push Profile，对象推送 (如联系人、图片）），**PAN** (Personal Area Network Profile，个人局域网），**HID** (Human Interface Device Profile，人机接口设备 (如键盘、鼠标) 等。
+
+ * **中间件层**：提供高层协议和服务，支持应用层的功能实现。常见的中间件层协议有，**SDP** (Service Discovery Protocol，服务发现协议，用于查找设备支持的服务），**RFCOMM** (Radio Frequency Communication，串口仿真协议，用于模拟 RS-232 串口通信），**OBEX** (Object Exchange Protocol，对象交换协议，用于文件传输和数据同步），**TCS** (Telephony Control Protocol Specification，电话控制协议，用于语音通话），**BNEP** (Bluetooth Network Encapsulation Protocol，网络封装协议，用于蓝牙网络共享），**AVDTP** (Audio/Video Distribution Transport Protocol，音频/视频传输协议，负责音频流的传输和控制，它定义了音频流的建立、配置、启动、暂停和停止等操作），**AVCTP** (Audio/Video Remote Control Profile，音频/视频远程控制协议，蓝牙协议栈中的控制传输协议，负责音频/视频控制命令的传输，它定义了控制命令的封装和传输机制），**ATT** (Attribute Protocol，用于在 BLE 设备之间传输属性数据，提供基于客户端-服务器的数据访问机制) 等。
+
+ * **HCI 层**：提供主机和蓝牙控制器之间的通信接口。负责传输命令、事件和数据。
+
+ * **L2CAP 层**：提供多路复用、分段和重组功能，支持上层协议的数据传输。管理逻辑链路，提供可靠的数据传输服务。
+
+ * **基带层**：管理物理链路，处理蓝牙设备的连接和通信。负责频率跳变、数据包格式化和错误检测。常见的基带层协议有 **LMP** (Link Manager Protocol，链路管理协议，负责设备之间的连接建立和维护），**SCO** (Synchronous Connection-Oriented link，同步面向连接链路，用于语音传输），**ACL** (Asynchronous Connectionless link，异步无连接链路，用于数据传输），**ISOC** (Isochronous Channels，提供同步数据传输通道，支持低延迟的音频流传输）。
+
+ * **射频层**：负责蓝牙无线电信号的发送和接收。处理频率跳变、调制和解调。使用蓝牙无线电协议，主要工作在 2.4 GHz ISM 频段。
+
+蓝牙协议栈相对于 TCP/IP 网络协议栈，其各层之间并不是那么的各自独立，而是紧密关联的。蓝牙协议栈中与音频相关的有 4 个用于不同场景的子协议栈，它们分别是用于传输高质量音频流的 **A2DP**，包括 **A2DP** -> **AVDTP** -> **L2CAP** -> **ACL**；用于通过蓝牙远程控制音频/视频设备的 **AVRCP**，包括 **AVRCP** -> **AVCTP** -> **L2CAP** -> **ACL**，**A2DP** 和 **AVRCP** 常协作实现蓝牙音频；用于语音通话的 **HFP**/**HSP**，包括 **HFP**/**HSP** -> **SCO**/**eSCO**；用于低功耗蓝牙的 **HAP**/**BAP**，包括 **HAP**/**BAP** -> **ACS**/**ACAS** -> **GATT**  -> **ATT** -> **GAP** -> **ISOC**。 除 **HAP**/**BAP** 协议栈外，其它的都是经典蓝牙的协议栈。
+
+![在这里插入图片描述](./images/bluetooth_audio_protocol_stack.png)
+
+类比于 TCP/IP 网络协议栈中的 RTP/RTCP 协议，**A2DP**/**AVDTP** 协议类似于 **RTP** 协议，**AVRCP**/**AVCTP** 协议类似于 **RTCP** 协议，**L2CAP**/**ACL** 协议类似于 **UDP** 协议，只是它们是可靠传输协议。
+
+在实现上，HCI 及更下层的协议无疑由 Linux 内核或硬件实现。应用层和中间件层协议的实现则常随着时间的流逝而变化。低功耗蓝牙是比较新的蓝牙标准，对低功耗蓝牙的支持是从 BlueZ 5.55 版本开始逐步添加的。对于 Linux 内核，则是从 Linux 5.13 版本开始，逐步支持 Isochronous Channels。
+
+在早期的 BlueZ 版本中，PulseAudio 这样的音频服务需要将音频流数据通过 Unix Domain Socket 发送给 BlueZ，再由 BlueZ 通过 A2DP 协议发送给蓝牙硬件设备。从 BlueZ 5.0 开始，BlueZ 的音频功能 (如 A2DP) 逐渐被移出 BlueZ 核心代码库，转而由 PipeWire 或 PulseAudio 这样的系统音频服务器直接处理音频流的传输。BlueZ 不再直接处理音频流数据，而是通过 D-Bus 接口与音频服务器 (如 PipeWire 或 PulseAudio) 交互。AVDTP 的实现由 BlueZ 和音频服务器 (如 PipeWire 或 PulseAudio) 共同协作完成，BlueZ 提供蓝牙协议栈的核心功能 (如设备管理、连接管理）。在 AVDTP 协议的实现中，BlueZ 负责音频流的建立、配置、启动、暂停和停止等操作，并通过 D-Bus 接口与音频服务器交互，传递音频流的配置和控制信息。PipeWire 或 PulseAudio 这样的音频服务器通过 BlueZ 的 D-Bus 接口管理蓝牙设备，负责音频流的编码、解码和传输，直接与蓝牙硬件交互，处理音频流数据。
+
 
 ## 蓝牙控制器探测
 BlueZ 是 Linux 官方蓝牙协议栈，提供对蓝牙无线通信标准的全面支持。核心协议方面，它支持 **L2CAP**（逻辑链路控制与适配协议），**RFCOMM**（串口仿真协议），**SDP**（服务发现协议），**HCI**（主机控制器接口）。配置文件方面，它支持 **A2DP**（高级音频分发），**AVRCP**（音视频远程控制），**HFP**（免提协议），**HID**（人机接口设备），PAN（个人局域网）。硬件设备类型方面，它支持音频设备，如蓝牙耳机、音箱；输入设备，如键盘、鼠标；网络连接，如蓝牙 PAN；物联网，如智能家居设备。它还提供一系列与蓝牙设备管理控制有关的工具程序，如 **bluetoothd**，蓝牙守护进程，管理设备和服务；**bluetoothctl**，命令行工具，用于设备配对、连接等操作；**hcitool**，配置蓝牙适配器及查询设备信息；**sdptool**，浏览和发布 SDP 服务记录。
@@ -1673,8 +1730,9 @@ BLUETOOTH_PLUGIN_DEFINE(avrcp, VERSION, BLUETOOTH_PLUGIN_PRIORITY_DEFAULT,
 ```
 
 **AVRCP** 插件向 BlueZ 核心注册了两个 profile。
+## 蓝牙设备、配置文件 (Profile) 和服务
 
-driver，device，profile
+adapter，driver，device，profile，service，stream，session
 
 
 
