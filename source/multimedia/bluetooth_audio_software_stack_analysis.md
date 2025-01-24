@@ -571,7 +571,7 @@ unsigned int mgmt_send(struct mgmt *mgmt, uint16_t opcode, uint16_t index,
 
 `mgmt_send()` 函数为要发送的请求创建一个 `struct mgmt_request` 对象，将这个对象放进请求队列，并根据需要，为 HCI socket 设置写处理函数。
 
-读取版本号的请求可以看作是一个握手消息。读取版本号结束之后，将会执行更多地初始化动作，这从读取版本号的请求完成处理函数 `read_version_complete()` 中可以看出。这个函数定义 (位于 *src/adapter.c*) 如下：
+读取 HCI 版本号的请求可以看作是一个握手消息。读取版本号结束之后，将会执行更多的初始化动作，这从读取 HCI 版本号的请求完成处理函数 `read_version_complete()` 中可以看出来。这个函数定义 (位于 *src/adapter.c*) 如下：
 ```
 static void read_version_complete(uint8_t status, uint16_t length,
 					const void *param, void *user_data)
@@ -626,11 +626,11 @@ static void read_version_complete(uint8_t status, uint16_t length,
 }
 ```
 
-`read_version_complete()` 函数简单检查得到的版本号。随后向 **BTPROTO_HCI** 协议的蓝牙 **PF_BLUETOOTH** socket 发送了命令读取命令 **MGMT_OP_READ_COMMANDS**，通过 `mgmt_register()` 函数注册了对 **MGMT_EV_INDEX_ADDED** 和 **MGMT_EV_INDEX_REMOVED** 事件的通知，并发送了 **MGMT_OP_READ_INDEX_LIST** 命令。
+`read_version_complete()` 函数简单检查得到的 HCI 版本号，如笔者的 Linux 6.6 版内核，读取到的 HCI 版本号为 **1.22**。随后向 HCI socket 发送 HCI 命令读取命令 **MGMT_OP_READ_COMMANDS**，通过 `mgmt_register()` 函数注册对 **MGMT_EV_INDEX_ADDED** 和 **MGMT_EV_INDEX_REMOVED** 事件通知的监听，并发送**索引**列表读取命令 **MGMT_OP_READ_INDEX_LIST**。
 
-用户空间应用程序，和 **BTPROTO_HCI** 协议的蓝牙 **PF_BLUETOOTH** socket 之间交换的这些消息的格式定义位于 *lib/mgmt.h*，大概 Linux 官方认为，Linux 永远不需要一个除 BlueZ 外的蓝牙协议栈系统服务。
+BlueZ 和 HCI socket 之间交换的这些消息的格式定义于 *lib/mgmt.h*，而不是导出到用户空间的 Linux 内核接口头文件，大概 Linux 官方认为，Linux 永远不需要一个除 BlueZ 外的蓝牙协议栈。
 
-`mgmt_register()` 函数定义 (位于 *src/shared/mgmt.c*) 如下：
+用于注册通知的 `mgmt_register()` 函数定义 (位于 *src/shared/mgmt.c*) 如下：
 ```
 struct mgmt_notify {
 	unsigned int id;
@@ -675,7 +675,7 @@ unsigned int mgmt_register(struct mgmt *mgmt, uint16_t event, uint16_t index,
 
 `mgmt_register()` 函数为注册的通知创建 `struct mgmt_notify` 对象，其中 `id` 根据注册通知的顺序自动分配，要监听的事件通过事件码 `event` 和索引 `index` 标识，或单独由事件码 `event` 标识，回调函数和用户私有数据 `user_data` 用于通知事件的处理。
 
-命令读取命令 **MGMT_OP_READ_COMMANDS** 的返回值由 `read_commands_complete()` 函数处理，这个函数定义 (位于 *src/adapter.c*) 如下：
+HCI 命令读取命令 **MGMT_OP_READ_COMMANDS** 的返回数据由 `read_commands_complete()` 函数处理，这个函数定义 (位于 *src/adapter.c*) 如下：
 ```
 static uint32_t kernel_features = 0;
  . . . . . .
@@ -759,9 +759,11 @@ static void read_commands_complete(uint8_t status, uint16_t length,
 }
 ```
 
-BlueZ 和 Linux 内核的蓝牙子系统可以各自以向后兼容的方式相对独立地发展。**MGMT_OP_READ_COMMANDS** 命令返回 Linux 内核的蓝牙子系统支持的所有命令类型和事件类型，如笔者的 Linux 6.6 版内核，支持 88 个命令类型，和 44 个事件类型，笔者的 BlueZ 5.64 版，支持 86 个命令类型，和 48 个事件类型。`read_commands_complete()` 函数检查其中的部分关键命令类型和事件类型，并将结果保存在全局的 **kernel_features**。
+BlueZ 蓝牙协议栈和 Linux 内核的蓝牙子系统可以各自以向后兼容的方式相对独立地发展。**MGMT_OP_READ_COMMANDS** 命令返回 Linux 内核的蓝牙子系统的 HCI 支持的所有命令和事件类型，如笔者的 Linux 6.6 版内核，支持 88 个命令，和 44 个事件类型，笔者的 BlueZ 5.64 版，支持 86 个命令，和 48 个事件类型。`read_commands_complete()` 函数检查其中的部分关键命令和事件类型，并将结果保存在全局的 **kernel_features**。
 
-BlueZ 的 `read_version_complete()` 函数发送**索引**列表读取命令 **MGMT_OP_READ_INDEX_LIST**，**索引** 在这里指蓝牙控制器/蓝牙适配器的索引，读取**索引**列表即读取蓝牙控制器/蓝牙适配器列表。**索引**列表读取命令 **MGMT_OP_READ_INDEX_LIST** 的返回值由 `read_index_list_complete()` 函数处理，这个函数定义 (位于 *src/adapter.c*) 如下：
+BlueZ 的 `read_version_complete()` 函数发送**索引**列表读取命令 **MGMT_OP_READ_INDEX_LIST**，**索引** 在这里指系统中蓝牙控制器/适配器的索引，读取**索引**列表即读取蓝牙控制器/适配器列表。前面在 `mgmt_send()` 和 `mgmt_register()` 等函数及 `struct mgmt_request` 和 `struct mgmt_notify` 等结构体中多次看到 `index`，这个索引正表示操作的目标蓝牙控制器/适配器。`read_version_complete()` 函数中注册的对 **MGMT_EV_INDEX_ADDED** 和 **MGMT_EV_INDEX_REMOVED** 事件通知的监听，即监听蓝牙控制器/适配器添加和移出的事件。
+
+**索引**列表读取命令的返回数据由 `read_index_list_complete()` 函数处理，这个函数定义 (位于 *src/adapter.c*) 如下：
 ```
 static GList *adapter_list = NULL;
  . . . . . .
@@ -1030,9 +1032,11 @@ static void read_index_list_complete(uint8_t status, uint16_t length,
 }
 ```
 
-通过 **MGMT_OP_READ_INDEX_LIST** 命令读取的 **索引**列表，的确用一个 16 位的整型值，也就是一个索引，或者设备 ID，描述或标识蓝牙控制器/蓝牙适配器。在 BlueZ 中，蓝牙控制器/蓝牙适配器由 `struct btd_adapter` 对象描述，BlueZ 用一个全局列表维护它们。`read_index_list_complete()` 函数遍历各个蓝牙控制器/蓝牙适配器，调用 `index_added()` 函数，为它们创建 `struct btd_adapter` 对象，并把它添加进蓝牙控制器/蓝牙适配器列表，为它们发出 `MGMT_OP_READ_INFO` 命令，以获得蓝牙控制器/蓝牙适配器的详细信息。
+通过 **MGMT_OP_READ_INDEX_LIST** 命令读取的 **索引**列表，的确用一个 16 位的整型值，也就是一个索引，或者设备 ID，描述或标识蓝牙控制器/适配器。在 BlueZ 中，蓝牙控制器/适配器由 `struct btd_adapter` 对象描述，BlueZ 用一个全局列表维护它们。
 
-`MGMT_OP_READ_INFO` 命令的返回值为 `struct mgmt_rp_read_info` 对象，这个结构在 *lib/mgmt.h* 中定义如下：
+`read_index_list_complete()` 函数遍历各个蓝牙控制器/适配器，调用 `index_added()` 函数，为它们创建 `struct btd_adapter` 对象，并把它添加进蓝牙控制器/适配器的列表，为它们发出 `MGMT_OP_READ_INFO` 命令，以获得蓝牙控制器/适配器的详细信息。
+
+`MGMT_OP_READ_INFO` 命令的返回数据为 `struct mgmt_rp_read_info` 对象，这个结构在 *lib/mgmt.h* 中定义如下：
 ```
 struct mgmt_rp_read_info {
 	bdaddr_t bdaddr;
@@ -1046,7 +1050,7 @@ struct mgmt_rp_read_info {
 } __packed;
 ```
 
-`MGMT_OP_READ_INFO` 命令的返回值由 `read_info_complete()` 函数处理，这个函数定义 (位于 *src/adapter.c*) 如下：
+蓝牙控制器/适配器信息读取命令 `MGMT_OP_READ_INFO` 的返回数据由 `read_info_complete()` 函数处理，这个函数定义 (位于 *src/adapter.c*) 如下：
 ```
 static void read_info_complete(uint8_t status, uint16_t length,
 					const void *param, void *user_data)
@@ -1333,14 +1337,44 @@ failed:
 
 `read_info_complete()` 函数的处理过程如下：
 
-1. 将获得的信息拷贝进蓝牙控制器/蓝牙适配器的 `struct btd_adapter` 对象。
-2. 清除蓝牙控制器/蓝牙适配器的 UUIDs 和 设备。
-3. 处理蓝牙控制器/蓝牙适配器的地址。如果获得的地址为空，会随机生成一个地址，并向 **mgmt** 发送 **MGMT_OP_SET_STATIC_ADDRESS** 命令，将地址设置给蓝牙控制器/蓝牙适配器，地址类型设置为 **BDADDR_LE_RANDOM**。否则，首先拷贝获得的地址，并根据获得的设置信息，设置地址类型为 **BDADDR_BREDR** 或**BDADDR_LE_PUBLIC**，分别表示经典蓝牙和低功耗蓝牙。
-4. 根据获得的设置信息，设置蓝牙控制器/蓝牙适配器的模式，如安全简单配对 **MGMT_SETTING_SSP**，传统蓝牙模式 **MGMT_SETTING_BREDR**，低功耗蓝牙模式 **MGMT_SETTING_LE** 等。
-5. 调用 `adapter_register()` 函数注册蓝牙控制器/蓝牙适配器。注册的含义包括为蓝牙控制器/蓝牙适配器向 DBus 注册 methods、属性；为低功耗蓝牙启动 GATT 数据库和广告管理器 (advertising managers，用于管理蓝牙设备的广告功能的组件。蓝牙广告是一种设备广播信息的方式，允许其它设备在不建立连接的情况下接收这些信息。这在低功耗蓝牙（Bluetooth Low Energy, BLE）中尤为重要，用于设备发现、广播服务信息等。)；为蓝牙控制器/蓝牙适配器注册标记改变通知；加载配置，位于 */var/lib/bluetooth/[蓝牙适配器设备地址]/settings*，如 */var/lib/bluetooth/28\:D0\:43\:9A\:CB\:EF/settings*；加载驱动；加载设备，配对过的蓝牙设备，在蓝牙控制器的目录下，有一个以它的设备地址命名的目录，其中包含设备的相关信息，如 */var/lib/bluetooth/28\:D0\:43\:9A\:CB\:EF/24\:D0\:DF\:96\:AD\:6E* 目录；加载连接。
-6. 为蓝牙控制器/蓝牙适配器向 **mgmt** 注册事件通知，监听的事件包括 **MGMT_EV_NEW_SETTINGS**、**MGMT_EV_CLASS_OF_DEV_CHANGED**、、**MGMT_EV_LOCAL_NAME_CHANGED**、**MGMT_EV_DISCOVERING**、**MGMT_EV_DEVICE_FOUND**、**MGMT_EV_DEVICE_DISCONNECTED**、**MGMT_EV_DEVICE_CONNECTED**、**MGMT_EV_CONNECT_FAILED**、**MGMT_EV_DEVICE_UNPAIRED**、**MGMT_EV_AUTH_FAILED**、**MGMT_EV_NEW_LINK_KEY**、**MGMT_EV_NEW_LONG_TERM_KEY**、**MGMT_EV_NEW_CSRK**、**MGMT_EV_NEW_IRK**、**MGMT_EV_NEW_CONN_PARAM**、**MGMT_EV_DEVICE_BLOCKED**、**MGMT_EV_DEVICE_UNBLOCKED**、**MGMT_EV_PIN_CODE_REQUEST**、**MGMT_EV_USER_CONFIRM_REQUEST**、**MGMT_EV_USER_PASSKEY_REQUEST**、**MGMT_EV_PASSKEY_NOTIFY**、**MGMT_EV_CONTROLLER_RESUME** 共 22 个事件。
-7. 设置蓝牙控制器/蓝牙适配器类别和名称。
-8. 设置蓝牙控制器/蓝牙适配器的可配对状态和可连接状态。
+1. 将获得的信息拷贝进蓝牙控制器/适配器的 `struct btd_adapter` 对象。
+2. 清除蓝牙控制器/适配器的 UUIDs 和 设备。
+3. 处理蓝牙控制器/适配器的地址。如果获得的地址为空，会随机生成一个地址，并向 HCI 发送设置静态地址命令 **MGMT_OP_SET_STATIC_ADDRESS**，将地址设置给蓝牙控制器/适配器，地址类型将设置为 **BDADDR_LE_RANDOM**。否则，首先拷贝获得的地址，并根据获得的设置信息，设置地址类型为 **BDADDR_BREDR** 或**BDADDR_LE_PUBLIC**，分别表示经典蓝牙和低功耗蓝牙。
+4. 根据获得的设置信息，设置蓝牙控制器/适配器的模式，如安全简单配对 **MGMT_SETTING_SSP**，传统蓝牙模式 **MGMT_SETTING_BREDR**，低功耗蓝牙模式 **MGMT_SETTING_LE** 等。
+5. 调用 `adapter_register()` 函数注册蓝牙控制器/适配器。注册蓝牙控制器/适配器的含义包括：
+ * 为蓝牙控制器/适配器向 DBus 注册 **methods** 和**属性**；
+ * 为低功耗蓝牙启动 GATT 数据库和广告管理器 (advertising managers，用于管理蓝牙设备的广告功能的组件。蓝牙广告是一种设备广播信息的方式，允许其它设备在不建立连接的情况下接收这些信息。这在低功耗蓝牙（Bluetooth Low Energy, BLE）中尤为重要，用于设备发现、广播服务信息等。)；
+ * 为蓝牙控制器/适配器注册标记改变通知；
+ * 加载配置，位于 */var/lib/bluetooth/[蓝牙适配器设备地址]/settings*，如 */var/lib/bluetooth/28\:D0\:43\:9A\:CB\:EF/settings*；
+ * 加载驱动；
+ * 加载设备，配对过的蓝牙设备，在蓝牙控制器的目录下，有一个以它的设备地址命名的目录，其中包含设备的相关信息，如 */var/lib/bluetooth/28\:D0\:43\:9A\:CB\:EF/24\:D0\:DF\:96\:AD\:6E* 目录；
+ * 加载连接，向 HCI 发送 **MGMT_OP_GET_CONNECTIONS** 命令获取已连接的设备。
+6. 为蓝牙控制器/适配器向 HCI 注册事件通知，监听的事件包括：
+ * **MGMT_EV_NEW_SETTINGS**
+ * **MGMT_EV_CLASS_OF_DEV_CHANGED**
+ * **MGMT_EV_LOCAL_NAME_CHANGED**
+ * **MGMT_EV_DISCOVERING**
+ * **MGMT_EV_DEVICE_FOUND**
+ * **MGMT_EV_DEVICE_DISCONNECTED**
+ * **MGMT_EV_DEVICE_CONNECTED**
+ * **MGMT_EV_CONNECT_FAILED**
+ * **MGMT_EV_DEVICE_UNPAIRED**
+ * **MGMT_EV_AUTH_FAILED**
+ * **MGMT_EV_NEW_LINK_KEY**
+ * **MGMT_EV_NEW_LONG_TERM_KEY**
+ * **MGMT_EV_NEW_CSRK**
+ * **MGMT_EV_NEW_IRK**
+ * **MGMT_EV_NEW_CONN_PARAM**
+ * **MGMT_EV_DEVICE_BLOCKED**
+ * **MGMT_EV_DEVICE_UNBLOCKED**
+ * **MGMT_EV_PIN_CODE_REQUEST**
+ * **MGMT_EV_USER_CONFIRM_REQUEST**
+ * **MGMT_EV_USER_PASSKEY_REQUEST**
+ * **MGMT_EV_PASSKEY_NOTIFY**
+ * **MGMT_EV_CONTROLLER_RESUME**
+共 22 个事件。
+7. 设置蓝牙控制器/适配器类别和名称。
+8. 设置蓝牙控制器/适配器的可配对状态和可连接状态。
 9. 根据设置配置可发现状态。根据设置启动设备扫描。
 
 `read_info_complete()` 函数执行完成之后，蓝牙控制器对整个系统可用，其中的含义包括，硬件被适当的初始化，硬件的特性和能力通过 DBus 广播到整个系统，系统中需要访问蓝牙的应用程序，如 PulseAudio 可以访问蓝牙控制器。
