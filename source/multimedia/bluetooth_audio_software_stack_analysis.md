@@ -1377,9 +1377,11 @@ failed:
 8. 设置蓝牙控制器/适配器的可配对状态和可连接状态。
 9. 根据设置配置可发现状态。根据设置启动设备扫描。
 
-`read_info_complete()` 函数执行完成之后，蓝牙控制器对整个系统可用，其中的含义包括，硬件被适当的初始化，硬件的特性和能力通过 DBus 广播到整个系统，系统中需要访问蓝牙的应用程序，如 PulseAudio 可以访问蓝牙控制器。
+`read_info_complete()` 函数执行完成之后，蓝牙控制器/适配器对整个系统可用，其中的含义包括，硬件被适当的初始化，硬件的特性和能力通过 DBus 广播到整个系统，系统中需要访问蓝牙的应用程序，如 PulseAudio 可以访问蓝牙控制器。
+
 ## BlueZ 插件系统及音频插件
-BlueZ 中，有一个简单的插件系统，支持通过插件提供一些功能模块，如 profile 和蓝牙控制器/蓝牙适配器驱动等。BlueZ 中用于描述插件的 `struct bluetooth_plugin_desc` 结构定义 (位于 *src/plugin.h*) 如下：
+
+BlueZ 中，有一个简单的插件系统，支持通过插件提供一些功能模块，如 profile 和蓝牙控制器/适配器驱动等。BlueZ 中用于描述插件的 `struct bluetooth_plugin_desc` 结构定义 (位于 *src/plugin.h*) 如下：
 ```
 struct bluetooth_plugin_desc {
 	const char *name;
@@ -1392,7 +1394,7 @@ struct bluetooth_plugin_desc {
 };
 ```
 
-插件的定义者定义这个结构的对象，在 `init` 回调中，向 BlueZ 注册具体的功能模块。BlueZ 的插件分为内置插件和独立插件。内置插件和 BlueZ 核心编译在一起，独立插件编译为单独的动态链接库 **.so** 文件。BlueZ 的插件系统提供了一个方便的宏 `BLUETOOTH_PLUGIN_DEFINE` 用于定义 `struct bluetooth_plugin_desc` 结构对象，这个宏定义 (位于 *src/plugin.h*) 如下：
+插件的定义者定义这个结构的对象，在 `init` 回调中，插件向 BlueZ 注册具体的功能模块。BlueZ 的插件分为内置插件和独立插件。内置插件和 BlueZ 核心编译在一起，独立插件编译为单独的动态链接库 **.so** 文件。BlueZ 的插件系统提供了一个方便的宏 `BLUETOOTH_PLUGIN_DEFINE` 用于定义 `struct bluetooth_plugin_desc` 结构对象，这个宏定义 (位于 *src/plugin.h*) 如下：
 ```
 #ifdef BLUETOOTH_PLUGIN_BUILTIN
 #define BLUETOOTH_PLUGIN_DEFINE(name, version, priority, init, exit) \
@@ -1414,11 +1416,11 @@ struct bluetooth_plugin_desc {
 #endif
 ```
 
-在分别被用于定义 BlueZ 内置插件和独立插件时，`BLUETOOTH_PLUGIN_DEFINE` 宏定义不同。用于定义内置插件时，`BLUETOOTH_PLUGIN_DEFINE` 宏定义一个名为 `__bluetooth_builtin_[name]` 的 `struct bluetooth_plugin_desc` 对象，如 `__bluetooth_builtin_a2dp`。
+在分别被用于定义 BlueZ 内置插件和独立插件时，`BLUETOOTH_PLUGIN_DEFINE` 宏定义不同。用于定义内置插件时，`BLUETOOTH_PLUGIN_DEFINE` 宏定义一个名为 `__bluetooth_builtin_[name]` 的 `struct bluetooth_plugin_desc` 对象，如 `__bluetooth_builtin_a2dp`，定义独立插件时，则定义名为 bluetooth_plugin_desc` 的 `struct bluetooth_plugin_desc` 对象。
 
 BlueZ 有一个脚本 *src/genbuiltin*，在构建时为所有内置插件声明其 `struct bluetooth_plugin_desc` 对象，并定义一个包含所有内置插件的名为 `__bluetooth_builtin` 的列表，这个脚本定义如下：
 ```
-#!/bin/sh
+#!/bin/s
 
 for i in $*
 do
@@ -1437,7 +1439,7 @@ echo "  NULL"
 echo "};"
 ```
 
-*src/genbuiltin* 脚本生成的头文件内容大致像下面这样：
+*src/genbuiltin* 脚本生成的头文件 *src/builtin.h* 内容大致像下面这样：
 ```
 extern struct bluetooth_plugin_desc __bluetooth_builtin_hostname;
 extern struct bluetooth_plugin_desc __bluetooth_builtin_wiimote;
@@ -1471,7 +1473,7 @@ static struct bluetooth_plugin_desc *__bluetooth_builtin[] = {
 };
 ```
 
-插件系统在 BlueZ 系统服务启动时，通过调用 `plugin_init()` 函数初始化，这个函数定义 (位于 *src/plugin.c*) 如下：
+插件系统在 BlueZ 系统服务启动时，调用 `plugin_init()` 函数初始化，这个函数定义 (位于 *src/plugin.c*) 如下：
 ```
 static GSList *plugins = NULL;
 
@@ -1656,12 +1658,12 @@ start:
 
 `plugin_init()` 函数接收插件黑名单和白名单作为参数，插件黑名单和白名单是以逗号 (",") 分割的插件名称列表。`plugin_init()` 函数执行过程如下：
 
- * 解析插件黑名单和白名单，将它们转换为字符串数组的形式。
- * 添加内置插件。遍历所有内置插件，添加那些不在黑名单中，而在白名单中的插件。具体来说，黑名单和白名单的工作方式为，只有黑名单，没有白名单，添加那些不在黑名单中的插件；只有白名单，没有黑名单，添加那些在白名单中的插件；既有黑名单，又有白名单，添加那些不在黑名单，且在白名单中的插件；既没有黑名单，又没有白名单，添加所有插件。
- * 添加独立插件。在 **PLUGINDIR** 目录下，如 */usr/lib/aarch64-linux-gnu/bluetooth/plugins/* 目录下，查找动态连接库，并添加插件。独立插件受到与内置插件相同的插件黑名单和白名单机制的过滤。所谓添加插件，指的是为插件的 `struct bluetooth_plugin_desc` 对象创建 `struct bluetooth_plugin` 对象，并将其添加到插件列表中。
- * 初始化所有添加的插件。这主要是指执行各插件的 `init` 回调。
+1. 解析插件黑名单和白名单，将它们转换为字符串数组的形式。
+2. 添加内置插件。遍历所有内置插件，添加那些不在黑名单中，而在白名单中的插件。具体来说，黑名单和白名单的工作方式为，只有黑名单，没有白名单，添加那些不在黑名单中的插件；只有白名单，没有黑名单，添加那些在白名单中的插件；既有黑名单，又有白名单，添加那些不在黑名单，且在白名单中的插件；既没有黑名单，又没有白名单，添加所有插件。
+3. 添加独立插件。在 **PLUGINDIR** 目录下，如 */usr/lib/aarch64-linux-gnu/bluetooth/plugins/*，查找插件的动态链接库文件，并添加插件。独立插件受到与内置插件相同的插件黑名单和白名单机制的过滤。所谓添加插件，指的是为插件的 `struct bluetooth_plugin_desc` 对象创建 `struct bluetooth_plugin` 对象，并将其添加到插件列表中。对于独立插件，BlueZ 通过 `dlopen()` 打开动态链接库文件，并通过 `dlsym()` 获得它的 `struct bluetooth_plugin_desc` 对象。
+4. 初始化所有添加的插件，包括内置插件和独立插件。这主要是指执行各插件的 `init()` 回调，该回调执行成功时，插件被标为激活状态。
 
-BlueZ 中蓝牙音频相关的内置插件有两个，分别为 **a2dp** 和 **avrcp**。**A2DP** 插件负责高质量音频流的传输，支持多种编解码器。**AVRCP** 插件负责远程控制功能，支持多种控制命令和媒体元数据传输。这两个插件在 BlueZ 中协同工作，为用户提供完整的蓝牙音频体验。
+BlueZ 中蓝牙音频相关的内置插件有两个，分别为 **a2dp** 和 **avrcp**。**A2DP** 插件负责高质量音频流的传输配置。**AVRCP** 插件负责远程控制功能，支持多种控制命令和媒体元数据传输。这两个插件在 BlueZ 中协同工作，为用户提供完整的蓝牙音频体验。
 
 **A2DP** 插件定义 (位于 *profiles/audio/a2dp.c*) 如下：
 ```
@@ -1737,7 +1739,7 @@ BLUETOOTH_PLUGIN_DEFINE(a2dp, VERSION, BLUETOOTH_PLUGIN_PRIORITY_DEFAULT,
 		a2dp_init, a2dp_exit)
 ```
 
-**A2DP** 插件向 BlueZ 核心注册了一个蓝牙控制器/适配器驱动，和两个 profile。
+**A2DP** 插件向 BlueZ 核心注册一个蓝牙控制器/适配器驱动，和两个 profile。
 
 **AVRCP** 插件定义 (位于 *profiles/audio/avrcp.c*) 如下：
 ```
@@ -1790,6 +1792,7 @@ BLUETOOTH_PLUGIN_DEFINE(avrcp, VERSION, BLUETOOTH_PLUGIN_PRIORITY_DEFAULT,
 ```
 
 **AVRCP** 插件向 BlueZ 核心注册了两个 profile。
+
 ## 蓝牙设备、配置文件 (Profile) 和服务
 
 adapter，driver，device，profile，service，stream，session
