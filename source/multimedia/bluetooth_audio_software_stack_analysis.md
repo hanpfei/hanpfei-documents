@@ -25,7 +25,7 @@
 |                   Adaptation Protocol (L2CAP)                                              |
 +--------------------------------------------------------------------------------------------+
 |                   Baseband Layer                                                           |
-|  (Protocols: Link Manager Protocol (LMP), SCO, eSCO, ACL, ISOC, etc.)                            |
+|  (Protocols: Link Manager Protocol (LMP), SCO, eSCO, ACL, ISOC, etc.)                      |
 +--------------------------------------------------------------------------------------------+
 |                   Radio Layer                                                              |
 |  (Physical Layer: Bluetooth Radio)                                                         |
