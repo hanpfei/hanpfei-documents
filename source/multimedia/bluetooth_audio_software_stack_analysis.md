@@ -16,7 +16,7 @@
 |  (Profiles: A2DP, HFP, HSP, AVRCP, HAP, BAP, ACS, ACAS, GAP, GATT, FTP, OPP, etc.)         |
 +--------------------------------------------------------------------------------------------+
 |                   Middleware Layer                                                         |
-|  (Protocols: AVDTP, AVCTP, SDP, ATT, RFCOMM, OBEX, TCS, BNEP, etc.)    |
+|  (Protocols: AVDTP, AVCTP, SDP, ATT, RFCOMM, OBEX, TCS, BNEP, etc.)                        |
 +--------------------------------------------------------------------------------------------+
 |                   Host Controller Interface (HCI)                                          |
 |  (Protocols: HCI Commands, Events, and Data)                                               |
