@@ -1,5 +1,7 @@
-@[TOC](Linux 系统蓝牙音频服务实现分析) 
+@[TOC](Linux 系统蓝牙音频服务实现分析)
+
 Linux 系统中，蓝牙音频服务实现为系统音频服务 PulseAudio 的可加载模块，它用来以 PulseAudio 标准的方式描述蓝牙音频设备，将其嵌入 PulseAudio 的音频处理流水线，并呈现给用户，支持用户切换音频设备，如蓝牙耳机。
+
 ## 蓝牙音频设备连接变化监听
 Linux 系统蓝牙音频服务的入口点是 **module-bluetooth-discover** 和 **module-bluetooth-policy** 模块，Linux 系统音频服务 PulseAudio 启动时加载 */etc/pulse/default.pa* 配置文件，以确定要加载的模块，与蓝牙相关的模块如下：
 ```
