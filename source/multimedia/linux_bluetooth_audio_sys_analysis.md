@@ -2,7 +2,7 @@
 
 Linux 系统中，蓝牙音频服务实现为系统音频服务 PulseAudio 的可加载模块，它用来以 PulseAudio 标准的方式描述蓝牙音频设备，将其嵌入 PulseAudio 的音频处理流水线，并呈现给用户，支持用户切换音频设备，如蓝牙耳机。
 
-## 蓝牙音频设备连接变化监听
+## 蓝牙音频设备变化监听
 Linux 系统蓝牙音频服务的入口点是 **module-bluetooth-discover** 和 **module-bluetooth-policy** 模块，Linux 系统音频服务 PulseAudio 启动时加载 */etc/pulse/default.pa* 配置文件，以确定要加载的模块，与蓝牙相关的模块如下：
 ```
 ### Automatically load driver modules for Bluetooth hardware
@@ -456,7 +456,7 @@ static pa_hook_result_t device_connection_changed_cb(pa_bluetooth_discovery *y, 
  * 蓝牙设备路径在已加载蓝牙设备路径列表中，且蓝牙设备上没有任何已连接的 transport，将蓝牙设备路径从已加载蓝牙设备路径列表移出。
  * 蓝牙设备路径不在已加载蓝牙设备路径列表中，且蓝牙设备上存在已连接的 transport，则为蓝牙音频设备加载 **module-bluez5-device** 模块，模块加载成功时，将蓝牙设备路径添加进已加载蓝牙设备路径列表。
 
-**module-bluez5-discover** 模块在蓝牙音频服务中扮演的角色，和 **module-udev-detect** 及 **module-alsa-card** 模块在 ALSA 中扮演的角色一样。
+蓝牙音频设备变化监听，将通过 DBUS 连接，接收包括蓝牙控制器/适配器、蓝牙设备和 profile 等的变化通知。**module-bluez5-discover** 模块在蓝牙音频服务中扮演的角色，和 **module-udev-detect** 及 **module-alsa-card** 模块在 ALSA 中扮演的角色一样。
 
 
 
