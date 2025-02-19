@@ -1792,28 +1792,3 @@ BLUETOOTH_PLUGIN_DEFINE(avrcp, VERSION, BLUETOOTH_PLUGIN_PRIORITY_DEFAULT,
 ```
 
 **AVRCP** 插件向 BlueZ 核心注册了两个 profile。
-
-## 蓝牙设备、配置文件 (Profile) 和服务
-
-adapter，driver，device，profile，service，stream，session
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
