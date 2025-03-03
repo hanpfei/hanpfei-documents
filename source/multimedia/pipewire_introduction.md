@@ -114,11 +114,17 @@ PipeWire 服务器和 PipeWire 客户端通过它们各自的 [pw_context](https
 参考文档：
 
 [PipeWire and AGL](https://wiki.automotivelinux.org/_media/pipewire_agl_20181206.pdf)
+
 [PipeWire Under The Hood](https://venam.net/blog/unix/2021/06/23/pipewire-under-the-hood.html)
+
 [PipeWire: The Linux audio/video bus (LWN)](https://lwn.net/Articles/847412)
+
 [Intoduction to PipeWire](https://bootlin.com/blog/an-introduction-to-pipewire/)
+
 [A custom PipeWire node](https://bootlin.com/blog/a-custom-pipewire-node/)
+
 [SPA Plugins](https://docs.pipewire.org/page_spa_plugins.html)
+
 [PipeWire document](https://docs.pipewire.org/)
 
 Done.
