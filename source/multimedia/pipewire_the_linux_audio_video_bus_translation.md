@@ -1,4 +1,3 @@
-
 ---
 title: PipeWire：Linux 的音频/视频总线
 date: 2025-03-04 21:05:49
@@ -63,6 +62,6 @@ Pinos 基于 GStreamer 流水线构建，使用了一些早期为 Manley 的原�
 
 
 
+原文作者：Ahmed S. Darwish
 
-
-
+[原文](https://lwn.net/Articles/847412/)
