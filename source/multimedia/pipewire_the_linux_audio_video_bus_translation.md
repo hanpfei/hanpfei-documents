@@ -8,7 +8,7 @@ tags:
 
 十多年来，[PulseAudio](https://www.freedesktop.org/wiki/Software/PulseAudio/) 一直服务于 Linux 桌面，作为其主要的音频混音和路由守护程序 - 以及它的音频 API。不幸的是，PulseAudio 的内部架构并不适合日益增长的沙盒化的应用程序用例，尽管已经有人尝试对其进行修改。[PipeWire](https://pipewire.org/)，一个新的守护进程从这些尝试中横空而出，将在即将到来的 Fedora 34 发行版中[替换 PulseAudio](https://fedoraproject.org/wiki/Releases/34/ChangeSet#Route_all_Audio_to_PipeWire)。这是一个即将到来的转变，值得一看。
 
-说到转换，2007 年末 Fedora 8 自己向 PulseAudio 的转换并不顺利。长期使用 Linux 的用户仍然记得，这个守护进程被[标记为](https://lwn.net/Articles/299211/)会破坏音频的软件。在一段崎岖的启动之旅之后，PulseAudio 成为 Linux 声音服务器斗争的[赢家](https://lwn.net/Articles/355542/)。它提供了一个本地客户端音频 API，但也[支持](https://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/User/PerfectSetup/#thirdpartyapplications)使用当时常见的音频 API 的应用程序 —— 包括原始的Linux ALSA 声音 API，它通常只允许一个应用程序访问声卡。PulseAudio 混合不同应用程序的音频流，并为音频管理、细粒度配置和无缝路由到蓝牙、USB 或 HDMI 提供了一个中心点。它将自己定位为 Linux 桌面中的 Windows Vista 用户模式音频引擎和 macOS CoreAudio 守护进程。
+说到转换，2007 年末 Fedora 8 自己向 PulseAudio 的转换并不顺利。长期使用 Linux 的用户仍然记得，这个守护进程被[标记为](https://lwn.net/Articles/299211/)会破坏音频的软件。在一段崎岖的启动之旅之后，PulseAudio 成为 Linux 声音服务器斗争的[赢家](https://lwn.net/Articles/355542/)。它提供了一个本地客户端音频 API，但也[支持](https://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/User/PerfectSetup/#thirdpartyapplications)使用当时常见音频 API 的应用程序 —— 包括原始的 Linux ALSA 声音 API，它通常只允许一个应用程序访问声卡。PulseAudio 混合不同应用程序的音频流，并为音频管理、细粒度配置和无缝路由到蓝牙、USB 或 HDMI 提供了一个中心点。它将自己定位为 Linux 桌面中的 Windows Vista 用户模式音频引擎和 macOS CoreAudio 守护进程。
 
 ## PulseAudio 的裂纹
 
