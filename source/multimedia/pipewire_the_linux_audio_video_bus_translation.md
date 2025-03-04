@@ -57,7 +57,26 @@ Pinos 基于 GStreamer 流水线构建，使用了一些早期为 Manley 的原�
 
 与 CRAS 类似，但与 PulseAudio 不同，PipeWire 不是在音频缓冲倒绕的基础上建模的。当基于定时器的音频调度与巨大的缓冲区一起使用时（如在 PulseAudio 中那样），需要支持重写声卡的缓冲区，以提供对不可预测事件（如新的音频流或流的音量变化）的低延迟响应。必须撤销已经发送到音频设备的大缓冲区，并且需要提交一个新的缓冲区。这导致了显著的[代码复杂性和极端情况[PDF]](http://lac.linuxaudio.org/2015/papers/10.pdf)。PipeWire 和 CRAS 都将最大延迟/缓冲区限制在更低的值，从而完全消除了缓冲区倒绕的需要。
 
-与 JACK 一样，PipeWire 选择了外部会话管理器设置。
+与 JACK 一样，PipeWire 选择了外部会话管理器设置。专业的音频用户通常在 [Catia](https://kx.studio/Applications:Catia) 或 [QjackCtl](https://qjackctl.sourceforge.io/) 这样的会话管理器应用程序中构建他们自己的音频流水线，然后让音频守护进程执行最终的结果。这样做的好处是将策略（如何构建媒体流水线）从机制（音频守护进程如何执行流水线）中分离出来。在 GUADEC 2018 上，开发者明确地[请求 Taymans [video, 23:15]](http://videos.guadec.org/2018/GUADEC%202018%20-%20Wim%20Taymans%20-%20PipeWire-0g4c6q2-hgw.mp4) 让 GNOME，和可能的其它外部守护进程，控制音频栈的这个部分。由于 PulseAudio 在其内部模块代码中深度嵌入音频路由策略决定逻辑，一些系统集成商已经遇到了问题。这也是 Henningson 在辞职邮件中提到的痛点之一。
+
+最后，跟随过去十年中创建的多个有影响力的系统守护进程的趋势，PipeWire 广泛使用 linux 内核特有的API。这包括 memfd、eventfd、timerfd、signalfd、epoll 和 dma-buf —— 所有这些都使“文件描述符”成为系统中事件和共享缓冲区的主要标识符。PipeWire 支持导入 dma-buf 文件描述符是实现高效的 Wayland [屏幕采集和录制](https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1086)的关键。对于大的 4K 和 8K 屏幕，CPU 不需要触碰任何庞大的 GPU 缓冲区：GNOME mutter（或类似的应用程序）传递一个 dma-buf 描述符，然后可以将其集成到 PipeWire 的 SPA 流水线中进行进一步的处理和采集。
+
+## 采用
+
+自项目的 [0.3 主版本发布](https://gitlab.freedesktop.org/pipewire/pipewire/-/blob/0.3.0/NEWS)以来，原生的 PipeWire API 已经被宣布为稳定的。现有的原始 ALSA 应用程序通过一个 PipeWire ALSA 插件支持。JACK 应用程序通过一个重新实现的 JACK 客户端库和 [pw-jack](https://man.archlinux.org/man/pw-jack.1) 工具支持，如果 JACK 本地库和 PipeWire JACK 库同时安装了的话。PulseAudio 应用程序通过 `pipewire-pulse` 守护进程支持，它监听 PulseAudio 自己的 socket 并实现它的本地通信协议。通过这种方式，使用它们自己的本地 PulseAudio 客户端库拷贝的容器化桌面应用程序依然得到支持。[WebRTC](https://webrtc.org/)，所有主要浏览器使用的通信框架（和[代码](https://webrtc.googlesource.com/src)），包括[用于 Wayland 屏幕共享的本地 PipeWire 支持](https://webrtc-review.googlesource.com/c/src/+/103504) — 通过一个 Flatpak portal 来协调。
+
+下图展示了一个 PipeWire 媒体流水线，在一台 Arch Linux 系统上，使用 [pw-dot](https://man.archlinux.org/man/pw-dot.1) 生成，然后经过轻微美化。展示了 PipeWire 本地和 PulseAudio 本地应用程序的组合：
+
+
+
+
+
+
+
+
+
+
+
 
 
 
