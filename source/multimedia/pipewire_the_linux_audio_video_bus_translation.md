@@ -67,20 +67,14 @@ Pinos 基于 GStreamer 流水线构建，使用了一些早期为 Manley 的原�
 
 下图展示了一个 PipeWire 媒体流水线，在一台 Arch Linux 系统上，使用 [pw-dot](https://man.archlinux.org/man/pw-dot.1) 生成，然后经过轻微美化。展示了 PipeWire 本地和 PulseAudio 本地应用程序的组合：
 
+![pipewire-pipeline](./images/pipewire-pipeline-sm.png)
 
+在左边，GNOME [Cheese](https://wiki.gnome.org/Apps/Cheese) 和一个通过 [gst-launch-1.0](https://man.archlinux.org/man/gst-launch-1.0.1) 创建的 GStreamer 流水线实例在并发访问相同的相机。中间，Firefox 在使用 WebRTC 和 Flatpak portals 共享系统屏幕（用于 [Jitsi](https://meet.jit.si/) 会议）。在右边，Spotify 音乐播放器（一个 PulseAudio 应用程序）正在播放音频，它被路由到系统的默认 ALSA sink —— 同时 GNOME Settings（另一个 PulseAudio 应用程序）在实时监视这个 sink 的左/右声道状态。
 
+在 Linux 发行版方面，Fedora 自其 [Fedora 27](https://fedoraproject.org/wiki/Fedora_27_talking_points#Changes_to_talk_about_for_developers) 发布以来一直在提供 PipeWire 守护进程（仅用于 Wayland 屏幕采集）。Debian [提供](https://wiki.debian.org/PipeWire) 包，但替换 PulseAudio 或 JACK 是“不支持的用例”。Arch Linux 在它的中央仓库中提供了 [PipeWire](https://wiki.archlinux.org/index.php/PipeWire)，并官方地提供额外的包来替换 PulseAudio 和 JACK，如果需要的话。类似地，Gentoo 提供了[扩展文档](https://wiki.gentoo.org/wiki/PipeWire)来替换这两个守护进程。即将发布的 Fedora 34 将是第一个默认使用 PipeWire 完全替代 PulseAudio 的 Linux 发行版，且开箱即用。
 
+总的来说，这是 Linux 多媒体场景的关键时期。虽然开源是一个关于技术的故事，但它也是一个关于努力创造它的人们的故事。[PulseAudio](https://blogs.gnome.org/uraeus/2018/10/30/pipewire-hackfest/) 和 [JACK](https://librearts.org/2020/07/podcast-episode-003-paul-davis-part-2/) 的开发者一致认为，PipeWire 及其作者的做法是正确的。即将发布的 Fedora 34 版本应该会为 PipeWire 在 Linux 发行版中的采用提供试金石。
 
-
-
-
-
-
-
-
-
-
-
-原文作者：Ahmed S. Darwish
+原文作者：Ahmed S. Darwish，March 2, 2021
 
 [原文](https://lwn.net/Articles/847412/)
