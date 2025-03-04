@@ -65,11 +65,83 @@ $ pw-jack qjackctl
 
 自此，PipeWire 运行起来了！然而，还有更多东西要看，比如如何配置 PipeWire 和会话管理器，如何编写依赖 PipeWire 的软件，其中蕴含的思想，如何管理图和依赖工具，以及大量其它示例。
 
-## 依赖于 Jack 的工具
+## 与 GStreamer 的关系
+
+## 构建块：POD/SPA
+
+### POD —— Plain Old Data
+
+### SPA —— Simple Plugin API
+
+## PipeWire Lib，来自 Wayland 的灵感
+
+## 配置
+
+### PipeWire 服务器配置
+
+### PipeWire 客户端配置
+
+### PipeWire 会话管理器配置
+
+### PipeWire 媒体会话配置
+
+### WirePlumber 配置
+
+## 工具 & 调试
+
+### 本地 PipeWire 工具
+
+PipeWire 带有一系列工具，可以用来执行常见的任务，如与服务器交互，调试或性能调优。如果你熟悉 PulseAudio 带的工具集，你将发现它们很相似。
+
+下面是其中一些有趣的工具：
+
+ * `pw-cat`：用于播放音频
+ * `pw-play`，`pw-record`，`pw-midirecord`，`pw-midiplay`：指向 `pw-cat` 的符号链接
+ * `pw-record`：用于录制音频
+ * `pw-loopback`：创建虚拟环回节点
+ * `pw-link`：端口和链接管理器，用于列出端口，监视它们，并创建链接
+ * `pw-dump`：用于转储图中的节点或整个图
+ * `pw-dot`：与 `pw-dump` 类似，但以 graphviz 格式转储
+ * `pw-top`，`pw-profiler`：用于监视图中对象之间的流量效率
+ * `pw-mon`：用于监视图中发生的任何事件
+ * `pw-metadata`：用于修改图中的元数据，它当前被用于存储默认的节点信息
+ * `pw-cli`：与 PipeWire 守护进程交互的通用命令行工具，允许用来转储，加载和卸载模块，列出对象，创建链接和节点，设置参数，等等。
+
+这些工具，特别是 `pw-cli`，可以被用来创建对象并管理运行中的图，或调查图中发生的事。
+
+这里有一个在两个节点的两个左前端口间创建链接的例子：
+```
+$ pw-cli create-link "TestSink" 'monitor_FL' \
+"alsa_output.usb-C-Media_Electronics_Inc.device.iec958-stereo" \
+'playback_FL'
+```
+
+或者转储所有可用的工厂：
+```
+$ pw-cli dump Factory
+```
+
+或者创建一个虚拟节点：
+```
+pw-cli create-node adapter { \
+factory.name=support.null-audio-sink node.name=my-mic \
+media.class=Audio/Duplex object.linger=1 \
+audio.position=FL,FR }
+```
+
+除了命令行工具之外，目前还存在一个名为 [helvum](https://gitlab.freedesktop.org/pipewire/helvum) 的基于 Rust-Gtk 的本地 GUI。它仍然是一个 WIP 项目，提供通过点击两个边的端口连接节点的基本功能。除此之外，PipeWire 还缺乏前端，特别是那些允许适当地操纵/表示任何类型媒体（包括音频和视频）的图的前端。
+
+helvum 看起来是这样的：
+
+![](./images/)
+
+### 依赖于 PulseAudio 的工具
+
+### 依赖于 Jack 的工具
 
 
 
-## 依赖于 GStreamer 的工具
+### 依赖于 GStreamer 的工具
 
 最后，正如我们前面提到的，我们可以依赖使用 gstreamer 的任何程序和 gstreamer 命令行工具来处理媒体。再次，通过如下插件：
 
