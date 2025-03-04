@@ -131,15 +131,89 @@ audio.position=FL,FR }
 
 除了命令行工具之外，目前还存在一个名为 [helvum](https://gitlab.freedesktop.org/pipewire/helvum) 的基于 Rust-Gtk 的本地 GUI。它仍然是一个 WIP 项目，提供通过点击两个边的端口连接节点的基本功能。除此之外，PipeWire 还缺乏前端，特别是那些允许适当地操纵/表示任何类型媒体（包括音频和视频）的图的前端。
 
-helvum 看起来是这样的：
+helvum 看起来像这样：
 
-![](./images/)
+![请添加图片描述](./images/helvum_gui_screenshot.png)
+
+（*更新*：现在有一个新的 QT GUI 称为 [qpwgraph](https://gitlab.freedesktop.org/rncbc/qpwgraph)）
+
+我自己也尝试过用 Rust 构建一些东西，但是 [Rust 绑定](https://pipewire.pages.freedesktop.org/pipewire-rs/pipewire/index.html)，特别是与 POD 和 SPA 相关的绑定，仍然是一个正在进行的工作。很难绑定到 rust，因为 PipeWire 库大多只有 `static inline` 函数。
+
+然而，有一些有趣的工具，如 [PulseEffects](https://github.com/wwmm/pulseeffects)，允许创建过滤器节点来动态添加音频效果。
+
+另一方面，当谈到会话管理器时，pipewire-media-session 目前还没有客户端，而 WirePlumber 确实提供了一组命令行工具。
+
+我们已经看到 `wpexec` 执行 lua 脚本。还有 `wpctl`，它是另一个调查工具，用来询问 WirePlumber 关于可用的设备、节点、它们的属性和它们的音量的信息。它可用于与“端点”的概念进行交互，“端点”是会话管理器的媒体开始和结束位置的抽象表示。
+
+`wpctl status` 可被用于列出已知的端点，其中默认的设备前面会展示一颗星字符。这个默认设备可以使用 `set-default` 选项传递节点 ID 来修改。其它选项，如 `set-volume`，`set-mute`，`set-profile` 都很容易理解。
 
 ### 依赖于 PulseAudio 的工具
 
+pipewire-pulse，正如我们所说的，是加载 `libpipewire-module-protocol-pulse` 模块的包装器，它允许在 PipeWire 兼容层之上使用大多数 PulseAudio 功能和软件。模块本身可以在 `pipewire-pulse.conf` 文件中通过一些选项配置，如 [这里](https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Config-PulseAudio) 所示。它甚至涵盖了网络协议支持的模块。
+
+因此，它允许我们使用任何我们已经习惯使用于 PulseAudio 的用户接口，如 pavucontrol， pulsemixer， pamixer 等。这还包括命令行工具，如 `pactl`，它给了我们除 `pw-cli` 外的另一种与 PipeWire 交互的方式。
+```
+$ pactl info
+
+Server String: /run/user/1000/pulse/native
+Library Protocol Version: 34
+Server Protocol Version: 35
+Is Local: yes
+Client Index: 106
+Tile Size: 65472
+User Name: vnm
+Host Name: identity
+Server Name: PulseAudio (on PipeWire 0.3.30)
+Server Version: 14.0.0
+Default Sample Specification: float32le 2ch 48000Hz
+Default Channel Map: front-left,front-right
+Default Sink: alsa_output.pci-0000_00_14.2.analog-stereo
+Default Source: alsa_input.pci-0000_00_14.2.analog-stereo
+Cookie: daad:fd8f
+```
+
+虽然 `pactl` 应该与 PulseAudio 一起使用，但其功能在某种程度上映射到了 PipeWire。这包括模块的加载，这可被用于在图中创建节点。
+```
+pactl load-module module-null-sink object.linger=1 \
+media.class=Audio/Sink \
+sink_name=my-sink \
+channel_map=surround-51
+```
+
+正如你可能注意到的，`module-null-sink` 的语法与你在 PulseAudio 中使用的语法完全不同。这相同的模块也可以被用于创建全双工或 source 节点。更多关于创建虚拟设备的信息请点击 [这里](https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Virtual-Devices)。
+
+映射甚至对于通过 `pactl list modules` 列出模块也能工作，只是列出的是 PipeWire 的模块。很明显，我们可以列出对象，或特定的东西，比如通过 `pactl list sinks` 列出 sinks。
+
+[这个有用的指南](https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Migrate-PulseAudio) 显示了 PulseAudio 和 PipeWire 之间特性的映射，包括我们展示的 pactl 和特定于 PulseAudio 的某些配置。
+
+下面是 pulsemixer 在 PipeWire 上运行的截图：
+
+![请添加图片描述](./images/pulsemixer_gui_screenshot.png)
+
 ### 依赖于 Jack 的工具
 
+正如 PulseAudio 一样，PipeWire 提供了一个 JACK 的兼容层。它是通过在 JACK 命令前加上 `pw-jack` 来启动的，例如：
+```
+$ pw-jack jack-plumbing
+$ pw-jack qjackctl
+```
 
+*NB*：你可以在 [这里](http://archive.ubuntu.com/ubuntu/pool/universe/j/jack-tools/jack-tools_20131226.orig.tar.bz2) 找到 `jack-plumbing`，这是一个创建 jack 规则连接规则的非常好的工具。
+
+`pw-jack` 是一个 shell 脚本，它设置了一些环境变量，并修改了 `LD_LIBRARY_PATH` 以在全局的那个之前指向 PipeWire 的 jack lib。你可以通过以下操作注意到这一点：
+```
+pw-jack ldd /usr/bin/qjackctl| grep -i libjack
+
+libjack.so.0 => /usr/lib/pipewire-0.3/jack/libjack.so.0 (0x00007f65c9fa0000)
+```
+
+与 PulseAudio 的类似，这允许我们使用大多数基于 JACK 的 GUI 工具，如 qjackctl，carla，catia，和所有漂亮的可视化工具。与 PulseAudio 工具相比，JACK 工具的优势在于，它已经默认显示了一个图，可以很好地映射到 PipeWire 的概念，但它只映射音频设备，而不映射视频设备。PipeWire 也允许在运行时修改图，效果是即时的，不像JACK，这是很棒。
+
+[文档](https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Config-JACK)还列出了与 JACK 有关的特有配置，通常位于 `jack.conf`。
+
+下面是 qjackctl 在 PipeWire 上运行的截图：
+
+![请添加图片描述](./images/qjackctl_gui_screenshot.png)
 
 ### 依赖于 GStreamer 的工具
 
