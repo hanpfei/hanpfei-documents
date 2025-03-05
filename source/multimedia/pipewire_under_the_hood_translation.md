@@ -301,7 +301,332 @@ for (i = 0;;) {
 
 ## 配置
 
+并不是每个人都会编写客户端，但是很多人都对配置 PipeWire 服务器和会话管理器感兴趣。在 PipeWire 方程中有三或四个块可以配置：
+
+ * PipeWire 守护进程运行 core 并托管处理图
+ * 根据配置文件自动设置其特性的客户端
+ * 会话管理器将节点添加到图中，发现并适当地设置它们
+ * PipeWire PulseAudio 服务器和 JACK 向后兼容层及其配置
+
+PipeWire 守护进程配置，客户端配置，及 pipewire-media-session，pipewire-pulse 和 WirePlumber 配置都具有相同的格式。虽然手册中的 `pipewire.conf(5)` 已经简要地解释了它，但它可能仍然令人困惑，所以让我们试着弄清楚它的意义。格式是一系列 `name = value` 形式的赋值语句。值可以是另一个简单的赋值，一个字典 `{ key1=val1 key2=val2 }`，一个数组 `[ val1 val2 ]`，或一个组合，如一个字典的数组。你可能已经注意到，在这种格式中没有逗号。
+
+出现的初始名称列表及其含义取决于我们正在配置什么。然而，正如我所发现的，它们中的大多数都有以下一些：
+ * `context.properties`
+   包含通用属性的字典
+ * `context.spa-libs`
+   告诉程序当匹配到一个 SPA 工厂名字时到哪里去查找 `.so` 的字典
+ * `context.modules`
+   一个字典数组，其中包含启动时要加载的模块
+ * `context.objects`
+   一个字典数组，其中包含将要使用 SPA 工厂自动创建的对象
+ * `context.exec`
+   一个字典数组 (不适用于客户端配置)，其中包含启动之后要顺序执行的其他命令。
+
 ### PipeWire 服务器配置
+
+PipeWire 守护进程的配置位于多个地方，全局的位于 */etc/pipewire/pipewire.conf* 和 */usr/share/pipewire/pipewire.conf*，本地的位于 *$XDG_CONFIG_HOME*，通常是 *.config/pipewire/pipewire.conf*。因此，在进行修改之前，请确保将其复制到本地用户目录，因为全局配置可能会随着当前的开发速度而迅速变化。
+
+在此之前，最好知道 PipeWire 受到几个环境变量的调控，包括 `PIPEWIRE_DEBUG`，它的值为用于调试范围为 1 到 5 的冗长级别 (5 是最冗长的)，且在它旁边可以有一个可选的类别来过滤记录的内容，`PIPEWIRE_LOG` 和 `PIPEWIRE_LOG_SYSTEMD` 用来在特定文件中记录日志，分别用来禁用或启用 systemd 日志，`PIPEWIRE_LATENCY` 用来配置默认的延迟（`buffer-size/sample-rate` 或 `samples in buffer/samplerate`，参考 [前面的文章](https://venam.net/blog/unix/2021/02/07/audio-stack.html) 了解它们的含义）。
+
+`pipewire.conf` 包含我们前面提到的所有配置名称。特别是，它的 `context.properties` 具有关于处理图的默认方面的信息。让我们回顾一下每个部分以及每个部分的特点。
+```
+# Daemon config file for PipeWire version "0.3.48" #
+#
+# Copy and edit this file in /etc/pipewire for system-wide changes
+# or in ~/.config/pipewire for local changes.
+#
+# It is also possible to place a file with an updated section in
+# /etc/pipewire/pipewire.conf.d/ for system-wide changes or in
+# ~/.config/pipewire/pipewire.conf.d/ for local changes.
+#
+
+context.properties = {
+    ## Configure properties in the system.
+    #library.name.system                   = support/libspa-support
+    #context.data-loop.library.name.system = support/libspa-support
+    #support.dbus                          = true
+    #link.max-buffers                      = 64
+    link.max-buffers                       = 16                       # version < 3 clients can't handle more
+    #mem.warn-mlock                        = false
+    #mem.allow-mlock                       = true
+    #mem.mlock-all                         = false
+    #clock.power-of-two-quantum            = true
+    #log.level                             = 2
+    #cpu.zero.denormals                    = false
+
+    core.daemon = true              # listening for socket connections
+    core.name   = pipewire-0        # core name and socket name
+
+    ## Properties for the DSP configuration.
+    #default.clock.rate          = 48000
+    #default.clock.allowed-rates = [ 48000 ]
+    #default.clock.quantum       = 1024
+    default.clock.min-quantum   = 16
+    #default.clock.max-quantum   = 2048
+    #default.clock.quantum-limit = 8192
+    #default.video.width         = 640
+    #default.video.height        = 480
+    #default.video.rate.num      = 25
+    #default.video.rate.denom    = 1
+    #
+    #settings.check-quantum      = false
+    #settings.check-rate         = false
+    #
+    # These overrides are only applied when running in a vm.
+    vm.overrides = {
+        default.clock.min-quantum = 1024
+    }
+}
+
+context.spa-libs = {
+    #<factory-name regex> = <library-name>
+    #
+    # Used to find spa factory names. It maps an spa factory name
+    # regular expression to a library name that should contain
+    # that factory.
+    #
+    audio.convert.* = audioconvert/libspa-audioconvert
+    api.alsa.*      = alsa/libspa-alsa
+    api.v4l2.*      = v4l2/libspa-v4l2
+    api.libcamera.* = libcamera/libspa-libcamera
+    api.bluez5.*    = bluez5/libspa-bluez5
+    api.vulkan.*    = vulkan/libspa-vulkan
+    api.jack.*      = jack/libspa-jack
+    support.*       = support/libspa-support
+    #videotestsrc   = videotestsrc/libspa-videotestsrc
+    #audiotestsrc   = audiotestsrc/libspa-audiotestsrc
+}
+
+context.modules = [
+    #{ name = <module-name>
+    #    [ args  = { <key> = <value> ... } ]
+    #    [ flags = [ [ ifexists ] [ nofail ] ]
+    #}
+    #
+    # Loads a module with the given parameters.
+    # If ifexists is given, the module is ignored when it is not found.
+    # If nofail is given, module initialization failures are ignored.
+    #
+
+    # Uses realtime scheduling to boost the audio thread priorities. This uses
+    # RTKit if the user doesn't have permission to use regular realtime
+    # scheduling.
+    { name = libpipewire-module-rt
+        args = {
+            nice.level    = -11
+            #rt.prio      = 88
+            #rt.time.soft = -1
+            #rt.time.hard = -1
+        }
+        flags = [ ifexists nofail ]
+    }
+
+    # The native communication protocol.
+    { name = libpipewire-module-protocol-native }
+
+    # The profile module. Allows application to access profiler
+    # and performance data. It provides an interface that is used
+    # by pw-top and pw-profiler.
+    { name = libpipewire-module-profiler }
+
+    # Allows applications to create metadata objects. It creates
+    # a factory for Metadata objects.
+    { name = libpipewire-module-metadata }
+
+    # Creates a factory for making devices that run in the
+    # context of the PipeWire server.
+    { name = libpipewire-module-spa-device-factory }
+
+    # Creates a factory for making nodes that run in the
+    # context of the PipeWire server.
+    { name = libpipewire-module-spa-node-factory }
+
+    # Allows creating nodes that run in the context of the
+    # client. Is used by all clients that want to provide
+    # data to PipeWire.
+    { name = libpipewire-module-client-node }
+
+    # Allows creating devices that run in the context of the
+    # client. Is used by the session manager.
+    { name = libpipewire-module-client-device }
+
+    # The portal module monitors the PID of the portal process
+    # and tags connections with the same PID as portal
+    # connections.
+    { name = libpipewire-module-portal
+        flags = [ ifexists nofail ]
+    }
+
+    # The access module can perform access checks and block
+    # new clients.
+    { name = libpipewire-module-access
+        args = {
+            # access.allowed to list an array of paths of allowed
+            # apps.
+            #access.allowed = [
+            #    /usr/bin/pipewire-media-session
+            #]
+
+            # An array of rejected paths.
+            #access.rejected = [ ]
+
+            # An array of paths with restricted access.
+            #access.restricted = [ ]
+
+            # Anything not in the above lists gets assigned the
+            # access.force permission.
+            #access.force = flatpak
+        }
+    }
+
+    # Makes a factory for wrapping nodes in an adapter with a
+    # converter and resampler.
+    { name = libpipewire-module-adapter }
+
+    # Makes a factory for creating links between ports.
+    { name = libpipewire-module-link-factory }
+
+    # Provides factories to make session manager objects.
+    { name = libpipewire-module-session-manager }
+
+    # Use libcanberra to play X11 Bell
+    #{ name = libpipewire-module-x11-bell
+    #  args = {
+    #      #sink.name = ""
+    #      #sample.name = "bell-window-system"
+    #      #x11.display = null
+    #      #x11.xauthority = null
+    #  }
+    #}
+]
+
+context.objects = [
+    #{ factory = <factory-name>
+    #    [ args  = { <key> = <value> ... } ]
+    #    [ flags = [ [ nofail ] ]
+    #}
+    #
+    # Creates an object from a PipeWire factory with the given parameters.
+    # If nofail is given, errors are ignored (and no object is created).
+    #
+    #{ factory = spa-node-factory   args = { factory.name = videotestsrc node.name = videotestsrc Spa:Pod:Object:Param:Props:patternType = 1 } }
+    #{ factory = spa-device-factory args = { factory.name = api.jack.device foo=bar } flags = [ nofail ] }
+    #{ factory = spa-device-factory args = { factory.name = api.alsa.enum.udev } }
+    #{ factory = spa-node-factory   args = { factory.name = api.alsa.seq.bridge node.name = Internal-MIDI-Bridge } }
+    #{ factory = adapter            args = { factory.name = audiotestsrc node.name = my-test } }
+    #{ factory = spa-node-factory   args = { factory.name = api.vulkan.compute.source node.name = my-compute-source } }
+
+    # A default dummy driver. This handles nodes marked with the "node.always-driver"
+    # property when no other driver is currently active. JACK clients need this.
+    { factory = spa-node-factory
+        args = {
+            factory.name    = support.node.driver
+            node.name       = Dummy-Driver
+            node.group      = pipewire.dummy
+            priority.driver = 20000
+        }
+    }
+    { factory = spa-node-factory
+        args = {
+            factory.name    = support.node.driver
+            node.name       = Freewheel-Driver
+            priority.driver = 19000
+            node.group      = pipewire.freewheel
+            node.freewheel  = true
+        }
+    }
+    # This creates a new Source node. It will have input ports
+    # that you can link, to provide audio for this source.
+    #{ factory = adapter
+    #    args = {
+    #        factory.name     = support.null-audio-sink
+    #        node.name        = "my-mic"
+    #        node.description = "Microphone"
+    #        media.class      = "Audio/Source/Virtual"
+    #        audio.position   = "FL,FR"
+    #    }
+    #}
+
+    # This creates a single PCM source device for the given
+    # alsa device path hw:0. You can change source to sink
+    # to make a sink in the same way.
+    #{ factory = adapter
+    #    args = {
+    #        factory.name           = api.alsa.pcm.source
+    #        node.name              = "alsa-source"
+    #        node.description       = "PCM Source"
+    #        media.class            = "Audio/Source"
+    #        api.alsa.path          = "hw:0"
+    #        api.alsa.period-size   = 1024
+    #        api.alsa.headroom      = 0
+    #        api.alsa.disable-mmap  = false
+    #        api.alsa.disable-batch = false
+    #        audio.format           = "S16LE"
+    #        audio.rate             = 48000
+    #        audio.channels         = 2
+    #        audio.position         = "FL,FR"
+    #    }
+    #}
+]
+
+context.exec = [
+    #{ path = <program-name> [ args = "<arguments>" ] }
+    #
+    # Execute the given program with arguments.
+    #
+    # You can optionally start the session manager here,
+    # but it is better to start it as a systemd service.
+    # Run the session manager with -h for options.
+    #
+    #{ path = "/usr/bin/pipewire-media-session" args = "" }
+    #
+    # You can optionally start the pulseaudio-server here as well
+    # but it is better to start it as a systemd service.
+    # It can be interesting to start another daemon here that listens
+    # on another address with the -a option (eg. -a tcp:4713).
+    #
+    #{ path = "/usr/bin/pipewire" args = "-c pipewire-pulse.conf" }
+]
+```
+
+`context.properties` 包含 core 的通用方面：日志等级，调度设置，默认的全局采样率，默认量子最小值和最大值（缓冲区）等等。流水线中的数据将默认为此采样率，每个节点将相应地自动协商自己的延迟 (在配置中设置的量子内的缓冲区大小)，当最终到达设备时，信号将转换为其采样率。节点可以自己通过设置 `node.latency` 属性设置一个想要的缓冲区大小。
+
+`context.spa-libs` 包含，如前所述，将正则表达式形式的工厂名称映射到磁盘上库的位置的字典 (.so 文件)。还记得在上一节中，我们是如何执行 `dlopen(3)` 并查找可用工厂的吗？在这里，快速查找如何在正确的库中使用工厂创建元素是很有用的，或者直接从 `context.objects` 中的配置创建元素，通过命令行工具，或其它。比如，我们注意到 `support.* = support/libspa-support`，这就是说，任何使用以 *support.* 开始的工厂的调用将使用位于 */usr/lib/spa-0.2/support/libspa-support.so* 的库。
+
+`context.modules` 包含一个要按顺序加载的模块的数组，该数组包含一系列字典，字典中至少有一个 `name` 字段和可选的 `args` 和 `flags`。`name` 用于指出要从系统加载的库，通常位于 */usr/lib/pipewire-<version>/*。`args` 是一个字典，包含特定的每模块设置，而 `flags` 当前是一个数组，其中可以有两个值：`ifexists`，只有当库在磁盘上时才加载模块，和 `nofail`，如果出错，不停止加载其它模块或崩溃。
+
+有相当多的模块可用，每个都做不同的事情，有些扩展核心功能，有些提供创建过滤器的方法，有些更改调度，有些添加性能分析机制，有些进行访问控制，有些提供围绕重采样的节点的适配器，有些提供工厂，等等。你通常可以通过执行 `pw-cli dump Module` 并检查 `module.description` 和 `module.usage` 属性，找到已加载模块的描述和用法，尽管很少。我目前不知道有一种方法可以在不首先加载模块的情况下转储模块的可能参数，类似于 `spa-inspect` 所做的。你可以随时查阅 [source](https://gitlab.freedesktop.org/pipewire/pipewire/-/tree/master/src/modules) 并找到 `PW_KEY_MODULE_USAGE`，就像这里的 [module-filter-chain](https://gitlab.freedesktop.org/pipewire/pipewire/-/blob/master/src/modules/module-filter-chain.c#L54) 一样。
+
+*NB*：从技术上讲，模块是动态客户端，它有一个具有如下签名的导出函数：
+```
+SPA_EXPORT int pipewire__module_init(struct pw_impl_module *module, const char *args);
+```
+
+这个有趣的插件，`libpipewire-module-filter-chain`，在 [这里](https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Filter-Chain) 描述，它允许创建 LADSPA 和内建插件 (SPA) 的子图，然后稍后将该子图的 sources 和 sinks 暴露给全局 PipeWire 图（它是否是在客户端运行的图的一部分的实例，我不确定）。相对于依赖单独的软件，这使得插入过滤器更简单，但你需要熟悉如何配置 LADSPA 库控制（这块我不熟）。
+
+`context.objects`，包含一个将在 PipeWire 启动时自动创建的对象的列表。它接收至少一个 SPA 工厂名字参数 `factory`，和可选的以字典传递的 `args`，以及 `flags` 参数，可以被设置为 `nofail` 以忽略创建对象时遇到的错误。
+
+这部分配置对于在图中自动创建虚拟节点或手动设置设备非常有用。例如：
+```
+{
+	factory = spa-node-factory
+	args = {
+		factory.name = videotestsrc
+		node.name = videotestsrc
+		Spa:Pod:Object:Param:Props:patternType = 1
+	}
+}
+```
+
+*NB*：在本例中，请确保取消 SPA 工厂 `videotestsrc` 的注释。
+
+这将创建一个具有固定模式的示例视频，类似于 GStreamer 的 `videotestsrc`。有一个 [Wiki 页面](https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Virtual-Devices) 介绍了虚拟设备的概念，它解释了可以给播放和采集设置的一些常见属性。
+
+*NB*：尽管它应该与前面的 `gst-launch-1.0` 的例子相同，使用 `gst-launch-1.0 pipewiresrc client-name=hello ! videoconvert ! autovideosink` 并把 `videotestsrc` 连接到 `hello` 只显示了个空屏幕（然而，直接连接网络摄像头确实能正确显示屏幕）。它确实可以与 `audiotestsrc` 一起工作，使用 `gst-launch-1.0 pipewiresrc client-name=hello3 ! audioconvert ! autoaudiosink`。
+
+最后，`context.exec` 包含一个将会在启动之后由 PipeWire 启动的程序的数组。它至少接收一个程序的 `path` 参数，及传递给它的可选的 `args` 参数。我实际上不确定为什么会出现这个部分，而我所看到的似乎都是建议依赖服务管理器而不是启动其它软件。我认为不应该由 PipeWire 守护进程来管理其它服务。然而，它就在那里，知道它就好。
+
+请注意，`pipewire-pulse` 是 `pipewire` 二进制文件的拷贝，唯一的区别是它有一个不同的名称。PipeWire 基于它的名称加载它的配置，因此它将加载 `pipewire-pulse.conf`，这将激活 `libpipewire-module-protocol-pulse`。
 
 ### PipeWire 客户端配置
 
