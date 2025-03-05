@@ -22,7 +22,7 @@ tags:
 
 ## 什么是 PipeWire —— 快速试运行
 
-PipeWire 是一个媒体处理图，这可能不太清晰，所以让我重新表述一下。PipeWire 是一个守护进程，它提供了类似于 shell 管道的东西，但是用于媒体：音频和视频。
+PipeWire 是一个媒体处理图引擎，这可能不太清晰，所以让我重新表述一下。PipeWire 是一个守护进程，它提供了类似于 shell 管道的东西，但是用于媒体：音频和视频。
 
 在这个图中存放的是可以代表多种事物的节点，从耳机或网络摄像头等真实设备到音频过滤器等虚拟事物。这些节点具有端口，这些端口可以链接在一起，媒体数据从第一个节点的 **source** 流向下一个节点的 **sink**。每个节点中发生的事情取决于它们以及它们提供的接口或功能。
 
@@ -67,13 +67,60 @@ $ pw-jack qjackctl
 
 ## 与 GStreamer 的关系
 
+理解 PipeWire 背后的想法的最好方法是看看 GStreamer，它的灵感来自于GStreamer，并且由同一个领导开发者（一个和蔼可亲的人）维护。尽管作者[想与 JACK 进行比较](https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/FAQ#is-pipewire-just-another-gstreamer)。你可以看一下 JACK 并从中提取你想要的概念，但在本文中我们将使用 GStreamer。
+
+Streamer 围绕着流水线的概念，流水线由在 “bin” 中添加的对象创建，这是它的图版本。像 PipeWire 一样，媒体数据从一端流向另一端。在 Gstreamer 的世界中，代替节点的是 GstElements，代替端口的是附加到 GstElements 的 pads，链接是 pads 之间的连接。
+
+相似之处在于，GStreamer 依赖于 [GObject](http://library.gnome.org/devel/gobject/stable/)，如果你不知道，它是一种使开发更容易的 C 框架/编程模型。它允许做许多事情，诸如注册 GstElements 出现在流水线中时会触发的异步事件 (称为信号)。GObject 还具有主循环管理、类型系统、内部调查机制和其它优点。
+
+GStreamer 提供不同类型的 GstElements 作为插件，它们通过 “工厂” 创建。事实上，这些是扩展公共 GstElement 类型的 GObjects，以提供有用的功能。GStreamer 文档中有一个可用插件的列表。例如 [aasink](https://gstreamer.freedesktop.org/documentation/aasink/index.html?gi-language=c)。一些用于视频，一些用于音频，一些用于日志，一些用于在格式和协商之间做转换，等等等。
+
+这些元素还可以在命令行上通过 `gst-inspect-1.0` 工具来分析。这使得使用 GStreamer 进行编程非常容易。
+
+类似地，PipeWire 有扩展基本节点元素类型的插件。然而，它不依赖于 GObject/GstElement，而是依赖于它自己的更简单的插件系统，适当地命名为 SPA（简单插件 API）。它也有工厂、循环管理系统、异步事件，和称为 POD (Plain Old Data) 的消息传递格式。把 PipeWire 想象成一个以守护进程运行的更简单的 Gstreamer，具有完全可控的循环，并依赖一个会话管理器根据出现的流和设备自动创建图/流水线。
+
+然而，PipeWire 仍然缺少像 GStreamer 那样优秀的文档和内部调查工具。插件几乎还没有文档。我不得不说，GStreamer 确实是一个做得很好的项目，我希望 PipeWire 很快也能做到这一点。
+
+你可以看看如下这些有用的命令行工具：
+
+ *  `gst-discover-1.0`
+ *  `gst-inspect-1.0`
+ *  `gst-launch-1.0`
+
+创建流水线的一个应用示例：
+```
+gst-launch-1.0 videotestsrc pattern=1 ! optv ! videoconvert ! autovideosink
+```
+
+GStreamer 仍然与 PipeWire 相关，因为 GStreamer 现在可以与它集成。“GStreamer 意在成为多媒体处理的瑞士军刀。” 可用的 PipeWire 新插件名称如下：
+
+ * `pipewiresrc`：PipeWire source
+ * `pipewiresink`：PipeWire sink
+ * `pipewiredeviceprovider`：PipeWire Device Provider
+
+学习 GStreamer 是更好地理解 PipeWire 的非常好的方法，至少对我来说是这样。
+
 ## 构建块：POD/SPA
+
+GObject，即 GLib 对象系统，是众所周知的，并且经过了实战测试，但由于它太重，PipeWire 没有使用它。PipeWire 依赖 SPA 和 POD。但什么是 SPA (Simple Plugin API) 和 POD (Plain Old Data)？
 
 ### POD —— Plain Old Data
 
+POD，即 Plain Old Data (不要与 [Perl 的 Plain Old Documentation](https://perldoc.perl.org/perlpod) 混淆)，是一个通用的数据容器格式，以用于数据编组/数据解组、序列化/反序列化、存储和传输。它是通常的平坦[被动数据结构](https://en.wikipedia.org/wiki/Passive_data_structure)。
+
+可以把它看作是另一种格式，类似于 XML、JSON、ASN.1、protobuf 等。它从 [D-bus Variant](https://dbus.freedesktop.org/doc/dbus-java/api/org/freedesktop/dbus/Variant.html) 和 [LV2 Atom](http://lv2plug.in/ns/ext/atom) 等格式中获得灵感。
+
+实际上，它是一种 LTV (长度-类型-值) 格式，因此使用 8 字节计数帧，其中长度和类型是固定的 32 位值，帧总是 8 字节对齐。所以填充常常被添加到不对齐的值上。(*NB*：帧是指数据值从起始到结束，即如何划分数据边界。) 32 位的 `T` 所指向的类型系统，称为 SPA 类型系统，具有复合/容器类型和基本/原始类型。整个范围从容器（如数组、结构体、对象、序列、指针、文件描述符、选择）到原语（如 bool、int、string 等）。这种格式的优点是它是一种“原样”格式，它可以直接在网络上传输，从内存中读取，存储在堆栈或磁盘上，而无需额外的编组。
+
+*NB*：如果你想了解更多关于协议/格式设计的信息，请参考 [RFC 3117](https://datatracker.ietf.org/doc/html/rfc3117)。
+
+POD 库不是专门为 PipeWire 设计的，它可以用于任何其它项目，尽管为什么使用这种格式而不是另一种格式的问题仍然存在。该库是一个小型的 [header-only](https://en.wikipedia.org/wiki/Header-only) 的 C 库，没有任何依赖，这使得对它进行测试变得轻而易举。我已经发布了一个基于[官方教程](https://gitlab.freedesktop.org/pipewire/pipewire/-/blob/master/doc/spa-pod.dox)的[使用示例](https://github.com/venam/SPA-And-PipeWire-Tests/blob/main/test_pod.c)，但让我们仍然回顾一下它的一般方面。
+
+
+
 ### SPA —— Simple Plugin API
 
-## PipeWire Lib，来自 Wayland 的灵感
+### PipeWire Lib，来自 Wayland 的灵感
 
 ## 配置
 
