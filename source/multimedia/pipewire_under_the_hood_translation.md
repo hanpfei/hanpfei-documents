@@ -116,9 +116,186 @@ POD，即 Plain Old Data (不要与 [Perl 的 Plain Old Documentation](https://p
 
 POD 库不是专门为 PipeWire 设计的，它可以用于任何其它项目，尽管为什么使用这种格式而不是另一种格式的问题仍然存在。该库是一个小型的 [header-only](https://en.wikipedia.org/wiki/Header-only) 的 C 库，没有任何依赖，这使得对它进行测试变得轻而易举。我已经发布了一个基于[官方教程](https://gitlab.freedesktop.org/pipewire/pipewire/-/blob/master/doc/spa-pod.dox)的[使用示例](https://github.com/venam/SPA-And-PipeWire-Tests/blob/main/test_pod.c)，但让我们仍然回顾一下它的一般方面。
 
+POD 的最佳文档是查阅头文件本身，因为许多辅助函数在其它任何地方都没有文档。你通常可以在 */usr/include/spa/pod/* 或 */usr/include/spa-<version>/pod/* (确保是最新的版本)。它与 SPA 捆绑在同一个目录中，因为它依赖于 */usr/include/spa/utils/type.h* 和 *defs.h* 中的类型 ID 系统。
 
+在 */spa/pod/pod.h* 中定义了 pod 结构 `struct spa_pod` 以及原语和容器值。构造它们的构建者位于 */spa/pod/builder.h*，解析器位于 */spa/pod/parser.h*，对于它们的管理可以通过 */spa/pod/iter.h*、*/spa/pod/filter.h* 和其它文件中的辅助函数完成。
+
+实际上，要创建 pod，我们需要初始化一块内存，在堆上或栈上，并使用构建者辅助函数初始化它。然后我们必须依靠帧来设置容器对象的开始和结束，基本上是在完成后设置对象的最终大小（如我们所说的LTV）。帧在我们选择的内存段上充当一种值的 push 和 pop 工具。
+
+下面看一下它是什么样的，你可以参考[我的示例](https://github.com/venam/SPA-And-PipeWire-Tests/blob/main/test_pod.c)、官方文档或头文件直接了解更多信息。编译应该像这样简单 `cc pod-test.c -o pod-test`。
+
+我们定义任何类型的存储，这里是 256B 的栈上存储，并告诉 pod 构建器我们将使用它来存储 pod。
+```
+uint8_t buffer[256];
+struct spa_pod_builder b = SPA_POD_BUILDER_INIT(buffer, sizeof(buffer));
+```
+
+然后我们可以为容器对象定义一个帧，这是一个简单的结构体，但它可以是对象（键/值，称为属性，也有它们自己的 IDs）或其它复杂类型。
+```
+struct spa_pod_frame f;
+spa_pod_builder_push_struct(&b, &f);
+```
+
+一旦帧开始，我们就可以给结构体添加值。
+```
+spa_pod_builder_int(&b, 5);
+spa_pod_builder_float(&b, 3.1415f);
+```
+
+最后，我们关闭帧，表示我们完成了结构体，它返回 `struct spa_pod` 基本类型，稍后可以将其转换为适当的类型。
+```
+struct spa_pod *pod = spa_pod_builder_pop(&b, &f);
+struct spa_pod_struct *example_struct = (struct spa_pod_struct*)pod;
+```
+
+这在内存中看起来是这样的 (小端格式)：
+```
+length = 00000020 = 32
+type   = 0000000e = 14 = SPA_TYPE_Struct
+value  =
+	length   = 00000004 = 4
+	type     = 00000004 = SPA_TYPE_Int
+	value    = 00000005 = 5
+	_padding = 00000000 (always align to 8 bytes)
+
+	length   = 00000004 = 4
+	type     = 00000006 = SPA_TYPE_Float
+	value    = 40490e56 = 3.1415
+	_padding = 00000000 (always align to 8 bytes)
+```
+
+可以在 */spa/utils/type.h* 和其它文件中找到类型。我们还可以注意到对齐的填充，这是由构建器自动添加的。
+
+一旦我们创建了特定类型的 pod，我们就可以用相关的辅助函数来处理它了。在 *iter.h* 头文件中我们可以找到循环遍历 `struct spa_pod_struct` 或验证pod 确实是结构体的方法。
+```
+struct spa_pod *entry;
+SPA_POD_STRUCT_FOREACH(example_struct, entry) {
+	printf("field type:%d\n", entry->type);
+	// two ways to get the value, casting or using spa_pod_get_..
+	if (spa_pod_is_int(entry)) {
+		int32_t ival;
+		spa_pod_get_int(entry, &ival);
+		printf("found int, pod_int: %d\n", ival);
+	}
+	if (spa_pod_is_float(entry)) {
+		struct spa_pod_float *pod_float = (struct spa_pod_float*)entry;
+		printf("found float, pod_float: %f\n", pod_float->value);
+	}
+}
+```
+
+正如你所注意到的，`struct spa_pod` 是通用的，并且只包含 pod 的前两个 32 位值，即大小和类型。因此，我们必须查询它的类型以找出它实际是什么，然后手动对其进行强制转换，或使用辅助函数，如在 *iter.h* 中找到的`spa_pod_get_*`。
+
+相反，我们可以依赖 `spa_pod_parser` 和其它辅助函数来验证和检查原始数据 (例如，查看 *iter.h* 中的 `spa_pod_from_data`)。
+
+然而，当你只想看一眼其格式时，手动检查值会很烦人。这也就是为什么调试函数会出现在 */spa/debug/pod.h* 中。`spa_debug_pod_value` 对于打印 pod 中的内容特别有用。我们也可以使用 */spa/utils/json.h* 和 */spa/utils/ansi.h* 把结构打印为 json，就像 [这里](https://gitlab.freedesktop.org/pipewire/pipewire/-/blob/master/src/tools/pw-dump.c) 展示的，但是还没有简单的函数来实现。
+
+POD 远不止于此，它是一个完整的对象格式，但让我们停下来，转到 SPA。
 
 ### SPA —— Simple Plugin API
+
+POD 只是关于数据表示，而 SPA 是关于功能的。SPA，即 Simple Plugin API，是一个 header-only 且没有依赖的框架，它提供了加载库的能力，其中库具有特定的格式，迭代工厂，创建它们，以及它们提供的可分析调查内部情况和使用的接口，所有这些都在运行时进行。
+
+像 POD 一样，它并不一定要绑定到 PipeWire，但可以在任何地方使用，尽管 PipeWire 使用 SPA 获得了自己的插件。
+
+SPA 中的工厂创建的对象具有特定的格式，常常内部依赖于 POD，SPA 工厂接口让我们了解与它们关联的功能。
+
+实际上，使用 SPA 的插件采用动态链接库 (.so) 的形式，通常位于 */usr/lib/spa/* 或环境变量 `SPA_PLUGIN_PATH` 指向的路径，并使用 `dlopen(3)` 动态打开。SPA 库至少有一个公共的符号 `spa_handle_factory_enum`，在 */spa/support/plugin.h* 中定义，像下面这样加载：
+```
+#define SPA_PLUGIN_PATH "/usr/lib/spa-0.2/"
+void *hnd = dlopen(
+	SPA_PLUGIN_PATH"/support/libspa-support.so",
+	RTLD_NOW);
+spa_handle_factory_enum_func_t enum_func = dlsym(
+	hnd,
+	SPA_HANDLE_FACTORY_ENUM_FUNC_NAME);
+```
+
+我也编写了一个 [简单的示例](https://github.com/venam/SPA-And-PipeWire-Tests/blob/main/test_spa.c) 来展示 SPA 的用法，但让我们快速检查一下这种机制，因为它对于掌握 PipeWire 配置很重要。编译也应该像这样简单 `cc test-spa.c -ldl -o test-spa`。
+
+插件是由一系列工厂组成的，而在每个工厂中，我们都有一系列可用的接口。其思想是，工厂是围绕特定类型的结构体使用的一系列方法，从它的创建到与它的不同交互。接口是关于任何可以捆绑在一起的东西。
+
+工厂具有广为人知的名字，其中的接口也有名字，它们在 */spa/utils/names.h* 中定义，接口名称以 `SPA_TYPE_INTERFACE_*` 的形式存储在插件本身的头文件中。工厂还具有额外的信息，比如版本号、作者、描述等等。
+
+这是我们在加载库后使用它时所需要知道的。然而，我们必须查阅头文件和库位置 `/usr/lib/spa-<version>`，以了解当前可用的工厂以及如何使用它们。在该库目录中，文件夹名称显示了插件的类别，其中大多数与 PipeWire 有关。如果我们看看 *support/libspa-support.so*，我们会看到它与我们得到的 *support* 头文件有关。我们可以在 `SPA_TYPE_INTERFACE_` 上查找有插件的头文件来确定。让我们以 *support/log.h* 为例。
+
+工厂的名称是 `SPA_NAME_SUPPORT_LOG`，唯一定义的接口是 `SPA_TYPE_INTERFACE_Log`。在内部，我们看到所有使用 SPA 的插件都定义了两个东西：包含 `struct spa_interface` 的结构体，包含与该接口相关的方法及版本号的另一个结构体，另外它可以定义事件和回调。如果你感到好奇，`struct spa_interface` 在 */spa/utils/hook.h* 中定义。然而，内部工作并不重要，重要的是我们可以看看接口中有哪些函数，这些函数决定了我们可以用插件做什么。
+
+一系列以 `spa-` 开头的命令行工具可以用来与插件交互。其中一个特别的称为 `spa-inspect` 的工具，可用于转储 .so 文件中存在的工厂和接口。然而，它不是很可靠，也没有提供太多关于我们可以用插件做什么的信息。
+
+示例输出如下：
+```
+factory version:     1
+factory name:     'support.log'
+factory info:
+  none
+factory interfaces:
+ interface: 'Spa:Pointer:Interface:Log'
+factory instance:
+ interface: 'Spa:Pointer:Interface:Log'
+```
+
+这样，加载了 `.so` 并获得了 `enum_func` 函数之后，我们可以循环遍历工厂，查找我们感兴趣的名字，然后循环遍历它的接口来看它是否有我们想要的，然后获得工厂的实例来使用它。
+
+```
+uint32_t i;
+const struct spa_handle_factory *factory = NULL;
+for (i = 0;;) {
+	if (enum_func(&factory, &i) <= 0)
+		break;
+	printf("factory name: %s, version: %d\n",
+			factory->name,
+			factory->version);
+	if (strcmp(factory->name, SPA_NAME_SUPPORT_LOG) == 0) {
+		const struct spa_interface_info *info = NULL;
+		uint32_t index = 0;
+		// get interface at position 0
+		int interface_available = 
+			spa_handle_factory_enum_interface_info(
+			factory,
+			&info,
+			&index);
+		if (strcmp(info->type, SPA_TYPE_INTERFACE_Log) == 0) {
+			// allocate a handle (struct) pointing
+			// to this factory's interfaces
+			size_t size = spa_handle_factory_get_size(
+				factory, NULL);
+			struct spa_handle *handle = calloc(1, size);
+			spa_handle_factory_init(factory, handle,
+				NULL, // info
+				NULL, // support
+				0     // n_support
+			);
+			// fetch the interface by name from the factory handle
+			void *iface;
+			int interface_exists =
+				spa_handle_get_interface(
+					handle,
+					SPA_TYPE_INTERFACE_Log,
+					&iface);
+			// finally get something useful by casting it
+			struct spa_log *log = iface;
+			// use the methods in the interface of the factory
+			spa_log_warn(log, "Hello World!");
+			spa_log_info(log, "version: %i", log->iface.version);
+			// clear the handle to the factory
+			spa_handle_clear(handle);
+		}
+	}
+}
+```
+
+这个长例子包含了我们讨论过的所有部分以及更多内容：
+
+ * 循环遍历库中存在的工厂并匹配名字
+ * 获得第一个接口 (尽管我们可以循环遍历 `spa_handle_factory_enum_interface_info` 直到返回 0) 的名字并匹配名字
+ * 分配一个 `struct spa_handle *`，它是指向工厂中所有接口的指针，是构造工厂的一种方法。(我们必须获取它的大小来做这个，我相信将来会有更好的辅助函数来简化这个)。创建工厂可能需要参数。
+ * 使用 `spa_handle_get_interface` 从创建的工厂获得我们的接口，然后将其转换为我们之前讨论过的 `struct spa_log`。
+ * 最后，使用与该结构关联的方法。
+
+有大量插件及使用它们的不同方法。有些接口是异步的，通过注册的事件处理程序和钩子使用回调，有些是同步的。
+
+这是 SPA 的大致概念。这可能看起来很麻烦，而且有点平淡无奇：头文件中定义的固定工厂名称，以及固定的接口，和从动态链接库手动获取它们的常用方法，然后根据信息使用其中的方法。现在让我们看看 POD 和 SPA 是如何在 PipeWire 中实际使用的。
 
 ### PipeWire Lib，来自 Wayland 的灵感
 
