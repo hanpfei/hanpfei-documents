@@ -630,9 +630,23 @@ SPA_EXPORT int pipewire__module_init(struct pw_impl_module *module, const char *
 
 ### PipeWire 客户端配置
 
+正如守护进程配置一样，客户端配置位于相同的目录下，但名字为 `client.conf` 和 `client-rt.conf`。两者的区别是一个加载 `libpipewire-module-rtkit` 模块而另一个不加载。
+
+PipeWire 客户端或者加载一个特定的配置文件，或者默认加载 `client.conf`。它们在加入图并被会话管理器的策略连接到其它节点之前执行这个配置步骤。
+
+这些文件包含我们前面已经看到的常规部分，但还有两个其它部分 `fitler.properties` 和 `stream.properties`，它们配置内部应该如何处理过滤器和流。客户端是做大部分样本转换、混合和重采样的地方，所以这些部分是关于如何完成这些的。从缓冲区大小，到样本质量，到通道混音，等等。
+
+在 [这里](https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Config-client) 的官方文档中可以找到属性中的一部分的快速解释。
+
 ### PipeWire 会话管理器配置
 
-### PipeWire 媒体会话配置
+会话管理器是负责策略的软件：查找和配置设备，将它们适当地附加到图上，如果需要设置和恢复它们的属性，将流路由到正确的设备，设置它们的音量等等。它可以在 PipeWire 的图中创建与会话管理有关的它自己的对象，比如端点和它们之间的链接，一种 PipeWire 节点之上的抽象。
+
+目前有两种会话管理器的实现：pipewire-media session 和 WirePlumber。每个都有不同的策略格式，pipewire-media-session 具有静态匹配规则，而 WirePlumber 为策略提供动态的 lua 脚本。
+
+然而，整体的想法是一样的：根据设备的来源查找和设置设备
+
+### pipewire-media-session 配置
 
 ### WirePlumber 配置
 
