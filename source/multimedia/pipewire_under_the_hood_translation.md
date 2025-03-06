@@ -746,6 +746,112 @@ pipewire-media-session 中的另一组有趣的模块是与恢复规则相关的
 
 ### WirePlumber 配置
 
+WirePlumber 是一个更高级的会话管理器，它基于 Glib/GObject 来包装 PipeWire 的类型/功能，并依赖于 lua 插件来实现大部分额外的逻辑。这意味着，一方面，你可以使用通常的 Glib 设施来调试 WirePlumber，例如 `G_MESSAGES_DEBUG=all` 这样的环境变量，尽管它已被弃用，而支持 `WIREPLUMBER_DEBUG`，另一方面，你可以通过添加 lua 插件来扩展其功能以满足你的需要。
+
+该项目仍处于早期阶段，变化很快。文档在 [这里](https://pipewire.pages.freedesktop.org/wireplumber/) 慢慢形成。像 pipewire-media-session 一样，它还具有设置策略、发现设备的机制，以及扩展功能的插件，然而它通过基于本地 PipeWire 库创建包装器，以自己的方式完成。
+
+配置文件要么位于本地用户目录 *~/.config/wireplumber*，要么位于全局的 */etc/wireplumber*。主配置文件 *wireplumber.conf* 的格式与我们前面看到的那些相同，并有一个附加的属性 *wireplumber.components*，据我所知，目前它用来通过 `libwireplumber-module-lua-scripting` (位于 */usr/lib/wireplumber-<version>*) 启动 lua 脚本引擎。
+
+然后，包含 lua 脚本的子目录将以字母顺序加载（*bluetooth.lua.d/*，*policy.lua.d/*，*main.lua.d/*）。列表中的最后一个脚本通常启用并激活前面脚本中设置的内容。例如，*policy.lua.d* 将按以下顺序传递以下文件：
+
+ * *00-functions.lua*
+ * *10-default-policy.lua*
+ * *50-endpoints-config.lua*
+ * *90-enable-all.lua*
+
+最后一个文件 *90-enable-all.lua* 调用 *10-default-policy.lua* 中定义的函数 `default_policy.enable()`，它将加载 */usr/share/wireplumber/scripts/* 目录下的模块和脚本在线设置策略。这有点令人困惑，部分原因是它没有很好的文档，部分原因是流程不清楚。然而，要点是它在这些 lua 文件中加载策略集，与 pipewire-media-session 所做的类似。
+
+一个更好的例子是查看 */etc/wireplumber/main.lua.d/50-alsa-config.lua*，相当于 *alsa-monitor.conf*。它在 *alsa-monitor.lua* 文件中创建的 `alsa_monitor` 对象中设置属性和规则，然后调用该文件中定义的函数 `alsa_monitor.enable()`，在最后的文件 *90-enable-all.lua* 中加载监视脚本，并让一切都井然有序 . . . 虽然不那么明显，但与 pipewire-media-session 进行比较仍然是有意义的。
+
+虽然 lua 用于配置，但它也可以用于编写依赖于 WirePlumber 的附加功能或副程序，所有这些都在自己的沙盒环境中运行。
+
+正如我们所说，WirePlumber 扩展 PipeWire 对象，把它们映射到 GObjects，它在 [这里的 C API 中](https://pipewire.pages.freedesktop.org/wireplumber/c_api.html) 进行了记录。它也基于图中的对象实现了端点会话相关的抽象。与所有 GObjects 一样，你可以调用其方法并在其上注册信号。其中一些在使用库时全局可访问，并为 WirePlumber 守护进程提供了一个网关。
+
+[Lua API](https://pipewire.pages.freedesktop.org/wireplumber/lua_api/lua_introduction.html) 是 C API 到 LUA 的映射，以及位于 */usr/share/wireplumber/scripts/* 的辅助程序。方法通过 `object:method` 符号调用，信号使用 `object:connect("signal_name", function()...)` 注册。让我们展示几个通过 Lua 可用的这种全局 GObjects 的例子。
+
+[Core](https://pipewire.pages.freedesktop.org/wireplumber/lua_api/lua_core_api.html) 和 [ObjectManager](https://pipewire.pages.freedesktop.org/wireplumber/lua_api/lua_object_manager_api.html) 是目前最值得一看的，它们还有[调试日志函数](https://pipewire.pages.freedesktop.org/wireplumber/lua_api/lua_log_api.html)。
+
+`Core` 提供了一个围绕 WirePlumber 核心的包装器，正如我所看到的，这对于通过 `Core.require_api` 加载模块以及调用它们的方法很有用。目前还没有关于可用的插件以及它们提供的调用和信号的文档，但你总是可以查看 `*_api_class_init` 函数的[源码](https://gitlab.freedesktop.org/pipewire/wireplumber/-/tree/f0166d6b3c6ac1c4d6351dc7a732d06117cd9b60/modules)，如 [这里的 mixer api](https://gitlab.freedesktop.org/pipewire/wireplumber/-/blob/f0166d6b3c6ac1c4d6351dc7a732d06117cd9b60/modules/module-mixer-api.c#L576)。
+
+可以在 [这里](https://gitlab.freedesktop.org/pipewire/wireplumber/-/blob/f0166d6b3c6ac1c4d6351dc7a732d06117cd9b60/tests/examples/get-default-sink-volume.lua) 找到一个这样的例子，我将其复制在下面：
+```
+#!/usr/bin/wpexec
+--
+-- WirePlumber
+--
+-- Copyright © 2021 Collabora Ltd.
+--    @author George Kiagiadakis <george.kiagiadakis@collabora.com>
+--
+-- SPDX-License-Identifier: MIT
+--
+
+-- Load the necessary wireplumber api modules
+Core.require_api("default-nodes", "mixer", function(...)
+  local default_nodes, mixer = ...
+
+  -- configure volumes to be printed in the cubic scale
+  -- this is also what the pulseaudio API shows
+  mixer.scale = "cubic"
+
+  local id = default_nodes:call("get-default-node", "Audio/Sink")
+  local volume = mixer:call("get-volume", id)
+
+  -- dump everything
+  Debug.dump_table(volume)
+
+  -- or maybe just the volume...
+  -- print(volume.volume)
+
+  Core.quit()
+end)
+```
+
+正如你可能注意到的，这些脚本通过传给 `wpexec` 命令行工具来运行。它还可以用于动态创建节点：
+```
+local props = {
+  ["media.class"] = "Audio/Sink",
+  ["factory.name"] = "support.null-audio-sink",
+  ["node.name"] = "ExampleNode",
+  ["node.description"] = "ExampleNode",
+  ["audio.position"] = "FL,FR",
+}
+node = Node("adapter", props)
+node:activate(Features.ALL)
+```
+
+`ObjectManager` 在某种程度上相当于 PipeWire 的注册表，但更简单，允许你侦听和过滤与它们交互的感兴趣的节点，可能还会修改它们的属性。ObjectManger 接受 [`Interest`](https://pipewire.pages.freedesktop.org/wireplumber/lua_api/lua_object_interest_api.html) 列表作为参数，它们是过滤器：
+```
+obj_mgr = ObjectManager {
+  Interest {
+    type = "node",
+    Constraint { "media.class", "matches", "*/Sink" }
+  }
+}
+```
+
+然后我们可以为 “已安装” 的信号添加一个 listener。
+```
+obj_mgr:connect("installed", function (om)
+  for obj in om:iterate() do
+    local id = obj["bound-id"]
+    local global_props = obj["global-properties"]
+    print("\n")
+    print("Obj ID: ".. id)
+    Debug.dump_table(global_props)
+    print("\n")
+  end
+end)
+```
+
+最后，我们让 `ObjectManager` 运行起来，以便它触发信号：
+```
+obj_mgr:activate()
+```
+
+这个脚本应该转储 PipeWire 图中的 sinks 的所有属性。
+
+更多的例子可以在 [这里](https://gitlab.freedesktop.org/pipewire/wireplumber/-/tree/f0166d6b3c6ac1c4d6351dc7a732d06117cd9b60/tests/examples) 找到。接下来，让我们转向其它工具和调试。
+
 ## 工具 & 调试
 
 ### 本地 PipeWire 工具
