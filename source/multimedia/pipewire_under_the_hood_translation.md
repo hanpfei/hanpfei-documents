@@ -644,9 +644,105 @@ PipeWire 客户端或者加载一个特定的配置文件，或者默认加载 `
 
 目前有两种会话管理器的实现：pipewire-media session 和 WirePlumber。每个都有不同的策略格式，pipewire-media-session 具有静态匹配规则，而 WirePlumber 为策略提供动态的 lua 脚本。
 
-然而，整体的想法是一样的：根据设备的来源查找和设置设备
+然而，整体的想法是一样的：根据设备的来源 (ALSA，JACK，Bluetooth) 查找和设置设备，设置它们的 profiles/端口/名字/音量，把它们加入图，根据定义的规则或恢复的信息连接设备和流，也对流的属性做同样的事情。
+
+可以将会话管理器配置视为图中发生的事情的规则手册。
 
 ### pipewire-media-session 配置
+
+pipewire-media-session 与 pipewire 守护进程一起发布，至少目前大多数包管理器都是这样。它的配置文件与客户端配置文件和守护进程配置文件位于相同的地方，但位于名为 *media-session.d* 的目录下。在这个目录下，我们可以看到入口点配置，称为 *media-session.conf*，以及用于软件管理的不同设备驱动程序的其它三个配置文件：*alsa-monitor.conf*，*bluez-monitor.conf*，*v4l2-monitor.conf*。
+
+到目前为止，*media-session.conf* 中的配置格式与所有常用的部分应该看起来比较熟悉了。这里的附加项是 `session.modules`，它是模块类别的字典 (包)，在 *media-session.d* 目录中出现文件名与字典项的键相同的特定文件时，启用这种模块类别（是的，这是一种有趣的启用功能的方式）。有一个 `default` 键，顾名思义，它始终启用。示例 `session.modules` 如下：
+```
+session.modules = {
+    # These are the modules that are enabled when a file with
+    # the key name is found in the media-session.d config directory.
+    # the default bundle is always enabled.
+
+    default = [
+        flatpak                 # manages flatpak access
+        portal                  # manage portal permissions
+        v4l2                    # video for linux udev detection
+        #libcamera              # libcamera udev detection
+        suspend-node            # suspend inactive nodes
+        policy-node             # configure and link nodes
+        #metadata               # export metadata API
+        #default-nodes          # restore default nodes
+        #default-profile        # restore default profiles
+        #default-routes         # restore default route
+        #streams-follow-default # move streams when default changes
+        #alsa-no-dsp            # do not configure audio nodes in DSP mode
+        #alsa-seq               # alsa seq midi support
+        #alsa-monitor           # alsa udev detection
+        #bluez5                 # bluetooth support
+        #bluez5-autoswitch      # automatic bluetooth HSP/HFP profile switch
+        #restore-stream         # restore stream settings
+        #logind                 # systemd-logind seat support
+    ]
+    with-audio = [
+        metadata
+        default-nodes
+        default-profile
+        default-routes
+        alsa-seq
+        alsa-monitor
+    ]
+    with-alsa = [
+        with-audio
+    ]
+    with-jack = [
+        with-audio
+    ]
+    with-pulseaudio = [
+        with-audio
+        bluez5
+        bluez5-autoswitch
+        logind
+        restore-stream
+        streams-follow-default
+    ]
+}
+```
+
+每个模块激活一个特定的功能，以下是在发出 `pipewire-media-session --help` 时列出的模块：
+
+ * flatpak：管理 flatpak 访问
+ * portal：管理 portal 权限
+ * metadata：导出 metadata API
+ * default-nodes：恢复默认的节点
+ * default-profile：恢复默认的 profiles
+ * default-routes：恢复默认的路由
+ * restore-stream：恢复流设置
+ * streams-follow-：当默认设备改变时移动流
+ * alsa-seq：alsa seq midi 支持
+ * alsa-monitor：alsa 声卡 udev 探测
+ * v4l2：Linux 视频设备 udev 探测
+ * libcamera：libcamera udev 探测
+ * bluez5：蓝牙支持
+ * suspend-node：挂起非活动节点
+ * policy-node：配置和链接节点
+ * pulse-bridge：接受 pulseaudio 客户端
+ * logind：systemd-logind seat 支持
+
+配置文件中没有任何其它内容，但是，除了通常的 *client.conf* 之外，一些模块使我们能够在设备和客户端上设置匹配规则，来设置附加属性。这些规则存储和读取在单独的文件中，比如：*alsa-monitor.conf*，*bluez-monitor.conf*，和 *v4l2-monitor.conf*，当设置具有相同名称的模块（例如 `alsa-monitor` 模块）时，应查询该配置文件。(虽然最后两个在上面的列表中没有提到，但在这里有一些 [关于蓝牙的内容](https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Config-Bluetooth)）
+
+这些文件有两个部分：`properties` 是总是要设置给这样的设备的属性，和 `rules` 部分。比如，在 *alsa-monitor.conf* 文件中，`properties` 的值与 alsa 设备保留相关，[这里](https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Config-ALSA#properties) 有更多相关内容。
+
+`rules` 配置是一个字典数组，字典包含两部分：`matches`，正则表达式列表和匹配规则 (也有 AND/OR 条件)，和 `action`，它目前只有一个 [`update-props`](https://gitlab.freedesktop.org/pipewire/pipewire/-/blob/master/src/examples/media-session/match-rules.c#L124) 条目来设置或删除 (当设置为null时) 设备上的属性。
+
+可以设置的属性要么是通用节点属性，要么取决于我们正在处理的设备类型。例如，[本文档](https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Config-ALSA) 列出了 ALSA 的一些属性。我目前不知道是否有一种方法可以列出所有可能为特定设备驱动程序设置的属性，查看代码，它们似乎在不同地方定义和读取。这是你应该记住的，节点上的属性被多个处理它们的不同软件/模块/库读取和解释。
+
+pipewire-media-session 中的另一组有趣的模块是与恢复规则相关的那些。这些与 PulseAudio 的恢复机制类似，实际上复用了它的代码，然而它在用户主目录 (通常位于 *~/.config/pipewire/media-session.d/*) 中以 JSON 格式存储规则。这将你从 PulseAudio 的二进制格式中拯救出来，其中我不得不 [创建一个定制的 db 编辑器](https://github.com/venam/pa-resto-edit) 来编辑它们。文件如下：
+
+ * `default-nodes`：存储默认的 sink 和 source。
+ * `default-profile`：存储设备的默认的 profiles。
+ * `default-routes`：为每个设备列出 profiles 和它们的设置/音量。
+ * `restore-stream`：输出和输入流名称的列表，以及它们上面最后设置的音量。此外，它可能具有诸如 `target-node` 之类的信息，理论上，应该在流出现时将其重新附加到正确的节点（尽管我遇到了不按照这一策略处理的问题）。
+
+除了这些我们还有 `streams-follow-default` 配置，它会持续将流移动到任何默认设备，即使它改变了。这可能是非常烦人的，但我的猜测是，它在某种程度上是 PulseAudio 的 `module-always-sink` 和 `module-always-source` [概念的替代](https://gitlab.freedesktop.org/pipewire/pipewire/-/wikis/Migrate-PulseAudio#modules-1)，当所有其它设备断开连接时，这些模块创建一个虚拟设备，流被移动到这个虚拟设备。无论如何，这打破了设备和流通常的恢复规则流程，并且不直观。当有疑问时，你可以随时查询这些 PulseAudio 恢复流程图：
+
+ * [PA 流恢复流程](https://camo.githubusercontent.com/f7fb01bb0b5529024b4d4df71873ac396beb690deeffbdb4f6b97fbdf7beb590/68747470733a2f2f636f6c696e2e67757468722e69652f77702d636f6e74656e742f75706c6f6164732f323031302f30322f70612d696e697469616c2d726f7574652e706e67)
+ * [PA 设备恢复流程](https://camo.githubusercontent.com/ec5dc9ce942cdd106dc7149560ba18c3880d48f88de720346eb90582c6fe787b/68747470733a2f2f636f6c696e2e67757468722e69652f77702d636f6e74656e742f75706c6f6164732f323031302f30322f70612d6e65772d6465766963652d726f7574652e706e67)
 
 ### WirePlumber 配置
 
