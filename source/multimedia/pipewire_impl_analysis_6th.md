@@ -1106,7 +1106,7 @@ pipewire-pulse 守护进程支持的接口，还有如下这些：
 
 通过各个模块来支持的不同接口的 marshaller 注册完成，原生 PipeWire IPC 协议的初始化即告完成。
 
-## 客户端发起连接
+## 原生 PipeWire IPC 协议客户端发起连接
 Core 接口是 PipeWire 客户端的核心接口，提供了与 PipeWire 守护进程通信、资源管理和事件处理的基础功能。Core 接口的核心对象是 `struct pw_core`，代表与 PipeWire 守护进程的连接，`struct pw_core` 类型定义 (位于 *pipewire/src/pipewire/private.h*) 如下：
 ```
 struct pw_proxy {
@@ -2003,9 +2003,40 @@ exit:
 (4). 调用 `pw_protocol_client_connect_fd()` 将 socket 文件描述符绑定到 `pw_protocol_client`。
 (5). 传入的 `done_callback` 非空时调用它。
 
+至此，原生 PipeWire IPC 协议客户端侧的准备工作结束。
 
+## 原生 PipeWire IPC 协议服务器接受连接
 
+原生 PipeWire IPC 协议服务器端的协议初始化过程中，调用 `impl_add_server()` 函数起 socket 服务器，并为服务器端 socket 在主事件循环中添加 IO 事件源，socket 上的输入 IO 事件处理函数为 `socket_data()`，这个函数定义 (位于 *pipewire/src/modules/module-protocol-native.c*) 如下：
+```
+static void
+socket_data(void *data, int fd, uint32_t mask)
+{
+	struct server *s = data;
+	struct client_data *client;
+	struct sockaddr_un name;
+	socklen_t length;
+	int client_fd;
 
+	length = sizeof(name);
+	client_fd = accept4(fd, (struct sockaddr *) &name, &length, SOCK_CLOEXEC);
+	if (client_fd < 0) {
+		pw_log_error("server %p: failed to accept: %m", s);
+		return;
+	}
+
+	client = client_new(s, client_fd);
+	if (client == NULL) {
+		pw_log_error("server %p: failed to create client", s);
+		close(client_fd);
+		return;
+	}
+}
+```
+
+这个函数的执行过程包括，调用 `accept4()` 获得客户端连接的 socket 文件描述符，调用 `client_new()` 创建服务器端的原生 IPC 协议通信的客户端表示 `struct client_data`/`struct pw_impl_client`。`client_new()` 函数的具体执行过程，前面已有说明。
+
+至此，原生 PipeWire IPC 协议客户端和服务器端进行通信的准备工作结束，双方可以进行消息通信了。
 
 
 
